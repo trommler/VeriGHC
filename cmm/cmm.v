@@ -7,6 +7,12 @@ Require Import Eqdep.
 
 Set Implicit Arguments.
 
+(* This is the development by Greg Morrisett *)
+(* I modified for compatibility with Coq 8.7.1
+   and removed the need for "Unset Automatic Introduction."
+   which is deprecated and the deprecation warning trips
+   Proof General 4.4 *)
+
 Axiom proof_irrelevance : forall (P:Prop) (H1 H2:P), H1 = H2.
 
 
@@ -1109,7 +1115,7 @@ Eval compute in crazy2.
       cross.
       sep.
     Defined.
-
+(* Greg's development ends here *)
 
 (** * Cmm starts here *)
 
