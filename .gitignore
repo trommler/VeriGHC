@@ -1,3 +1,7 @@
+# EMACS backup files
+*~
+
+# Coq files
 .*.aux
 *.a
 *.cma
