@@ -22,28 +22,36 @@ Axiom proof_irrelevance : forall (P:Prop) (H1 H2:P), H1 = H2.
 *)
 Module FunctionalSepIMP.
 
+  (* Cmm types *)
+  Definition Int := nat.
+  Definition CmmLit := nat.
+  Definition CmmReg := nat.
+
+  (* Cmm Basic types *)
+  Inductive CmmType : Set := CmmInt | CmmWord | CmmLabel.
+  
+  Definition CmmType_eq (t1 t2 : CmmType) : {t1=t2} + {t1<>t2}.
+    decide equality.
+  Defined.
+  
+  Definition typeDenote (t : CmmType) : Set :=
+    match t with
+    | CmmInt => nat (* should be Z *)
+    | CmmWord => nat
+    | CmmLabel => string
+    end.
+  (* End Cmm types *)
+
   Definition ptr := nat.
   Definition ptr_eq := eq_nat_dec.
 
-  (** Just to demonstrate things, let's fix the universe of storable types by
-  giving some type names and an interpretation. *)
-  Inductive stype : Set := 
-  | Nat_t : stype
-  | Pair_t : stype -> stype -> stype
-  | Sum_t : stype -> stype -> stype
-  | Fn_t : stype -> stype -> stype.
+  Definition stype := CmmType.
 
-  Definition stype_eq (t1 t2:stype) : {t1=t2} + {t1<>t2}.
-    decide equality.
-  Defined.
+  Definition stype_eq := CmmType_eq.
 
-  Fixpoint interp (t:stype) : Set := 
-    (match t with 
-       | Nat_t => nat
-       | Pair_t t1 t2 => (interp t1) * (interp t2)
-       | Sum_t t1 t2 => (interp t1) + (interp t2)
-       | Fn_t t1 t2 => (interp t1) -> (interp t2)
-     end)%type.
+  Definition interp := typeDenote.
+
+  (* End Cmm types *)
 
   (** ** Heaps *)
   (** We're going to store dynamic values -- a pair of an [stype] [t] and 
@@ -747,7 +755,7 @@ Module FunctionalSepIMP.
       end).
 
   (** * Examples *)
-  Definition inc(p:tptr Nat_t) := 
+  Definition inc(p:tptr CmmWord) := 
     v <- read p ; 
     write p (1 + v).
 
@@ -757,13 +765,13 @@ Module FunctionalSepIMP.
       hang on to the fact that the value read out is equal to [n].  If
       we used binary post-conditions (a relation on both the input heap
       and output heap), this wouldn't be necessary.  *)
-  Definition inc_tc(p:tptr Nat_t)(n:interp Nat_t) :
+  Definition inc_tc(p:tptr CmmWord)(n:interp CmmWord) :
     {{ p --> n }} inc p {{ fun _ => p --> 1+n }}.
   Proof.
     unfold inc ; sep.
     eapply bind_tc ; sep.
 
-    apply read_tc with (t:=Nat_t); sep. simpl. 
+    apply read_tc with (t:=CmmWord); sep. simpl. 
     eapply consequence_tc. eapply (frame_tc (pure (x = n))).
     eapply write_tc. sep. simpl. sep.
   Qed.
@@ -771,7 +779,7 @@ Module FunctionalSepIMP.
   (** The great part is that now if we have a property on some disjoint
      part of the state, say [p2 --> n2], then after calling [inc], we
      are guaranteed that property is preserved via the frame rule. *)
-  Definition inc_two(p1 p2:tptr Nat_t)(n1 n2:interp Nat_t) : 
+  Definition inc_two(p1 p2:tptr CmmWord)(n1 n2:interp CmmWord) : 
     {{ p1 --> n1 ** p2 --> n2 }} inc p1 {{ fun _ => p1 --> 1+n1 ** p2 --> n2 }}.
   Proof.
     intros. 
@@ -1107,7 +1115,7 @@ Module FunctionalSepIMP.
     Defined.
 Eval compute in crazy2.
 
-    Lemma crazy3 (p q r s:tptr Nat_t) : 
+    Lemma crazy3 (p q r s:tptr CmmWord) : 
       (p --> 0 ** q --> 1) ** (r --> 2 ** emp) ** (s --> 3) ==> 
       s --> 3 ** q --> 1 ** p --> 0 ** r --> 2.
     Proof.
@@ -1118,24 +1126,6 @@ Eval compute in crazy2.
 (* Greg's development ends here *)
 
 (** * Cmm starts here *)
-
-Definition Int := nat.
-Definition CmmLit := nat.
-Definition CmmReg := nat.
-
-(* Basic types *)
-Inductive CmmType : Set := CmmInt | CmmWord | CmmLabel.
-
-Definition CmmType_eq (t1 t2 : CmmType) : {t1=t2} + {t1<>t2}.
-  decide equality.
-Defined.
-
-Definition typeDenote (t : CmmType) : Set :=
-  match t with
-    | CmmInt => nat (* should be Z *)
-    | CmmWord => nat
-    | CmmLabel => string
-  end.
 
 (* About 60 operations including vector/SIMD ops *)
 Inductive MachOp : Set := MO_Add | MO_Mult.
@@ -1158,26 +1148,31 @@ We do not access the stack yet and the latter is just syntactic sugar for heap a
 
 
 (* OK, to do this I need to change the type universe for our heap implementation *)
-Program Fixpoint exprDenote (t:CmmType) (exp:CmmExpr t) : Cmd (typeDenote t) :=
-  match exp with
-  | ELit n          => ret n
-  | ELoad typ pexp  => ptr <- exprDenote pexp ;
-                       v <- untyped_read ptr ;
-                       match v with
-                       | existT _ t' v =>
-                         match stype_eq typ t' with
-                         | left _  => ret _
-                         | right _ => exit _
-                         end
-                       end
-  | EMachOp op args => match args with
-                       | (x::y::nil) => xval <- exprDenote x ;
-                                        yval <- exprDenote y ;
-                                        ret ((machOpDenote op)
-                                              xval yval)
-                       | _ => exit _
-                       end
-  end.
+Fixpoint exprDenote (t:CmmType) (exp:CmmExpr t) : Cmd (typeDenote t).
+  refine (
+            match exp in (CmmExpr t) with
+            | ELit n          => ret _
+            | ELoad typ pexp  => ptr <- exprDenote _ pexp ;
+                                 v <- untyped_read ptr ;
+                                 match v with
+                                 | existT _ t' v =>
+                                   match stype_eq typ t' with
+                                   | left _  => ret _
+                                   | right _ => exit _
+                                   end
+                                 end
+            | EMachOp op args => match args with
+                                 | (x::y::nil) => xval <- exprDenote _ x ;
+                                                  yval <- exprDenote _ y ;
+                                                  ret _ (*(machOpDenote op
+                                                         xval yval) *)
+                                 | _ => exit _
+                                 end
+            end).
+  simpl. apply n.
+  subst. apply v.
+  simpl. apply (machOpDenote op xval yval).
+Defined.
 
 Print exprDenote.
 
@@ -1186,7 +1181,7 @@ Print exprDenote.
 Definition Label := nat.
 
 (* From CmmNode.hs *)
-Definition CmmActual := CmmExpr.
+Definition CmmActual := CmmExpr CmmWord.
 Definition CmmFormal := nat. (* LocalReg *)
 Definition GlobalReg := nat.
 Definition ForeignTarget := nat.
@@ -1198,14 +1193,14 @@ Definition SwitchTargets := list (Int * Label).
 Inductive CmmNode : Set :=
 | CmmEntry : Label (* -> CmmTickScope *) -> CmmNode
 | CmmComment : (* FastString -> *) CmmNode
-| CmmAssign : CmmReg -> CmmExpr -> CmmNode
-| CmmStore : CmmExpr -> CmmExpr -> CmmNode
+| CmmAssign : forall t:CmmType, CmmReg -> CmmExpr t -> CmmNode
+| CmmStore : forall t:CmmType, CmmExpr CmmWord -> CmmExpr t-> CmmNode
 | CmmUnsafeForeignCall : ForeignTarget -> list CmmFormal -> list CmmActual
                                                          -> CmmNode
-| CmmCondBranch : CmmExpr -> Label -> Label -> option Bool -> CmmNode
+| CmmCondBranch : CmmExpr CmmWord -> Label -> Label -> option Bool -> CmmNode
 | CmmBranch : Label -> CmmNode
-| CmmSwitch : CmmExpr -> SwitchTargets -> CmmNode
-| CmmCall   : CmmExpr -> option Label -> list GlobalReg -> ByteOff -> ByteOff
+| CmmSwitch : CmmExpr CmmWord -> SwitchTargets -> CmmNode
+| CmmCall   : CmmExpr CmmWord -> option Label -> list GlobalReg -> ByteOff -> ByteOff
                                       -> ByteOff -> CmmNode
 | CmmForeignCall : ForeignTarget -> list CmmFormal -> list CmmActual -> Label
                                  -> ByteOff -> ByteOff -> Bool -> CmmNode
@@ -1213,9 +1208,9 @@ Inductive CmmNode : Set :=
 
 Program Fixpoint cmmNodeDenote (node : CmmNode) : Cmd unit :=
   match node with
-  | CmmStore lexpr rexpr => fun h => ptr <- exprDenote lexpr ;
-                                     val <- exprDenote rexpr ;
-                                     write ptr val  
+  | CmmStore lexpr rexpr => ptr <- exprDenote _ lexpr ;
+                            val <- exprDenote _ rexpr ;
+                            write ptr val
   | CmmAssign _ _
   | CmmEntry _ 
   | CmmComment
@@ -1225,6 +1220,6 @@ Program Fixpoint cmmNodeDenote (node : CmmNode) : Cmd unit :=
   | CmmSwitch _ _
   | CmmCall _ _ _ _ _ _
   | CmmForeignCall _ _ _ _ _ _ _
-    => fun h => (h, tt)
+    => ret tt
   end.
 End FunctionalSepIMP.
