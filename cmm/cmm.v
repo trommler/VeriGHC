@@ -1208,8 +1208,8 @@ Inductive CmmNode : Set :=
 
 Program Fixpoint cmmNodeDenote (node : CmmNode) : Cmd unit :=
   match node with
-  | CmmStore lexpr rexpr => ptr <- exprDenote _ lexpr ;
-                            val <- exprDenote _ rexpr ;
+  | CmmStore lexpr rexpr => ptr <- exprDenote lexpr ;
+                            val <- exprDenote rexpr ;
                             write ptr val
   | CmmAssign _ _
   | CmmEntry _ 
