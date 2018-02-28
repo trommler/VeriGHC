@@ -3,7 +3,7 @@ Require Import List.
 Require Import Omega.
 Require Import String.
 Require Import Eqdep.
-(* Require Import Cpdt.CpdtTactics. *)
+Require Import ProofIrrelevance.
 
 Set Implicit Arguments.
 
@@ -12,9 +12,6 @@ Set Implicit Arguments.
    and removed the need for "Unset Automatic Introduction."
    which is deprecated and the deprecation warning trips
    Proof General 4.4 *)
-
-Axiom proof_irrelevance : forall (P:Prop) (H1 H2:P), H1 = H2.
-
 
 (** With this module, we develop a separation logic for reasoning about 
     imperative Coq programs.  Separation logic gives us a crucial principle
@@ -663,7 +660,7 @@ Module FunctionalSepIMP.
     unf ; unfold typed_ptsto, ptsto, read, untyped_read, bind ; 
       mysimp ; subst ; mysimp ; simpl in * ; mysimp.
     rewrite lookup_insert. destruct (stype_eq t t) ; try congruence. 
-    rewrite (proof_irrelevance e (eq_refl t)). unfold eq_rec_r ; simpl. 
+    rewrite (proof_irrelevance _ e (eq_refl t)). unfold eq_rec_r ; simpl. 
     simpl. exists ((p,existT interp t v)::nil). exists x0. mysimp. 
     exists ((p,existT interp t v)::nil). exists nil. mysimp.
   Qed.
@@ -1211,11 +1208,13 @@ Program Fixpoint cmmNodeDenote (node : CmmNode) : Cmd unit :=
   | CmmStore lexpr rexpr => ptr <- exprDenote lexpr ;
                             val <- exprDenote rexpr ;
                             write ptr val
-  | CmmAssign _ _
-  | CmmEntry _ 
+
   | CmmComment
-  | CmmUnsafeForeignCall _ _ _
+  | CmmEntry _  => ret tt
+ 
   | CmmCondBranch _ _ _ _
+  | CmmAssign _ _
+  | CmmUnsafeForeignCall _ _ _
   | CmmBranch _
   | CmmSwitch _ _
   | CmmCall _ _ _ _ _ _
