@@ -171,15 +171,15 @@ Module FunctionalSepIMP.
       the underlying value otherwise. *)
 
   Definition read (t:stype) (p:tptr t) : Cmd (interp t).
-    refine (d <- untyped_read p ; 
-            match d with 
-            | existT _ t' v => 
-              match stype_eq t t' with 
-              | left _ => ret _
-              | right _ => exit _
-              end
-            end).
-
+    refine (
+        d <- untyped_read p ;
+        match d with
+        | existT _ t' v =>
+          match stype_eq t t' with
+          | left _ => ret _
+          | right _ => exit _
+          end
+        end).
     subst. apply v.
   Defined.
 
@@ -1153,7 +1153,7 @@ Fixpoint exprDenote (t:CmmType) (exp:CmmExpr t) : Cmd (typeDenote t).
                                  v <- untyped_read ptr ;
                                  match v with
                                  | existT _ t' v =>
-                                   match stype_eq typ t' with
+                                   match CmmType_eq typ t' with
                                    | left _  => ret _
                                    | right _ => exit _
                                    end
