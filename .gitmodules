@@ -1,0 +1,3 @@
+[submodule "ext/VST"]
+	path = ext/VST
+	url = https://github.com/trommler/VST.git
