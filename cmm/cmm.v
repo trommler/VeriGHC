@@ -5,6 +5,8 @@ Require Import String.
 Require Import Eqdep.
 Require Import ProofIrrelevance.
 
+Require Import VST.msl.msl_direct.
+
 Set Implicit Arguments.
 
 (* This is the development by Greg Morrisett *)
@@ -42,18 +44,12 @@ Module FunctionalSepIMP.
   Definition ptr := nat.
   Definition ptr_eq := eq_nat_dec.
 
-  Definition stype := CmmType.
-
-  Definition stype_eq := CmmType_eq.
-
-  Definition interp := typeDenote.
-
   (* End Cmm types *)
 
   (** ** Heaps *)
   (** We're going to store dynamic values -- a pair of an [stype] [t] and 
       a value of type [interp t]. *)
-  Definition dynamic := sigT interp.
+  Definition dynamic := sigT typeDenote.
 
   (** We will continue to use lists of pointers and values as the model for
       heaps.  However, to support an easy definition of disjoint union, we 
@@ -164,18 +160,18 @@ Module FunctionalSepIMP.
       it will make it easier for Coq to figure out the [stype] at 
       which we're using things.  Note that this is a little misleading
       because in general, a [ptr] can map to a value of any stype! *)
-  Definition tptr(t:stype) := ptr.
+  Definition tptr(t:CmmType) := ptr.
 
   (** Typed read -- we do an untyped read, and then check that the
       [stype] matches what we expected, failing if not, and returning
       the underlying value otherwise. *)
 
-  Definition read (t:stype) (p:tptr t) : Cmd (interp t).
+  Definition read (t:CmmType) (p:tptr t) : Cmd (typeDenote t).
     refine (
         d <- untyped_read p ;
         match d with
         | existT _ t' v =>
-          match stype_eq t t' with
+          match CmmType_eq t t' with
           | left _ => ret _
           | right _ => exit _
           end
@@ -191,8 +187,8 @@ Module FunctionalSepIMP.
              end.
 
   (** Typed write. *)
-  Definition write (t:stype) (p:tptr t) (v:interp t) : Cmd unit := 
-    untyped_write p (existT interp t v).
+  Definition write (t:CmmType) (p:tptr t) (v:typeDenote t) : Cmd unit := 
+    untyped_write p (existT _ t v).
 
   (** When we allocate, we need to pick something fresh for the heap.  So 
       we choose the maximum value in the heap plus one. *)
@@ -203,7 +199,7 @@ Module FunctionalSepIMP.
   Definition untyped_new (v:dynamic) : Cmd ptr := 
     fun h => let p := 1 + max_heap h in Some (insert p v h, p).
 
-  Definition new(t:stype)(v:interp t) : Cmd (tptr t) := untyped_new (existT interp t v).
+  Definition new(t:CmmType)(v:typeDenote t) : Cmd (tptr t) := untyped_new (existT typeDenote t v).
 
   Definition free (p:ptr) : Cmd unit := 
     fun h => match lookup p h with 
@@ -213,13 +209,14 @@ Module FunctionalSepIMP.
 
   (** ** Heap Predicates or hprops *)
   (** An [hprop] is a predicate on heaps. *)
-  Definition hprop := heap -> Prop.
+  Definition hprop := pred heap.
 
   (** [emp] holds only when the heap is empty.  One way to think of [emp]
       is that as a pre-condition, it tells us that we don't have the right
       to access anything in the heap.  [emp] plays the role of a unit for
       [star] which is defined below. *)
-  Definition emp : hprop := fun h => h = nil.
+  (* Definition emp : hprop := fun h => h = nil. *)
+  Definition empty : hprop := fun h => h = nil.
 
   (** [top] holds on any heap. *)
   Definition top : hprop := fun _ => True.
@@ -234,11 +231,11 @@ Module FunctionalSepIMP.
   Local Open Scope sep_scope.
 
   (** [ x --> v] is the same as above, except we make the type explicit. *)
-  Definition typed_ptsto (t:stype) (x:tptr t) (v:interp t) : hprop := 
-    x ---> (existT interp t v).
+  Definition typed_ptsto (t:CmmType) (x:tptr t) (v:typeDenote t) : hprop := 
+    x ---> (existT _ t v).
   Arguments typed_ptsto [t].
 (*  Implicit Arguments typed_ptsto [t].*)
-  Infix "-->" := typed_ptsto (at level 70) : sep_scope.
+  Infix "|-->" := typed_ptsto (at level 70) : sep_scope.
 
   (** [P ** Q] holds when the heap can be broken into disjoint heaps 
       [h1] and [h2] such that [h1] satisfies [P] and [h2] satisfies [Q]. 
@@ -252,7 +249,7 @@ Module FunctionalSepIMP.
   (** When [P] is a pure predicate in the sense that it doesn't refer to a
       heap, then we can use [pure P] as a predicate on the heap.  Note that
       we require that the heap that it corresponds to is empty. *)
-  Definition pure (P:Prop) : hprop := fun h => emp h /\ P.
+  Definition pure (P:Prop) : hprop := fun h => empty h /\ P.
 
   (** [sing h] is the singleton predciate on heaps -- i.e., it holds on [h']
       only when [h'] is equal to h. *)
@@ -435,6 +432,42 @@ Module FunctionalSepIMP.
   Proof.
     induction h ; mysimp. assert False. omega. contradiction.
   Qed.
+
+(** Instances for separation algebra on heaps *)
+  Instance Join_heap : Join heap := 
+    fun a b c => wf a /\ wf b /\ disjoint a b /\ c = merge a b .
+
+  Instance Perm_heap : Perm_alg heap.
+  Proof.
+    constructor; auto with typeclass_instances; try firstorder.
+    unfold join in *. unfold Join_heap in *.
+    firstorder. subst. reflexivity.
+
+    unfold join in *. unfold Join_heap in *.
+    firstorder. subst. exists (merge b c). firstorder. apply disjoint_comm in H2.
+    apply merge_disjoint in H2. destruct H2 as [_ Hcb]. apply disjoint_comm. assumption.
+
+    apply merge_wf; auto.
+
+    apply disjoint_comm in H2. apply merge_disjoint in H2. destruct H2 as [_ Hcb].
+    apply disjoint_comm. assumption.
+
+    apply disjoint_comm. apply disjoint_merge. apply disjoint_comm. assumption.
+    apply disjoint_comm in H2. apply merge_disjoint in H2. destruct H2. assumption.
+
+    symmetry. apply merge_assoc; try assumption.
+    apply disjoint_comm in H2. apply merge_disjoint in H2. destruct H2.
+    apply disjoint_comm. assumption.
+    apply disjoint_comm in H2. apply merge_disjoint in H2. destruct H2.
+    apply disjoint_comm. assumption.
+
+
+    unfold join in *. unfold Join_heap in *.
+    firstorder. subst. 
+  Instance Sep_heap : Sep_alg heap := _.
+  Instance Canc_heap : Canc_alg heap := _.
+  Instance Disj_heap : Disj_alg heap := _.
+  
 
   (** * Separation Reasoning *)
 
