@@ -1,1 +1,1 @@
--Q /home/peter/projects/VeriGHC/ext/VST/msl VST.msl -Q /home/peter/projects/VeriGHC/ext/VST/sepcomp VST.sepcomp -Q /home/peter/projects/VeriGHC/ext/VST/veric VST.veric -Q /home/peter/projects/VeriGHC/ext/VST/floyd VST.floyd -R /home/peter/projects/VeriGHC/ext/VST/compcert compcert
+-Q ../ext/VST/msl VST.msl -Q ../ext/VST/sepcomp VST.sepcomp -Q ../ext/VST/veric VST.veric -Q ../ext/VST/floyd VST.floyd -R ../ext/VST/compcert compcert
