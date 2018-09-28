@@ -1,2 +1,1 @@
--Q ../ext/VST/msl VST.msl -Q ../ext/VST/sepcomp VST.sepcomp -Q ../ext/VST/veric VST.veric -Q ../ext/VST/floyd VST.floyd -R ../ext/VST/compcert compcert
--Q ../ghc GHC
+-Q ../ext/VST/msl VST.msl -Q ../ext/VST/sepcomp VST.sepcomp -Q ../ext/VST/veric VST.veric -Q ../ext/VST/floyd VST.floyd -R ../ext/VST/compcert compcert -Q ../ghc GHC

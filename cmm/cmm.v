@@ -7,6 +7,8 @@ Require Import ProofIrrelevance.
 
 Require Import VST.msl.msl_direct.
 
+Require Import GHC.OrdList.
+
 Set Implicit Arguments.
 
 (* This is the development by Greg Morrisett *)
