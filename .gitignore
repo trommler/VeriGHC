@@ -1,5 +1,7 @@
-# EMACS backup files
+# EMACS backup files and temporary files
 *~
+\#*\#
+.\#*
 
 # Coq files
 .*.aux
