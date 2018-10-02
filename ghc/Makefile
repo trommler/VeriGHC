@@ -1,4 +1,4 @@
-MODULES := OrdList Reg Instr
+MODULES := OrdList Reg Instr Int CmmType
 VS      := $(MODULES:%=%.v)
 
 .PHONY: coq clean
