@@ -11,7 +11,13 @@ Require Import GHC.OrdList.
 
 Set Implicit Arguments.
 
-(* This is the development by Greg Morrisett *)
+(* This is the development by Greg Morrisett
+   which can be found at
+   http://www.cs.cornell.edu/courses/cs6115/2017fa/notes/Sep.html
+
+   http://www.cs.cornell.edu/courses/cs6115/2017fa/
+   has links to all sources under "Schedule"
+*)
 (* I modified for compatibility with Coq 8.7.1
    and removed the need for "Unset Automatic Introduction."
    which is deprecated and the deprecation warning trips
