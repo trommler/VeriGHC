@@ -4,12 +4,12 @@ Require Import GHC.Int.
 Require Import GHC.Unique.
 Require Import GHC.CmmMachOp.
 
-Inductive LocalReg :=
+Inductive LocalReg : Set :=
 | LR_LocalReg: Unique -> CmmType -> LocalReg.
 
-Inductive VGcPtr := VG_VGcPtr | VNonGcPtr.
+Inductive VGcPtr : Set := VG_VGcPtr | VNonGcPtr.
 
-Inductive GlobalReg :=
+Inductive GlobalReg : Set :=
 | VanillaReg: Int -> VGcPtr -> GlobalReg
 | FloatReg: Int -> GlobalReg
 | DoubleReg: Int -> GlobalReg
@@ -19,7 +19,7 @@ Inductive GlobalReg :=
 | PicBaseReg: GlobalReg
 .
 
-Inductive CmmReg :=
+Inductive CmmReg : Set :=
 | CmmLocal: LocalReg -> CmmReg
 | CmmGlobal: GlobalReg -> CmmReg
 .
@@ -27,7 +27,7 @@ Inductive CmmReg :=
 (* FIXME: BlockId shoul be defined in its own file and is a Label *)
 Definition BlockId := nat.
 
-Inductive Area :=
+Inductive Area : Set :=
 | Old: Area
 | Young: BlockId -> Area
 .
@@ -38,7 +38,7 @@ Inductive Rational := Ratio: Int -> Int -> Rational.
 
 Inductive CLabel := nat.
 
-Inductive CmmLit :=
+Inductive CmmLit : Set :=
 | CmmInt: Int (*eger *) -> Width -> CmmLit
 | CmmFloat: Rational -> Width -> CmmLit
 | CmmVec: list CmmLit -> CmmLit
@@ -49,7 +49,7 @@ Inductive CmmLit :=
 | CmmHighStackMark: CmmLit
 .
 
-Inductive CmmExpr :=
+Inductive CmmExpr : Set :=
 | CE_CmmLit: CmmLit -> CmmExpr
 | CE_CmmLoad: CmmExpr -> CmmType -> CmmExpr
 | CE_CmmReg: CmmReg -> CmmExpr
