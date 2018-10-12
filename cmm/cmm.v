@@ -5,9 +5,10 @@ Require Import String.
 Require Import Eqdep.
 Require Import ProofIrrelevance.
 
-Require Import VST.msl.msl_direct.
+Require Import compcert.lib.Integers.
 
-Require Import GHC.OrdList.
+Require Import GHC.CmmType.
+Require Import Cmm.CmmType_sem.
 
 Set Implicit Arguments.
 
@@ -28,36 +29,10 @@ Set Implicit Arguments.
     for modularly reasoning about programs — the _frame rule_.
 *)
 Module FunctionalSepIMP.
-
-  (* Cmm types *)
-  Definition Int := nat.
-  Definition CmmLit := nat.
-  Definition CmmReg := nat.
-
-  (* Cmm Basic types *)
-  Inductive CmmType : Set := CmmInt | CmmWord | CmmLabel.
-  
-  Definition CmmType_eq (t1 t2 : CmmType) : {t1=t2} + {t1<>t2}.
-    decide equality.
-  Defined.
-  
-  Definition typeDenote (t : CmmType) : Set :=
-    match t with
-    | CmmInt => nat (* should be Z *)
-    | CmmWord => nat
-    | CmmLabel => string
-    end.
-  (* End Cmm types *)
-
-  Definition ptr := nat.
-  Definition ptr_eq := eq_nat_dec.
-
-  (* End Cmm types *)
-
   (** ** Heaps *)
   (** We're going to store dynamic values -- a pair of an [stype] [t] and 
       a value of type [interp t]. *)
-  Definition dynamic := sigT typeDenote.
+  Definition dynamic := sigT cmmTypeDenote.
 
   (** We will continue to use lists of pointers and values as the model for
       heaps.  However, to support an easy definition of disjoint union, we 
@@ -70,6 +45,8 @@ Module FunctionalSepIMP.
       irrelevance.  To avoid this we can put in well-formedness
       constraints in just the right places. *)
 
+  Definition ptr := nat.
+  Definition ptr_eq := eq_nat_dec.
   Definition heap := list (ptr * dynamic).
 
   Definition empty_heap : heap := nil.
@@ -174,11 +151,11 @@ Module FunctionalSepIMP.
       [stype] matches what we expected, failing if not, and returning
       the underlying value otherwise. *)
 
-  Definition read (t:CmmType) (p:tptr t) : Cmd (typeDenote t).
+  Definition read (t:CmmType) (p:tptr t) : Cmd (cmmTypeDenote t).
     refine (
         d <- untyped_read p ;
         match d with
-        | existT _ t' v =>
+        | existT t' v =>
           match CmmType_eq t t' with
           | left _ => ret _
           | right _ => exit _
@@ -195,7 +172,7 @@ Module FunctionalSepIMP.
              end.
 
   (** Typed write. *)
-  Definition write (t:CmmType) (p:tptr t) (v:typeDenote t) : Cmd unit := 
+  Definition write (t:CmmType) (p:tptr t) (v:cmmTypeDenote t) : Cmd unit := 
     untyped_write p (existT _ t v).
 
   (** When we allocate, we need to pick something fresh for the heap.  So 
@@ -207,7 +184,7 @@ Module FunctionalSepIMP.
   Definition untyped_new (v:dynamic) : Cmd ptr := 
     fun h => let p := 1 + max_heap h in Some (insert p v h, p).
 
-  Definition new(t:CmmType)(v:typeDenote t) : Cmd (tptr t) := untyped_new (existT typeDenote t v).
+  Definition new(t:CmmType)(v:cmmTypeDenote t) : Cmd (tptr t) := untyped_new (existT cmmTypeDenote t v).
 
   Definition free (p:ptr) : Cmd unit := 
     fun h => match lookup p h with 
@@ -217,7 +194,7 @@ Module FunctionalSepIMP.
 
   (** ** Heap Predicates or hprops *)
   (** An [hprop] is a predicate on heaps. *)
-  Definition hprop := pred heap.
+  Definition hprop := heap -> Prop.
 
   (** [emp] holds only when the heap is empty.  One way to think of [emp]
       is that as a pre-condition, it tells us that we don't have the right
@@ -239,11 +216,11 @@ Module FunctionalSepIMP.
   Local Open Scope sep_scope.
 
   (** [ x --> v] is the same as above, except we make the type explicit. *)
-  Definition typed_ptsto (t:CmmType) (x:tptr t) (v:typeDenote t) : hprop := 
+  Definition typed_ptsto (t:CmmType) (x:tptr t) (v:cmmTypeDenote t) : hprop := 
     x ---> (existT _ t v).
   Arguments typed_ptsto [t].
 (*  Implicit Arguments typed_ptsto [t].*)
-  Infix "|-->" := typed_ptsto (at level 70) : sep_scope.
+  Infix "-->" := typed_ptsto (at level 70) : sep_scope.
 
   (** [P ** Q] holds when the heap can be broken into disjoint heaps 
       [h1] and [h2] such that [h1] satisfies [P] and [h2] satisfies [Q]. 
@@ -441,7 +418,8 @@ Module FunctionalSepIMP.
     induction h ; mysimp. assert False. omega. contradiction.
   Qed.
 
-(** Instances for separation algebra on heaps *)
+  (** Instances for separation algebra on heaps *)
+  (*
   Instance Join_heap : Join heap := 
     fun a b c => wf a /\ wf b /\ disjoint a b /\ c = merge a b .
 
@@ -475,16 +453,16 @@ Module FunctionalSepIMP.
   Instance Sep_heap : Sep_alg heap := _.
   Instance Canc_heap : Canc_alg heap := _.
   Instance Disj_heap : Disj_alg heap := _.
-  
+  *)
 
   (** * Separation Reasoning *)
 
   (** Reasoning directly in terms of heaps is painful.  So we will define
       some rules for reasoning directly at the level of the separation logic. 
       This list of lemmas is by no means complete... *)
-  Lemma emp_star P : P ==> emp ** P.
+  Lemma emp_star P : P ==> empty ** P.
   Proof.
-    unfold himp, star, emp, disjoint ; simpl ; intros. exists empty_heap. exists h. 
+    unfold himp, star, empty, disjoint ; simpl ; intros. exists empty_heap. exists h. 
     mysimp. 
   Qed.
   Hint Resolve emp_star : sep_db.
@@ -495,9 +473,9 @@ Module FunctionalSepIMP.
       try rewrite merge_comm ; auto ; apply disjoint_comm ; simpl ; auto.
   Qed. 
 
-  Lemma star_emp P : P ==> P ** emp.
+  Lemma star_emp P : P ==> P ** empty.
   Proof.
-    unfold himp, star, emp ; intros. apply star_comm ; auto. apply emp_star ; auto.
+    unfold himp, star, empty ; intros. apply star_comm ; auto. apply emp_star ; auto.
   Qed.
   Hint Resolve star_emp : sep_db.
 
@@ -512,7 +490,7 @@ Module FunctionalSepIMP.
 
   Lemma pure_elim P R (Q:Prop) : Q -> R ==> P -> R ==> (pure Q) ** P.
   Proof.
-    unfold himp, pure, star, emp, disjoint. intros. exists empty_heap. exists h. mysimp.
+    unfold himp, pure, star, empty, disjoint. intros. exists empty_heap. exists h. mysimp.
   Qed.
   Hint Resolve pure_elim : sep_db.
 
@@ -526,9 +504,9 @@ Module FunctionalSepIMP.
   Qed.
   Hint Resolve himp_id : sep_db.
 
-  Lemma ptsto_ptsto_some : forall t (x:tptr t) (v:interp t), x --> v ==> x -->?.
+  Lemma ptsto_ptsto_some : forall t (x:tptr t) (v:cmmTypeDenote t), x --> v ==> x -->?.
     unfold himp, typed_ptsto, ptsto_some, hexists, ptsto. intros.
-    exists (existT interp t v). auto.
+    exists (existT cmmTypeDenote t v). auto.
   Qed.
   Hint Resolve ptsto_ptsto_some : sep_db.
 
@@ -539,11 +517,11 @@ Module FunctionalSepIMP.
   
   Lemma hyp_pure : forall (P:Prop) Q R, (P -> Q ==> R) -> (pure P) ** Q ==> R.
   Proof.
-    unfold himp, star, pure, emp ; mysimp ; subst ; simpl in *. apply H ; auto. 
+    unfold himp, star, pure, empty ; mysimp ; subst ; simpl in *. apply H ; auto. 
   Qed.
   Hint Resolve hyp_pure : sep_db.
 
-  Lemma ptsto_hexist : forall t (p:tptr t) (v:interp t), 
+  Lemma ptsto_hexist : forall t (p:tptr t) (v:cmmTypeDenote t), 
     p --> v ==> hexists (fun v => p --> v).
   Proof.
     unfold himp, hexists, typed_ptsto, ptsto ; mysimp ; subst ; mysimp. eauto.
@@ -597,14 +575,14 @@ Module FunctionalSepIMP.
   Qed.
   Hint Resolve hyp_assoc_r : sep_db.
 
-  Lemma conc_emp P Q : P ==> Q -> P ==> Q ** emp.
-    unfold himp, emp, star. intros. apply star_comm ; auto. unfold star.
+  Lemma conc_emp P Q : P ==> Q -> P ==> Q ** empty.
+    unfold himp, empty, star. intros. apply star_comm ; auto. unfold star.
     exists nil. exists h. mysimp.
   Qed.
   Hint Resolve conc_emp : sep_db.
 
-  Lemma hyp_emp P Q : P ==> Q -> emp ** P ==> Q.
-    unfold himp, emp, star. mysimp. subst. simpl in *. auto.
+  Lemma hyp_emp P Q : P ==> Q -> empty ** P ==> Q.
+    unfold himp, empty, star. mysimp. subst. simpl in *. auto.
   Qed.
   Hint Resolve hyp_emp : sep_db.
 
@@ -643,7 +621,7 @@ Module FunctionalSepIMP.
   Notation "{{ P }} c {{ Q }}" := (sep_tc_triple P c Q) (at level 90) : cmd_scope.
 
   (** Lots of definitions to be unwound... *)
-  Ltac unf := unfold sep_tc_triple, star, hexists, pure, emp, sing.
+  Ltac unf := unfold sep_tc_triple, star, hexists, pure, empty, sing.
 
   (** This says that [ret v] can be run in a heap satisfying [emp] and 
       returns a heap satisfying [emp] and the return value is equal to v. 
@@ -653,7 +631,7 @@ Module FunctionalSepIMP.
       the other portion will be preserved.  In short, the specification
       captures the fact that [ret] will not change the heap. 
    *)
-  Lemma ret_tc (t:Type) (v:t) : {{ emp }} ret v {{ fun x => pure (x = v) }}.
+  Lemma ret_tc (t:Type) (v:t) : {{ empty }} ret v {{ fun x => pure (x = v) }}.
   Proof.
     unf ; mysimp ; subst. exists empty_heap. exists x0. mysimp.
   Qed.
@@ -662,17 +640,17 @@ Module FunctionalSepIMP.
      a heap satisfying [x --> v].  Because of the definition of the
      separation-total-correctness triple, [x] must be fresh for the
      whole heap. *)
-  Lemma new_tc (t:stype)(v:interp t) : 
-    {{ emp }} new t v {{ fun (x:tptr t) => x --> v }}.
+  Lemma new_tc (t:CmmType)(v:cmmTypeDenote t) : 
+    {{ empty }} new t v {{ fun (x:tptr t) => x --> v }}.
   Proof.
     unfold new, typed_ptsto ; unf ; mysimp ; subst. 
-    exists ((S (max_heap x0),existT interp t v)::nil). exists x0.
+    exists ((S (max_heap x0),existT cmmTypeDenote t v)::nil). exists x0.
     mysimp. unfold ptsto ; auto. apply max_heap_fresh. omega.
   Qed.
 
   (** [free x] is nicely dual to [new]. *)
   Lemma free_tc (p:ptr) : 
-    {{ p-->? }} free p {{ fun _ => emp }}.
+    {{ p-->? }} free p {{ fun _ => empty }}.
   Proof.
     unf ; unfold ptsto_some, hexists, ptsto, free ; mysimp ; subst ; mysimp.
     rewrite lookup_insert. exists nil. exists x0. mysimp. 
@@ -681,18 +659,18 @@ Module FunctionalSepIMP.
 
   (** [write p v] requires a heap where [p] points to some value, and ensures
       [p] points to [v] afterwards. *)
-  Lemma write_tc (t:stype) (p:tptr t) (v:interp t) : 
+  Lemma write_tc (t:CmmType) (p:tptr t) (v:cmmTypeDenote t) : 
     {{ p -->? }} write p v {{ fun _ => p --> v }}.
   Proof.
     unfold ptsto_some, typed_ptsto, hexists, ptsto, write, untyped_write ; unf.
     mysimp ; subst ; mysimp ; simpl in *.
-    rewrite lookup_insert. exists ((p,existT interp t v)::nil). exists x0. mysimp.
-    rewrite remove_insert ; auto. 
+    rewrite lookup_insert. exists ((p,existT cmmTypeDenote t v)::nil). exists x0. mysimp.
+    rewrite remove_insert ; auto.
   Qed.
 
   (** [read p] requires a heap where [p] points to some value [v], and ensures
       [p] points to [v] afterwards, and the result is equal to [v]. *)
-  Lemma read_tc (t:stype) (p:tptr t) (v:interp t) :
+  Lemma read_tc (t:CmmType) (p:tptr t) (v:cmmTypeDenote t) :
     {{ p --> v }} 
     read p 
     {{ fun x => p --> x ** pure(x = v) }}.
@@ -700,10 +678,10 @@ Module FunctionalSepIMP.
 
     unf ; unfold typed_ptsto, ptsto, read, untyped_read, bind ; 
       mysimp ; subst ; mysimp ; simpl in * ; mysimp.
-    rewrite lookup_insert. destruct (stype_eq t t) ; try congruence. 
+    rewrite lookup_insert. destruct (CmmType_eq t t) ; try congruence. 
     rewrite (proof_irrelevance _ e (eq_refl t)). unfold eq_rec_r ; simpl. 
-    simpl. exists ((p,existT interp t v)::nil). exists x0. mysimp. 
-    exists ((p,existT interp t v)::nil). exists nil. mysimp.
+    simpl. exists ((p,existT cmmTypeDenote t v)::nil). exists x0. mysimp. 
+    exists ((p,existT cmmTypeDenote t v)::nil). exists nil. mysimp.
   Qed.
 
   (** This is one possible proof rule for [bind].  Basically, we require
@@ -908,7 +886,7 @@ Module FunctionalSepIMP.
     (** Now we given an interpreation to the syntax for predicates: *)
     Fixpoint hinterp (hp:Hprop) : hprop := 
       match hp with 
-        | Emp => emp
+        | Emp => empty
         | Atom n => lookup_hprop n hmap
         | Star h1 h2 => star (hinterp h1) (hinterp h2)
       end.
