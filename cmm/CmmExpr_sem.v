@@ -19,11 +19,21 @@ Definition cmmLitDenote (l : CmmLit) : val :=
   | _ => Vundef
   end.
 
+Definition Vtrue: val := Vlong Int64.one.
+Definition Vfalse: val := Vlong Int64.zero.
+
+Definition from_bool (b :bool) : val :=
+  if b then Vtrue else Vfalse.
+
 Definition moDenote (mo : MachOp) (ps : list val) : val :=
 (* TODO: compcert/common/Value.v defines ops on val but only for Vint.
          Provide our own definition for Vlong *)
   match mo,ps with
   | MO_Add W64, ((Vlong v1)::(Vlong v2)::nil) => Vlong (Int64.add v1 v2)
+  | MO_Sub W64, ((Vlong v1)::(Vlong v2)::nil) => Vlong (Int64.sub v1 v2)
+  | MO_Eq W64, ((Vlong v1)::(Vlong v2)::nil) => from_bool (Int64.eq v1 v2)
+  | MO_Ne W64, ((Vlong v1)::(Vlong v2)::nil) => from_bool (negb (Int64.eq v1 v2))
+  | MO_Mul W64, ((Vlong v1)::(Vlong v2)::nil) => Vlong (Int64.mul v1 v2)
   | _, _ => Vundef
   end.
 
