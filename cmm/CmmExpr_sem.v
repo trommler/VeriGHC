@@ -20,6 +20,8 @@ Definition cmmLitDenote (l : CmmLit) : val :=
   end.
 
 Definition moDenote (mo : MachOp) (ps : list val) : val :=
+(* TODO: compcert/common/Value.v defines ops on val but only for Vint.
+         Provide our own definition for Vlong *)
   match mo,ps with
   | MO_Add W64, ((Vlong v1)::(Vlong v2)::nil) => Vlong (Int64.add v1 v2)
   | _, _ => Vundef
