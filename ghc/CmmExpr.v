@@ -24,7 +24,7 @@ Inductive CmmReg : Set :=
 | CmmGlobal: GlobalReg -> CmmReg
 .
 
-(* FIXME: BlockId shoul be defined in its own file and is a Label *)
+(* FIXME: BlockId should be defined in its own file and is a Label *)
 Definition BlockId := nat.
 
 Inductive Area : Set :=
