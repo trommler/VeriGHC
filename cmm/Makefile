@@ -1,4 +1,4 @@
-MODULES := CmmType_sem cmm
+MODULES := CmmType_sem CmmExpr_sem cmm
 VS      := $(MODULES:%=%.v)
 
 .PHONY: coq clean
