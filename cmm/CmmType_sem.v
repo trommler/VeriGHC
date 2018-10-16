@@ -33,7 +33,7 @@ Definition cmmTypeDenote (t:CmmType) :=
                              | W64 => float
                              | _ => unit
                              end
-  | CT_CmmType GcPtrCat _ => Int64.int
+  | CT_CmmType GcPtrCat _ => long
   | CT_CmmType (VecCat _ _) _ => unit
   end.
   

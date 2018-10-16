@@ -33,3 +33,10 @@ Definition CmmType_eq (t1 t2 : CmmType) : {t1=t2} + {t1<>t2}.
   apply Width_eq.
   apply CmmCat_eq.
 Defined.
+
+Definition cmmBits : Width -> CmmType :=
+  CT_CmmType BitsCat.
+
+Definition b64 : CmmType := cmmBits W64.
+Definition bWord : CmmType := cmmBits W64. (* Need DynFlags here *) 
+                               

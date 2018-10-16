@@ -771,9 +771,9 @@ Module FunctionalSepIMP.
       end).
 
   (** * Examples *)
-  Definition inc(p:tptr CmmWord) := 
+  Definition inc(p:tptr bWord) := 
     v <- read p ; 
-    write p (1 + v).
+    write p (Int64.add Int64.one v).
 
   (** So this claims that if we start in a state where [p] holds [n],
       then after running inc, we do not fail and get into a state 
@@ -781,13 +781,13 @@ Module FunctionalSepIMP.
       hang on to the fact that the value read out is equal to [n].  If
       we used binary post-conditions (a relation on both the input heap
       and output heap), this wouldn't be necessary.  *)
-  Definition inc_tc(p:tptr CmmWord)(n:interp CmmWord) :
-    {{ p --> n }} inc p {{ fun _ => p --> 1+n }}.
+  Definition inc_tc(p:tptr bWord)(n:cmmTypeDenote bWord) :
+    {{ p --> n }} inc p {{ fun _ => p --> (Int64.add Int64.one n) }}.
   Proof.
     unfold inc ; sep.
     eapply bind_tc ; sep.
 
-    apply read_tc with (t:=CmmWord); sep. simpl. 
+    apply read_tc with (t:=bWord); sep. simpl. 
     eapply consequence_tc. eapply (frame_tc (pure (x = n))).
     eapply write_tc. sep. simpl. sep.
   Qed.
