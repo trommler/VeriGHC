@@ -795,16 +795,16 @@ Module FunctionalSepIMP.
   (** The great part is that now if we have a property on some disjoint
      part of the state, say [p2 --> n2], then after calling [inc], we
      are guaranteed that property is preserved via the frame rule. *)
-  Definition inc_two(p1 p2:tptr CmmWord)(n1 n2:interp CmmWord) : 
-    {{ p1 --> n1 ** p2 --> n2 }} inc p1 {{ fun _ => p1 --> 1+n1 ** p2 --> n2 }}.
+  Definition inc_two(p1 p2:tptr bWord)(n1 n2:cmmTypeDenote bWord) : 
+    {{ p1 --> n1 ** p2 --> n2 }} inc p1 {{ fun _ => p1 --> (Int64.add Int64.one n1) ** p2 --> n2 }}.
   Proof.
-    intros. 
+    intros.
     apply (frame_tc (p2 --> n2)).
     apply inc_tc.
   Qed.
 
   (** swap the contents of two pointers *)
-  Definition swap(t:stype)(p1 p2:tptr t) := 
+  Definition swap(t:CmmType)(p1 p2:tptr t) := 
     v1 <- read p1 ; 
     v2 <- read p2 ; 
     write p2 v1 ;; 
@@ -819,7 +819,7 @@ Module FunctionalSepIMP.
       type-classes or canonical-structures to automate a lot of this sort 
       of thing.  Below, we'll see an alternative technique based on 
       reflection. *)
-  Lemma swap_tc(t:stype)(p1 p2:tptr t)(v1 v2:interp t) : 
+  Lemma swap_tc(t:CmmType)(p1 p2:tptr t)(v1 v2:cmmTypeDenote t) : 
     {{ p1 --> v1 ** p2 --> v2 }} swap p1 p2 {{ fun _ => p1 --> v2 ** p2 --> v1 }}.
   Proof.
     unfold swap ; sep.
@@ -931,7 +931,7 @@ Module FunctionalSepIMP.
     (** Convert a list of names back into an [Hprop]. *)
     Definition collapse := List.fold_right (fun n p => Star (Atom n) p) Emp.
     (** Convert a list of names into an [hprop]. *)
-    Definition interp_list := List.fold_right (fun n p => (lookup_hprop n hmap) ** p) emp.
+    Definition interp_list := List.fold_right (fun n p => (lookup_hprop n hmap) ** p) empty.
 
     (** So our cross-off algorithm takes two [Hprop]s, flattens them into
         lists of names, simplifies the two lists by crossing off common
@@ -1100,7 +1100,7 @@ Module FunctionalSepIMP.
               | (?t2, ?map2) => constr:((Star t1 t2, map2))
             end
         end
-      | emp => constr:((Emp, map))
+      | empty => constr:((Emp, map))
       | _ => 
         match lookup_name term map with
           | Some ?t => constr:((t, map))
@@ -1131,9 +1131,9 @@ Module FunctionalSepIMP.
     Defined.
 Eval compute in crazy2.
 
-    Lemma crazy3 (p q r s:tptr CmmWord) : 
-      (p --> 0 ** q --> 1) ** (r --> 2 ** emp) ** (s --> 3) ==> 
-      s --> 3 ** q --> 1 ** p --> 0 ** r --> 2.
+    Lemma crazy3 (p q r s:tptr bWord) : 
+      (p --> Int64.zero ** q --> Int64.one) ** (r --> Int64.repr 2 ** empty) ** (s --> Int64.repr 3) ==> 
+      s --> Int64.repr 3 ** q --> Int64.one ** p --> Int64.zero ** r --> Int64.repr 2.
     Proof.
       intros.
       cross.
@@ -1142,7 +1142,7 @@ Eval compute in crazy2.
 (* Greg's development ends here *)
 
 (** * Cmm starts here *)
-
+(*
 (* About 60 operations including vector/SIMD ops *)
 Inductive MachOp : Set := MO_Add | MO_Mult.
 
@@ -1162,9 +1162,9 @@ Inductive CmmExpr : CmmType -> Set :=
 We do not access the stack yet and the latter is just syntactic sugar for heap access *)
 .
 
-
+*)
 (* OK, to do this I need to change the type universe for our heap implementation *)
-Fixpoint exprDenote (t:CmmType) (exp:CmmExpr t) : Cmd (typeDenote t).
+Fixpoint exprDenote (t:CmmType) (exp:CmmExpr t) : Cmd (cmmTypeDenote t).
   refine (
             match exp in (CmmExpr t) with
             | ELit n          => ret _

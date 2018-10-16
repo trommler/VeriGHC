@@ -41,6 +41,7 @@ Definition moDenote (mo : MachOp) (ps : list val) : val :=
 Fixpoint cmmExprDenote (e : CmmExpr) : val :=
   match e with
   | CE_CmmLit l => cmmLitDenote l
+  | CE_CmmLoad e t => Vundef
   | CE_CmmMachOp mo ps => moDenote mo (List.map cmmExprDenote ps)
   | _ => Vundef
   end.

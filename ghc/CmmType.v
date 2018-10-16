@@ -37,6 +37,8 @@ Defined.
 Definition cmmBits : Width -> CmmType :=
   CT_CmmType BitsCat.
 
+Definition cmmFloat : Width -> CmmType :=
+  CT_CmmType FloatCat.
+
 Definition b64 : CmmType := cmmBits W64.
 Definition bWord : CmmType := cmmBits W64. (* Need DynFlags here *) 
-                               
