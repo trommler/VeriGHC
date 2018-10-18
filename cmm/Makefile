@@ -1,4 +1,4 @@
-MODULES := CmmType_sem CmmExpr_sem cmm
+MODULES := CmmType_sem CmmExpr_sem cmm heap
 VS      := $(MODULES:%=%.v)
 
 .PHONY: coq clean
