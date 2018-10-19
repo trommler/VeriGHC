@@ -71,4 +71,3 @@ Fixpoint cmmExprDenote (h : heap) (e : CmmExpr) : val :=
   | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote h) ps)
   | _ => Vundef
   end.
-

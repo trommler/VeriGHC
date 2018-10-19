@@ -1052,7 +1052,7 @@ Module FunctionalSepIMP.
      cross.
      sep.
     Defined.
-Eval compute in crazy2.
+(* Eval compute in crazy2. *)
 
     Lemma crazy3 (p q r s:tptr bWord) : 
       (p --> Int64.zero ** q --> Int64.one) ** (r --> Int64.repr 2 ** empty) ** (s --> Int64.repr 3) ==> 
@@ -1087,7 +1087,8 @@ We do not access the stack yet and the latter is just syntactic sugar for heap a
 
 *)
 (* OK, to do this I need to change the type universe for our heap implementation *)
-Fixpoint exprDenote (t:CmmType) (exp:CmmExpr t) : Cmd (cmmTypeDenote t).
+(*
+    Fixpoint exprDenote (t:CmmType) (exp:CmmExpr t) : Cmd (cmmTypeDenote t).
   refine (
             match exp in (CmmExpr t) with
             | ELit n          => ret _
@@ -1114,7 +1115,7 @@ Fixpoint exprDenote (t:CmmType) (exp:CmmExpr t) : Cmd (cmmTypeDenote t).
 Defined.
 
 Print exprDenote.
-
+*)
 (* GHC has many different types of labels. In this development, we abstract
    from those differences and the easiest is to make Label an alias for nat *)
 Definition Label := nat.
