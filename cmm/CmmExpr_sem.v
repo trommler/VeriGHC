@@ -1,16 +1,17 @@
-Require Import compcert.common.Values.
-Require Import compcert.lib.Integers.
-
 Require Import List.
 Require Import BinPosDef.
+
+Require Import compcert.common.Values.
+Require Import compcert.lib.Integers.
 
 Require Import GHC.CmmExpr.
 Require Import GHC.CmmType.
 Require Import GHC.CmmMachOp.
 
+Require Import CmmType_sem.
 Require Import heap.
-(* FIXME: Implement all literals *)
 
+(* FIXME: Implement all literals *)
 Definition cmmLitDenote (l : CmmLit) : val :=
   match l with
   | CmmInt n width => match width with
@@ -39,21 +40,27 @@ Definition moDenote (mo : MachOp) (ps : list val) : val :=
   | _, _ => Vundef
   end.
 
-(* FIXME: Implement all expressions *)
 Definition from_block (b : block) : ptr :=
   pred (Pos.to_nat b).
+
+Definition from_CmmType (t: CmmType) (v: cmmTypeDenote t) : val :=
+  (match t return cmmTypeDenote t -> val with
+   | CT_CmmType BitsCat W64 => fun v => Vlong v
+   | _ => fun _ => Vundef
+   end) v.
 
 Definition read_heap (p : val) (h : heap) : option val :=
   match p with
   | Vptr blk _ => match lookup (from_block blk) h with (* ignore offset for now *)
                   | None => None
                   | Some v => match v with
-                              | existT _ v' => Some _
+                              | existT t' v' => Some (from_CmmType t' v')
                               end
                   end
   | _ => None
   end.
 
+(* FIXME: Implement all expressions *)
 Fixpoint cmmExprDenote (h : heap) (e : CmmExpr) : val :=
   match e with
   | CE_CmmLit l => cmmLitDenote l
@@ -64,3 +71,4 @@ Fixpoint cmmExprDenote (h : heap) (e : CmmExpr) : val :=
   | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote h) ps)
   | _ => Vundef
   end.
+
