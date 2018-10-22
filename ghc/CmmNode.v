@@ -1,9 +1,16 @@
+Require Import CmmMachOp.
 Require Import CmmExpr.
+Require Import CmmSwitch.
 
 Definition ULabel := CLabel.
 
 Definition CmmActual := CmmExpr.
 Definition CmmFormal := LocalReg.
+
+Inductive ForeignTarget : Set :=
+| FT_ForeignTarget : CmmExpr -> (* ForeignConvention -> *) ForeignTarget
+| FT_PrimTarget : CallishMachOp -> ForeignTarget
+.
 
 Inductive CmmNode : Set :=
 | CmmEntry : ULabel (* -> CmmTickScope *) -> CmmNode
@@ -12,11 +19,9 @@ Inductive CmmNode : Set :=
 | CmmStore : CmmExpr -> CmmExpr -> CmmNode
 | CmmUnsafeForeignCall : ForeignTarget -> list CmmFormal -> list CmmActual
                                                          -> CmmNode
-| CmmCondBranch : CmmExpr CmmWord -> Label -> Label -> option Bool -> CmmNode
+| CmmCondBranch : CmmExpr -> ULabel -> ULabel -> option bool -> CmmNode
 | CmmBranch : ULabel -> CmmNode
 | CmmSwitch : CmmExpr -> SwitchTargets -> CmmNode
 | CmmCall   : CmmExpr -> option Label -> list GlobalReg -> ByteOff -> ByteOff
                                       -> ByteOff -> CmmNode
-| CmmForeignCall : ForeignTarget -> list CmmFormal -> list CmmActual -> Label
-                                 -> ByteOff -> ByteOff -> Bool -> CmmNode
 .
