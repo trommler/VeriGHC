@@ -1,4 +1,4 @@
-MODULES := OrdList Reg Instr Int CmmType Unique CmmMachOp CmmExpr
+MODULES := OrdList Reg Instr Int CmmType Unique CmmMachOp CmmExpr CmmSwitch
 VS      := $(MODULES:%=%.v)
 
 .PHONY: coq clean

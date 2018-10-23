@@ -1,5 +1,4 @@
 (* Coq implementation of compiler/cmm/CmmExpr.hs *)
-Require Import BinNums.
 Require Import List.
 
 Require Import GHC.CmmType.
@@ -37,8 +36,6 @@ Inductive Area : Set :=
 
 (* FIXME: Put these definitions in the appropriate files and check types
    with GHC implementation *)
-Definition Integer := Z.
-
 Inductive Rational := Ratio: Int -> Int -> Rational.
 
 Inductive CLabel := nat.
