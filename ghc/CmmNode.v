@@ -1,3 +1,5 @@
+Require Import BinNums. (* for ByteOff *)
+
 Require Import CmmMachOp.
 Require Import CmmExpr.
 Require Import CmmSwitch.
@@ -11,6 +13,8 @@ Inductive ForeignTarget : Set :=
 | FT_ForeignTarget : CmmExpr -> (* ForeignConvention -> *) ForeignTarget
 | FT_PrimTarget : CallishMachOp -> ForeignTarget
 .
+
+Definition ByteOff := Z.
 
 Inductive CmmNode : Set :=
 | CmmEntry : ULabel (* -> CmmTickScope *) -> CmmNode
