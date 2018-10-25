@@ -1,73 +1,67 @@
 Require Import List.
 Require Import BinPosDef.
 
-Require Import compcert.common.Values.
 Require Import compcert.lib.Integers.
+Require Import common.HaskellValues.
 
 Require Import GHC.CmmExpr.
 Require Import GHC.CmmType.
 Require Import GHC.CmmMachOp.
 
 Require Import CmmType_sem.
+
+(* Remove the following imports when we switch to comcert memory *)
+Require Import compcert.common.Values.
 Require Import heap.
 
 (* FIXME: Implement all literals *)
-Definition cmmLitDenote (l : CmmLit) : val :=
+Definition cmmLitDenote (l : CmmLit) : hval :=
   match l with
   | CmmInt n width => match width with
-                      | W32 => Vint (Int.repr n)
-                      | W64 => Vlong (Int64.repr n)
-                      | _ => Vundef
+                      | W64 => HSint (Int64.repr n)
+                      | _ => HSundef
                       end
-  | _ => Vundef
+  | _ => HSundef
   end.
 
-Definition Vtrue: val := Vlong Int64.one.
-Definition Vfalse: val := Vlong Int64.zero.
-
-Definition from_bool (b :bool) : val :=
-  if b then Vtrue else Vfalse.
-
-Definition moDenote (mo : MachOp) (ps : list val) : val :=
-(* TODO: compcert/common/Value.v defines ops on val but only for Vint.
-         Provide our own definition for Vlong *)
+Definition moDenote (mo : MachOp) (ps : list hval) : hval :=
   match mo,ps with
-  | MO_Add W64, ((Vlong v1)::(Vlong v2)::nil) => Vlong (Int64.add v1 v2)
-  | MO_Sub W64, ((Vlong v1)::(Vlong v2)::nil) => Vlong (Int64.sub v1 v2)
-  | MO_Eq W64, ((Vlong v1)::(Vlong v2)::nil) => from_bool (Int64.eq v1 v2)
-  | MO_Ne W64, ((Vlong v1)::(Vlong v2)::nil) => from_bool (negb (Int64.eq v1 v2))
-  | MO_Mul W64, ((Vlong v1)::(Vlong v2)::nil) => Vlong (Int64.mul v1 v2)
-  | _, _ => Vundef
+  | MO_Add W64, v1::v2::nil => HaskellVal.add v1 v2
+  | MO_Sub W64, v1::v2::nil => HaskellVal.sub v1 v2
+  | MO_Eq W64, v1::v2::nil => HaskellVal.cmp Ceq v1 v2
+  | MO_Ne W64, v1::v2::nil => HaskellVal.cmp Cne v1 v2
+  | MO_Mul W64, v1::v2::nil => HaskellVal.mul v1 v2
+  | _, _ => HSundef
   end.
 
 Definition from_block (b : block) : ptr :=
   pred (Pos.to_nat b).
 
-Definition from_CmmType (t: CmmType) (v: cmmTypeDenote t) : val :=
-  (match t return cmmTypeDenote t -> val with
-   | CT_CmmType BitsCat W64 => fun v => Vlong v
-   | _ => fun _ => Vundef
+Definition from_CmmType (t: CmmType) (v: cmmTypeDenote t) : hval :=
+  (match t return cmmTypeDenote t -> hval with
+   | CT_CmmType BitsCat W64 => fun v => HSint v
+   | _ => fun _ => HSundef
    end) v.
 
-Definition read_heap (p : val) (h : heap) : option val :=
+Definition read_heap (p : hval) (h : heap) : option hval :=
   match p with
-  | Vptr blk _ => match lookup (from_block blk) h with (* ignore offset for now *)
-                  | None => None
-                  | Some v => match v with
-                              | existT t' v' => Some (from_CmmType t' v')
-                              end
-                  end
+  | HSptr blk _ => match lookup (from_block blk) h with (* ignore offset for now *)
+                   | None => None
+                   | Some v => match v with
+                               | existT t' v' => Some (from_CmmType t' v')
+                               end
+                   end
   | _ => None
   end.
 
 (* FIXME: Implement all expressions *)
-Fixpoint cmmExprDenote (h : heap) (e : CmmExpr) : val :=
+Fixpoint cmmExprDenote (h : heap) (e : CmmExpr) : hval :=
   match e with
   | CE_CmmLit l => cmmLitDenote l
   | CE_CmmLoad e' t => match read_heap (cmmExprDenote h e') h with
-                       | None => Vundef
+                       | None => HSundef
                        | Some v => v
                        end
   | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote h) ps)
-  | _ => Vundef
+  | _ => HSundef
   end.
