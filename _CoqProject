@@ -21,6 +21,7 @@ cmm/heap.v
 cmm/cmm.v
 cmm/CmmExpr_sem.v
 cmm/CmmType_sem.v
+cmm/CmmNode_sem.v
 
 
 
