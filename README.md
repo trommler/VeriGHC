@@ -13,11 +13,5 @@ make
 
 (and wait for very long time)
 
-cd ../../ghc
-make
-
-cd ../common
-make
-
-cd ../cmm
+cd ../..
 make
