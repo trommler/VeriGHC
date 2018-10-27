@@ -2,22 +2,21 @@
 Towards a verified back-end for The Glorious Glasgow Haskell Compilation System
 
 To check out:
-git clone --recursive
+
+``git clone --recursive``
 
 When updating:
-git pull
-git submodule update
 
-cd ext/VST
-make
+``git pull``
+
+``git submodule update``
+
+``cd ext/VST``
+
+``make``
 
 (and wait for very long time)
 
-cd ../../ghc
-make
+``cd ../..``
 
-cd ../common
-make
-
-cd ../cmm
-make
+``make``

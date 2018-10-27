@@ -1,2 +1,0 @@
--R ../ext/VST/compcert compcert
--R . common
