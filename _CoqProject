@@ -8,6 +8,7 @@
 -R common common
 common/HaskellValues.v
 ghc/BlockId.v
+ghc/Cmm.v
 ghc/CmmExpr.v
 ghc/CmmMachOp.v
 ghc/CmmSwitch.v

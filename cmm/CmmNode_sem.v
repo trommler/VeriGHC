@@ -1,3 +1,16 @@
+Require Import HaskellValues.
+Require Import GHC.CmmNode.
+
+Inductive answer : Type := 
+| Value : hval -> answer 
+| Error : answer.
+
+(*
+Inductive comp := 
+| Ret : answer -> comp
+| Bind : comp -> (hval -> comp) -> comp
+| Delay : exp -> list (var * value) -> comp.
+ *)
 
 (*
 Program Fixpoint cmmNodeDenote (node : CmmNode) : Cmd unit :=
