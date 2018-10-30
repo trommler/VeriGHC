@@ -7,6 +7,7 @@
 -R cmm Cmm
 -R common common
 common/HaskellValues.v
+ghc/BlockId.v
 ghc/CmmExpr.v
 ghc/CmmMachOp.v
 ghc/CmmSwitch.v
@@ -14,6 +15,7 @@ ghc/CmmType.v
 ghc/CmmNode.v
 ghc/Instr.v
 ghc/Int.v
+ghc/Label.v
 ghc/OrdList.v
 ghc/Reg.v
 ghc/Unique.v

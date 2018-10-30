@@ -1,6 +1,7 @@
 (* Coq implementation of compiler/cmm/CmmExpr.hs *)
 Require Import List.
 
+Require Import GHC.BlockId.
 Require Import GHC.CmmType.
 Require Import GHC.Int.
 Require Import GHC.Unique.
@@ -25,9 +26,6 @@ Inductive CmmReg : Set :=
 | CmmLocal: LocalReg -> CmmReg
 | CmmGlobal: GlobalReg -> CmmReg
 .
-
-(* FIXME: BlockId should be defined in its own file and is a Label *)
-Definition BlockId := nat.
 
 Inductive Area : Set :=
 | Old: Area
