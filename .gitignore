@@ -38,3 +38,6 @@ nra.cache
 CoqMakefile
 CoqMakefile.conf
 .coqdeps.d
+# files created by file browsers
+.directory
+
