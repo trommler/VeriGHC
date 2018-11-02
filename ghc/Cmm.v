@@ -1,6 +1,7 @@
 (* definitions from compiler/cmm/Cmm.hs *)
 Require Import GHC.BlockId.
 Require Import GHC.CmmNode.
+Require Import GHC.CmmExpr.
 
 Definition CmmBlock := list CmmNode.
 
@@ -12,8 +13,24 @@ Record CmmGraph : Set := CG_CmmGraph {
                              g_graph : Graph CmmNode;
                            }.
 
+Inductive SectionType :=
+| Text
+| Data
+| ReadOnlyData
+| RelocatableReadOnlyData
+| UninitialisedData
+| ReadOnlyData16
+| CString
+| OtherSection
+.
 
-              
+Inductive section := S_section : SectionType -> CLabel -> section.
+
+Inductive GenCmmDecl d h g :=
+| CmmProc : h -> CLabel -> list GlobalReg -> g -> GenCmmDecl d h g
+| CmmData : section -> d -> GenCmmDecl d h g.
+
+(* Definition CmmDecl := GenCmmDecl CmmStatics CmmTopInfo CmmGraph. *)
 
 
 
