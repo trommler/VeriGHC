@@ -36,7 +36,7 @@ Inductive Area : Set :=
    with GHC implementation *)
 Inductive Rational := Ratio: Int -> Int -> Rational.
 
-Inductive CLabel := nat.
+Definition CLabel := nat.
 
 Inductive CmmLit : Set :=
 | CmmInt: Integer -> Width -> CmmLit
