@@ -20,6 +20,7 @@ ghc/Label.v
 ghc/OrdList.v
 ghc/Reg.v
 ghc/Unique.v
+ghc/Word.v
 cmm/heap.v
 cmm/cmm.v
 cmm/CmmExpr_sem.v
