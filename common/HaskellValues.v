@@ -59,8 +59,7 @@ Module HaskellVal.
 
     Definition of_optbool (ob: option bool): hval :=
       match ob with
-      | Some true => HStrue
-      | Some false => HSfalse
+      | Some b => from_bool b
       | None => HSundef
       end.
 
