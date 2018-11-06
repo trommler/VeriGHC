@@ -78,3 +78,11 @@ Inductive GenBasicBlock (i:Set) : Set :=
 
 Inductive ListGraph (i:Set) : Set :=
   LG_ListGraph : list (GenBasicBlock i) -> ListGraph i. 
+
+
+Definition GenCmmGroup d h g := list (GenCmmDecl d h g).
+Definition CmmGroup := GenCmmGroup CmmStatics CmmTopInfo CmmGraph.
+
+Definition CmmProgram := list CmmGroup.
+
+Definition RawCmmGroup := GenCmmGroup CmmStatics (LabelMap CmmStatics) CmmGraph.
