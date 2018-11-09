@@ -5,7 +5,7 @@ Require Import GHC.CmmExpr.
 Require Import GHC.Int.
 Require Import GHC.Word.
 
-Definition CmmBlock := list CmmNode.
+(* Definition CmmBlock := list CmmNode. *)
 
 (* TODO: Put in separate file *)
 Definition Graph (n:Set) : Set := list n.
@@ -68,10 +68,12 @@ Record CmmTopInfo : Set := TopInfo {
 
 Definition CmmDecl := GenCmmDecl CmmStatics CmmTopInfo CmmGraph.
 
+Definition GenCmmGroup d h g := list (GenCmmDecl d h g).
+Definition CmmGroup := GenCmmGroup CmmStatics CmmTopInfo CmmGraph.
 
+Definition CmmProgram := list CmmGroup.
 
-
-
+Definition RawCmmGroup := GenCmmGroup CmmStatics (LabelMap CmmStatics) CmmGraph.
 
 Inductive GenBasicBlock (i:Set) : Set :=
   BasicBlock : BlockId -> list i -> GenBasicBlock i.
@@ -79,10 +81,3 @@ Inductive GenBasicBlock (i:Set) : Set :=
 Inductive ListGraph (i:Set) : Set :=
   LG_ListGraph : list (GenBasicBlock i) -> ListGraph i. 
 
-
-Definition GenCmmGroup d h g := list (GenCmmDecl d h g).
-Definition CmmGroup := GenCmmGroup CmmStatics CmmTopInfo CmmGraph.
-
-Definition CmmProgram := list CmmGroup.
-
-Definition RawCmmGroup := GenCmmGroup CmmStatics (LabelMap CmmStatics) CmmGraph.

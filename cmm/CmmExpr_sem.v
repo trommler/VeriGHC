@@ -65,3 +65,26 @@ Fixpoint cmmExprDenote (h : heap) (e : CmmExpr) : hval :=
   | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote h) ps)
   | _ => HSundef
   end.
+
+
+Inductive answer :=
+| AValue : hval -> answer
+| AError : answer
+.
+
+Inductive comp := 
+| Ret : answer -> comp
+| Bind : comp -> (answer -> comp) -> comp
+(*| Delay : exp -> (* list (var * value) ->*) comp *).
+
+Fixpoint cmmExprDenote' (h : heap) (e : CmmExpr) : comp :=
+  Ret (AValue (
+        match e with
+        | CE_CmmLit l => cmmLitDenote l
+        | CE_CmmLoad e' t => match read_heap (cmmExprDenote h e') h with
+                             | None => HSundef
+                             | Some v => v
+                             end
+        | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote h) ps)
+        | _ => HSundef
+        end)).
