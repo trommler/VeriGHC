@@ -93,14 +93,14 @@ Fixpoint cmmExprDenote' (h : heap) (e : CmmExpr) : comp :=
         end)).
 
 (* Cminor semantics *)
-(*
+
 Definition cmmLitToCminorConst (l:CmmLit) : constant :=
   match l with
   | CmmInt i W64 => Olongconst (Int64.repr i)
   | CmmInt i W32 => Ointconst (Int.repr i)
   | _            => Ointconst (Int.repr 0)
   end.
-
+(*
 Fixpoint cmmExprToCminorExpr (e:CmmExpr) : expr :=
   match e with
   | CE_CmmLit l => Econst (cmmLitToCminorConst l)
