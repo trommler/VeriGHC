@@ -6,6 +6,7 @@
 -R ghc GHC
 -R cmm Cmm
 -R common common
+-R Cminor Cminor
 common/HaskellValues.v
 ghc/BlockId.v
 ghc/Cmm.v

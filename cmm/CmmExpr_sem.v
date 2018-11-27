@@ -1,4 +1,5 @@
 Require Import List.
+Import ListNotations.
 Require Import BinPosDef.
 
 Require Import compcert.lib.Integers.
@@ -7,6 +8,8 @@ Require Import common.HaskellValues.
 Require Import GHC.CmmExpr.
 Require Import GHC.CmmType.
 Require Import GHC.CmmMachOp.
+
+Require Import Cminor.Cminor.
 
 Require Import CmmType_sem.
 
@@ -88,3 +91,40 @@ Fixpoint cmmExprDenote' (h : heap) (e : CmmExpr) : comp :=
         | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote h) ps)
         | _ => HSundef
         end)).
+
+(* Cminor semantics *)
+(*
+Definition cmmLitToCminorConst (l:CmmLit) : constant :=
+  match l with
+  | CmmInt i W64 => Olongconst (Int64.repr i)
+  | CmmInt i W32 => Ointconst (Int.repr i)
+  | _            => Ointconst (Int.repr 0)
+  end.
+
+Fixpoint cmmExprToCminorExpr (e:CmmExpr) : expr :=
+  match e with
+  | CE_CmmLit l => Econst (cmmLitToCminorConst l)
+  | CE_CmmLoad e t => Eload (cmmTypeToChunk t) (cmmExprToCminorExpr e)
+  | CE_CmmReg r =>
+  | CE_CmmMachOp mo exs => machOpToCminorExpr mo exs
+  | _ => _
+  end
+with machOpToCminorExpr (mo:MachOp) (exs:list CmmExpr) : expr :=
+       match mo with
+       | MO_Add _ => cminorBinop Oadd exs 
+       | MO_Sub _ => cminorBinop Osub exs
+       | MO_Eq w =>  cminorBinop (Ocmpl Ceq) exs(* TODO: Implement width and also sign *)
+       | MO_Ne w =>  cminorBinop (Ocmpl Cne) exs
+       | MO_Mul w => cminorBinop Omul exs
+       end
+with cminorBinop (op:binary_operation) (exs:list CmmExpr) : expr :=
+       match (List.map cmmExprToCminorExpr exs) with
+       | [x1;x2] => Ebinop op x1 x2
+       | _ => Econst (Ointconst (Int.repr 0)) (* panic *)
+       end
+with cminorUnnop (op:unary_operation) (exs:list CmmExpr) : expr :=
+       match (List.map cmmExprToCminorExpr exs) with
+       | [x] => Eunop op x
+       | _ => Econst (Ointconst (Int.repr 0)) (* panic *)
+       end.
+*)
