@@ -122,7 +122,7 @@ with cminorBinop (op:binary_operation) (exs:list CmmExpr) : expr :=
        | [x1;x2] => Ebinop op x1 x2
        | _ => Econst (Ointconst (Int.repr 0)) (* panic *)
        end
-with cminorUnnop (op:unary_operation) (exs:list CmmExpr) : expr :=
+with cminorUnop (op:unary_operation) (exs:list CmmExpr) : expr :=
        match (List.map cmmExprToCminorExpr exs) with
        | [x] => Eunop op x
        | _ => Econst (Ointconst (Int.repr 0)) (* panic *)
