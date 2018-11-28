@@ -1,6 +1,7 @@
 (* Coq representation of compiler/cmm/CmmType.hs *)
 Require Import Eqdep.
 
+Require Import compcert.lib.Integers.
 Require Import GHC.Int.
 
 Definition Length := Int.
@@ -14,7 +15,7 @@ Inductive CmmCat :=
 
 Definition CmmCat_eq (c1 c2 : CmmCat) : {c1=c2} + {c1<> c2}.
   decide equality.
-  decide equality.
+  apply Int64.eq_dec.
 Defined.
 
 Inductive Width :=

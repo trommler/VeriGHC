@@ -2,6 +2,7 @@ Require Import GHC.CmmType.
 
 Require Import compcert.lib.Integers.
 Require Import compcert.lib.Floats.
+Require Import compcert.common.AST.
 
 Module Wordsize_16.
   Definition wordsize := 16%nat.
@@ -36,4 +37,27 @@ Definition cmmTypeDenote (t:CmmType) :=
   | CT_CmmType GcPtrCat _ => long
   | CT_CmmType (VecCat _ _) _ => unit
   end.
-  
+
+(* CMinor semantics *)
+
+(* TODO: add sign hint *)
+Definition cmmTypeToChunk (t:CmmType) : memory_chunk :=
+  match t with
+  | CT_CmmType cat width =>
+    match cat with
+    | GcPtrCat => Many64 (* all pointers are 64-bit *)
+    | BitsCat  => match width with
+                  | W8  => Mint8unsigned
+                  | W16 => Mint16unsigned
+                  | W32 => Mint32 (* How to deal with signed int *)
+                  | W64 => Mint64
+                  | _   => Many64 (* panic *)
+                  end
+    | FloatCat => match width with
+                  | W32 => Mfloat32
+                  | W64 => Mfloat64
+                  | _   => Many64 (* panic *)
+                  end
+    | VecCat l c => Many64 (* panic*)
+    end
+  end.
