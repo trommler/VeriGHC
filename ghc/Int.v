@@ -1,4 +1,3 @@
-(* FIXME: Use CompCert's machine integers for this *)
 Require Import BinNums.
 Require Import compcert.lib.Integers.
 
