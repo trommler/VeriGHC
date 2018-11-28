@@ -118,6 +118,7 @@ Definition globalRegToExpr (g:GlobalReg) :expr :=
   Econst (Oaddrsymbol 1%positive (Ptrofs.of_int64 Int64.zero)). (* TODO: Give each register its own memory location :-) *)
 
 Definition eight := Int64.repr 8.
+
 (*
 Fixpoint cmmExprToCminorExpr (e:CmmExpr) {struct e} : expr :=
   match e with
@@ -140,8 +141,9 @@ with machOpToCminorExpr (mo:MachOp) (exs:list CmmExpr) : expr :=
        | MO_Mul w => cminorBinop Omul exs
        end
 with cminorBinop (op:binary_operation) (exs:list CmmExpr) : expr :=
-       match (List.map cmmExprToCminorExpr exs) with
-       | [x1;x2] => Ebinop op x1 x2
+       match exs with
+       | [x1;x2] => Ebinop op (cmmExprToCminorExpr x1)
+                           (cmmExprToCminorExpr x2)
        | _ => Econst (Ointconst (Int.repr 0)) (* panic *)
 (*       end
 with cminorUnop (op:unary_operation) (exs:list CmmExpr) : expr :=
@@ -150,4 +152,5 @@ with cminorUnop (op:unary_operation) (exs:list CmmExpr) : expr :=
        | _ => Econst (Ointconst (Int.repr 0)) (* panic *)*)
        end.
 
-*)
+
+ *)
