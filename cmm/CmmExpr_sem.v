@@ -119,38 +119,30 @@ Definition globalRegToExpr (g:GlobalReg) :expr :=
 
 Definition eight := Int64.repr 8.
 
-(*
+
 Fixpoint cmmExprToCminorExpr (e:CmmExpr) {struct e} : expr :=
+  let regToExpr := fun r => match r with
+                            | CmmLocal (LR_LocalReg l t) => Evar (uniqueToIdent l) (* What to do with type? *) 
+                            | CmmGlobal g => Eload (globalRegToChunk g) (globalRegToExpr g)
+                            end
+  in
   match e with
   | CE_CmmLit l => Econst (cmmLitToCminorConst l)
   | CE_CmmLoad e t => Eload (cmmTypeToChunk t) (cmmExprToCminorExpr e)
-  | CE_CmmReg r => match r with
-                   | CmmLocal (LR_LocalReg l t) => Evar (uniqueToIdent l) (* What to do with type? *) 
-                   | CmmGlobal g => Eload (globalRegToChunk g) (globalRegToExpr g)
-                   end
-  | CE_CmmMachOp mo exs => machOpToCminorExpr mo exs
+  | CE_CmmReg r => regToExpr r
+  | CE_CmmMachOp mo exs => let cmexs := List.map cmmExprToCminorExpr exs
+                           in
+                           let binop op := match cmexs with
+                                           | [x1;x2] => Ebinop op x1 x2
+                                           | _ => Econst (Ointconst (Int.repr 0)) (* panic *)
+                                           end
+                           in match mo with
+                              | MO_Add _ => binop Oadd
+                              | MO_Sub _ => binop Osub
+                              | MO_Eq w =>  binop (Ocmpl Ceq) (* TODO: Implement width and also sign *)
+                              | MO_Ne w =>  binop (Ocmpl Cne)
+                              | MO_Mul w => binop Omul
+                              end
   | CE_CmmStackSlot area slot => Econst (Oaddrstack (Ptrofs.of_int64 (Int64.mul slot eight))) 
-  | CE_CmmRegOff r off => machOpToCminorExpr (MO_Add W64) [(CE_CmmReg r); CE_CmmLit (CmmInt 0%Z W64)] (* FIXME: We need fromIntegral here *)
-  end
-with machOpToCminorExpr (mo:MachOp) (exs:list CmmExpr) : expr :=
-       match mo with
-       | MO_Add _ => cminorBinop Oadd exs 
-       | MO_Sub _ => cminorBinop Osub exs
-       | MO_Eq w =>  cminorBinop (Ocmpl Ceq) exs(* TODO: Implement width and also sign *)
-       | MO_Ne w =>  cminorBinop (Ocmpl Cne) exs
-       | MO_Mul w => cminorBinop Omul exs
-       end
-with cminorBinop (op:binary_operation) (exs:list CmmExpr) : expr :=
-       match exs with
-       | [x1;x2] => Ebinop op (cmmExprToCminorExpr x1)
-                           (cmmExprToCminorExpr x2)
-       | _ => Econst (Ointconst (Int.repr 0)) (* panic *)
-(*       end
-with cminorUnop (op:unary_operation) (exs:list CmmExpr) : expr :=
-       match (List.map cmmExprToCminorExpr exs) with
-       | [x] => Eunop op x
-       | _ => Econst (Ointconst (Int.repr 0)) (* panic *)*)
-       end.
-
-
- *)
+  | CE_CmmRegOff r off => Ebinop Oadd (regToExpr r) (Econst (cmmLitToCminorConst (CmmInt 0%Z W64))) (* FIXME: We need fromIntegral here *)
+  end.
