@@ -3,6 +3,7 @@ Require Import BinNums. (* for ByteOff *)
 Require Import CmmMachOp.
 Require Import CmmExpr.
 Require Import CmmSwitch.
+Require Import Label.
 
 Definition ULabel := CLabel.
 

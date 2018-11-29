@@ -1,2 +1,3 @@
+Require Import AST.
 (* simpler version of compiler/cmm/Hoopl/Label.hs *)
-Definition Label : Set := nat.
+Definition Label := ident.

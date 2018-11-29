@@ -7,6 +7,8 @@ Require Import GHC.Int.
 Require Import GHC.Unique.
 Require Import GHC.CmmMachOp.
 
+Require Import compcert.common.AST.
+
 Inductive LocalReg : Set :=
 | LR_LocalReg: Unique -> CmmType -> LocalReg.
 
@@ -36,7 +38,7 @@ Inductive Area : Set :=
    with GHC implementation *)
 Inductive Rational := Ratio: Int -> Int -> Rational.
 
-Definition CLabel := nat.
+Definition CLabel := ident.
 
 Inductive CmmLit : Set :=
 | CmmInt: Integer -> Width -> CmmLit
