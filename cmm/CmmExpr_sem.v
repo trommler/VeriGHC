@@ -15,27 +15,33 @@ Require Import Cminor.Cminor.
 
 Require Import CmmType_sem.
 
-(* Remove the following imports when we switch to comcert memory *)
+(* Remove the following imports when we switch to CompCert memory *)
 Require Import compcert.common.Values.
 Require Import heap.
 
 (* FIXME: Implement all literals *)
 Definition cmmLitDenote (l : CmmLit) : hval :=
   match l with
-  | CmmInt n width => match width with
-                      | W64 => HSint (Int64.repr n)
+  | CmmInt n _ => HSint (Int64.repr n) (* Ignore upper bits *)
+  | CmmFloat rat w => match w with
+                      | W32 => HSundef
+                      | W64 => HSundef
                       | _ => HSundef
                       end
-  | _ => HSundef
+  | CmmLabel l => HSundef
+  | CmmLabelOff l off => HSundef
+  | CmmLabelDiffOff l1 l2 off w => HSundef
+  | CmmBlock blk => HSundef
+  | CmmHighStackMark => HSundef
   end.
 
 Definition moDenote (mo : MachOp) (ps : list hval) : hval :=
   match mo,ps with
-  | MO_Add W64, v1::v2::nil => HaskellVal.add v1 v2
-  | MO_Sub W64, v1::v2::nil => HaskellVal.sub v1 v2
-  | MO_Eq W64, v1::v2::nil => HaskellVal.cmp Ceq v1 v2
-  | MO_Ne W64, v1::v2::nil => HaskellVal.cmp Cne v1 v2
-  | MO_Mul W64, v1::v2::nil => HaskellVal.mul v1 v2
+  | MO_Add _, [v1;v2] => HaskellVal.add v1 v2
+  | MO_Sub _, [v1;v2] => HaskellVal.sub v1 v2
+  | MO_Eq _,  [v1;v2] => HaskellVal.cmp Ceq v1 v2
+  | MO_Ne _,  [v1;v2] => HaskellVal.cmp Cne v1 v2
+  | MO_Mul _, [v1;v2] => HaskellVal.mul v1 v2
   | _, _ => HSundef
   end.
 
@@ -139,9 +145,9 @@ Fixpoint cmmExprToCminorExpr (e:CmmExpr) {struct e} : expr :=
                            in match mo with
                               | MO_Add _ => binop Oadd
                               | MO_Sub _ => binop Osub
-                              | MO_Eq w =>  binop (Ocmpl Ceq) (* TODO: Implement width and also sign *)
-                              | MO_Ne w =>  binop (Ocmpl Cne)
-                              | MO_Mul w => binop Omul
+                              | MO_Eq _  => binop (Ocmpl Ceq)
+                              | MO_Ne _  => binop (Ocmpl Cne)
+                              | MO_Mul _ => binop Omul
                               end
   | CE_CmmStackSlot area slot => Econst (Oaddrstack (Ptrofs.of_int64 (Int64.mul slot eight))) 
   | CE_CmmRegOff r off => Ebinop Oadd (regToExpr r) (Econst (cmmLitToCminorConst (CmmInt 0%Z W64))) (* FIXME: We need fromIntegral here *)
