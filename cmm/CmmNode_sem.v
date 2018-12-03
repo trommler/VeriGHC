@@ -1,4 +1,6 @@
-Require Import HaskellValues.
+Require Import compcert.common.Memory.
+Require Import compcert.common.Values.
+
 Require Import GHC.CmmNode.
 Require Import GHC.Label.
 Require Import GHC.Unique.
@@ -9,6 +11,45 @@ Require Import CmmExpr_sem.
 Require Import CmmType_sem.
 
 Require Import Cminor.
+
+
+Inductive answer : Type := 
+| Value : val -> answer 
+| Error : answer.
+
+
+Inductive comp := 
+| Ret : answer -> comp
+| Bind : comp -> (val -> comp) -> comp
+| Delay : list CmmNode -> comp.
+
+Notation "'ret' x" := (Ret (Value x)) (at level 75) : comp_scope.
+Notation "x <- c1 ; c2" := (Bind c1 (fun x => c2))
+        (right associativity, at level 84, c1 at next level) : comp_scope.
+Local Open Scope comp_scope.
+
+(*
+Program Fixpoint cmmNodeDenote (node : CmmNode) (m:mem) : comp :=
+  match node with
+  | CmmStore lexpr rexpr => ptr <- cmmExprDenote m lexpr ;
+                            val <- cmmExprDenote m rexpr ;
+                            chunk <- cmmTypeDenote(cmmExprType rexpr) ;
+                            Mem.storev chunk m ptr val
+
+  | CmmComment
+  | CmmEntry _  => ret HSundef
+ 
+  | CmmCondBranch _ _ _ _
+  | CmmAssign _ _
+  | CmmUnsafeForeignCall _ _ _
+  | CmmBranch _
+  | CmmSwitch _ _
+  | CmmCall _ _ _ _ _ _
+    => ret HSundef
+  end.
+*)
+
+(* Cminor semantics *)
 
 Definition cmmLabelToCminorLabel (l:Label) : label := l.
 
@@ -29,36 +70,3 @@ Fixpoint cmmNodeToCminorStmt (n:CmmNode) : stmt :=
   | CmmSwitch e tgts => Sskip (* FIXME: Implement switch table *)
   | CmmCall e optl grs off1 off2 off3 => Sskip (* FIXME: Add GHC calling convention and tailcall *)
   end.
-
-
-(*Inductive answer : Type := 
-| Value : hval -> answer 
-| Error : answer.
-
-
-Inductive comp := 
-| Ret : answer -> comp
-| Bind : comp -> (hval -> comp) -> comp
-| Delay : exp -> list (var * value) -> comp.
- *)
-
-(*
-Program Fixpoint cmmNodeDenote (node : CmmNode) : Cmd unit :=
-  match node with
-  | CmmStore lexpr rexpr => ptr <- exprDenote lexpr ;
-                            val <- exprDenote rexpr ;
-                            write ptr val
-
-  | CmmComment
-  | CmmEntry _  => ret tt
- 
-  | CmmCondBranch _ _ _ _
-  | CmmAssign _ _
-  | CmmUnsafeForeignCall _ _ _
-  | CmmBranch _
-  | CmmSwitch _ _
-  | CmmCall _ _ _ _ _ _
-  | CmmForeignCall _ _ _ _ _ _ _
-    => ret tt
-  end.
-*)

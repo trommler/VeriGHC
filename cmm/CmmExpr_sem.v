@@ -2,9 +2,11 @@ Require Import List.
 Import ListNotations.
 Require Import BinPosDef.
 
-Require Import compcert.lib.Integers.
+Require Import compcert.common.Memory.
 Require Import compcert.common.AST.
-Require Import common.HaskellValues.
+Require Import compcert.common.Values.
+
+Require Import compcert.lib.Integers.
 
 Require Import GHC.CmmExpr.
 Require Import GHC.CmmType.
@@ -15,90 +17,43 @@ Require Import Cminor.Cminor.
 
 Require Import CmmType_sem.
 
-(* Remove the following imports when we switch to CompCert memory *)
-Require Import compcert.common.Values.
-Require Import heap.
-
 (* FIXME: Implement all literals *)
-Definition cmmLitDenote (l : CmmLit) : hval :=
+Definition cmmLitDenote (l : CmmLit) : option val :=
   match l with
-  | CmmInt n _ => HSint (Int64.repr n) (* Ignore upper bits *)
+  | CmmInt n _ => Some (Vlong (Int64.repr n)) (* Ignore upper bits *)
   | CmmFloat rat w => match w with
-                      | W32 => HSundef
-                      | W64 => HSundef
-                      | _ => HSundef
+                      | W32 => None
+                      | W64 => None
+                      | _ => None
                       end
-  | CmmLabel l => HSundef
-  | CmmLabelOff l off => HSundef
-  | CmmLabelDiffOff l1 l2 off w => HSundef
-  | CmmBlock blk => HSundef
-  | CmmHighStackMark => HSundef
+  | CmmLabel l => None
+  | CmmLabelOff l off => None
+  | CmmLabelDiffOff l1 l2 off w => None
+  | CmmBlock blk => None
+  | CmmHighStackMark => None
   end.
 
-Definition moDenote (mo : MachOp) (ps : list hval) : hval :=
+Definition moDenote (mo : MachOp) (ps : list (option val)) : option val :=
   match mo,ps with
-  | MO_Add _, [v1;v2] => HaskellVal.add v1 v2
-  | MO_Sub _, [v1;v2] => HaskellVal.sub v1 v2
-  | MO_Eq _,  [v1;v2] => HaskellVal.cmp Ceq v1 v2
-  | MO_Ne _,  [v1;v2] => HaskellVal.cmp Cne v1 v2
-  | MO_Mul _, [v1;v2] => HaskellVal.mul v1 v2
-  | _, _ => HSundef
-  end.
-
-Definition from_block (b : block) : ptr :=
-  pred (Pos.to_nat b).
-
-Definition from_CmmType (t: CmmType) (v: cmmTypeDenote t) : hval :=
-  (match t return cmmTypeDenote t -> hval with
-   | CT_CmmType BitsCat W64 => fun v => HSint v
-   | _ => fun _ => HSundef
-   end) v.
-
-Definition read_heap (p : hval) (h : heap) : option hval :=
-  match p with
-  | HSptr blk _ => match lookup (from_block blk) h with (* ignore offset for now *)
-                   | None => None
-                   | Some v => match v with
-                               | existT t' v' => Some (from_CmmType t' v')
-                               end
-                   end
-  | _ => None
+  | MO_Add _, [Some v1;Some v2] => Some (Val.addl v1 v2)
+  | MO_Sub _, [Some v1;Some v2] => Some (Val.subl v1 v2)
+  | MO_Eq _,  [Some v1;Some v2] => Val.cmpl Ceq v1 v2
+  | MO_Ne _,  [Some v1;Some v2] => Val.cmpl Cne v1 v2
+  | MO_Mul _, [Some v1;Some v2] => Some (Val.mull v1 v2)
+  | _, _ => None
   end.
 
 (* FIXME: Implement all expressions *)
-Fixpoint cmmExprDenote (h : heap) (e : CmmExpr) : hval :=
+Fixpoint cmmExprDenote (m : mem) (e : CmmExpr) : option val :=
   match e with
   | CE_CmmLit l => cmmLitDenote l
-  | CE_CmmLoad e' t => match read_heap (cmmExprDenote h e') h with
-                       | None => HSundef
-                       | Some v => v
+  | CE_CmmLoad e' t => match (cmmExprDenote m e') with
+                       | None => None
+                       | Some v => Mem.loadv (cmmTypeToChunk t) m v
                        end
-  | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote h) ps)
-  | _ => HSundef
+  | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote m) ps)
+  | _ => None
   end.
-
-
-Inductive answer :=
-| AValue : hval -> answer
-| AError : answer
-.
-
-Inductive comp := 
-| Ret : answer -> comp
-| Bind : comp -> (answer -> comp) -> comp
-(*| Delay : exp -> (* list (var * value) ->*) comp *).
-
-Fixpoint cmmExprDenote' (h : heap) (e : CmmExpr) : comp :=
-  Ret (AValue (
-        match e with
-        | CE_CmmLit l => cmmLitDenote l
-        | CE_CmmLoad e' t => match read_heap (cmmExprDenote h e') h with
-                             | None => HSundef
-                             | Some v => v
-                             end
-        | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote h) ps)
-        | _ => HSundef
-        end)).
 
 (* Cminor semantics *)
 
