@@ -1,13 +1,17 @@
 Require Import compcert.lib.Maps.
 Require Import List.
 Import ListNotations.
+Require Import Coq.ZArith.BinInt.
 
 Require Import compcert.common.Memory.
 Require Import compcert.common.Values.
+Require Import compcert.lib.Integers.
 
 Require Import GHC.CmmNode.
 Require Import GHC.Label.
 Require Import GHC.Unique.
+Require Import GHC.Int.
+Require Import GHC.CmmSwitch.
 
 Require Import CmmExpr.
 
@@ -24,8 +28,62 @@ Inductive cont: Type :=
 
 Definition env := PTree.t val.
 
+Fixpoint find_entry (l:Label) (ns:list CmmNode) : list CmmNode :=
+  match ns with
+  | n::ns' => match n with
+              | CmmEntry l' => if Label_eq l l' then ns' else find_entry l ns'
+              | _ => find_entry l ns'
+              end
+  | [] => []
+  end.
+
+Definition jumpish (n:CmmNode) : bool :=
+  match n with
+  | CmmBranch _ => true
+  | CmmCondBranch _ _ _ _ => true
+  | CmmSwitch _ _ => true
+  | CmmCall _ _ _ _ _ _ => true
+  | CmmUnsafeForeignCall _ _ _ => true
+  | _ => false
+  end.
+
+Fixpoint first_block (ns:list CmmNode) : list CmmNode :=
+  match ns with
+  | n::ns' => if jumpish n then [n] else n::first_block ns'
+  | [] => []
+  end.
+
+Definition find_block (l:Label) (ns:list CmmNode) : list CmmNode :=
+  first_block (find_entry l ns).
+
+Fixpoint tgt_list_find (vi:Integer) (olbl:option Label) (tgts:list (Integer*Label)) : option Label :=
+  match tgts with
+  | (i, l)::tgts' => if Z.eq_dec i vi then Some l else tgt_list_find vi olbl tgts'
+  | [] => olbl
+  end.
+    
+Definition switch_label (v:val) (st:SwitchTargets) : option Label :=
+  match v with
+  | Vlong i => match st with
+               | ST_SwitchTargets sign (lo,hi) olbl tgts =>
+                 let vi := if sign then Int64.signed i else Int64.unsigned i
+                 in if Z.ltb vi lo then None
+                    else if Z.gtb vi hi then None
+                         else tgt_list_find vi olbl tgts
+               end
+  | _ => None
+  end.
+
+Record function : Type := mkfunction {
+  (* fn_sig: signature; *)
+  (* fn_params: list ident; *)
+  (* fn_vars: list ident; *)
+  (* fn_stackspace: Z; *)
+  fn_body: list CmmNode
+}.
+
 Inductive state : Type :=
-| Sequence : forall (* (f:function) *)
+| Sequence : forall (f:function)
     (n:CmmNode)
     (k:cont)
     (sp:val)
@@ -35,25 +93,39 @@ Inductive state : Type :=
 .
 
 Inductive step : state -> state -> Prop :=
-| step_comment : forall n ns k sp e m,
-    step (Sequence CmmComment (Klist (n::ns) k) sp e m)
-         (Sequence n (Klist ns k) sp e m)
-| step_label : forall l n ns k sp e m,
-    step (Sequence (CmmEntry l) (Klist (n::ns) k) sp e m)
-         (Sequence n (Klist ns k) sp e m)
-| step_assign_local : forall reg l t ex v n ns k sp e m,
+| step_comment : forall f n ns k sp e m,
+    step (Sequence f CmmComment (Klist (n::ns) k) sp e m)
+         (Sequence f n (Klist ns k) sp e m)
+| step_label : forall f l n ns k sp e m,
+    step (Sequence f(CmmEntry l) (Klist (n::ns) k) sp e m)
+         (Sequence f n (Klist ns k) sp e m)
+| step_assign_local : forall f reg l t ex v n ns k sp e m,
     cmmExprDenote m ex = Some v ->
     cmmExprType ex = t ->
     CmmLocal (LR_LocalReg l t) = reg ->
-    step (Sequence (CmmAssign reg ex) (Klist (n::ns) k) sp e m)
-         (Sequence n (Klist ns k) sp (PTree.set l v e) m)
-| step_store : forall lexp rexp ptr val ch n ns k sp e m m',
+    step (Sequence f (CmmAssign reg ex) (Klist (n::ns) k) sp e m)
+         (Sequence f n (Klist ns k) sp (PTree.set l v e) m)
+| step_store : forall f lexp rexp ptr val ch n ns k sp e m m',
     cmmExprDenote m lexp = Some ptr ->
     cmmExprDenote m rexp = Some val ->
     cmmTypeToChunk (cmmExprType rexp) = ch ->
     Mem.storev ch m ptr val = Some m' ->
-    step (Sequence (CmmStore lexp rexp) (Klist (n::ns) k) sp e m)
-         (Sequence n (Klist ns k) sp e m') 
+    step (Sequence f (CmmStore lexp rexp) (Klist (n::ns) k) sp e m)
+         (Sequence f n (Klist ns k) sp e m') 
+| step_goto : forall f l k sp e m ns,
+    find_block l f.(fn_body) = ns ->
+    step (Sequence f (CmmBranch l) (Klist [] k) sp e m)
+         (Sequence f (CmmEntry l) (Klist ns k) sp e m)
+| step_conditional : forall f ex v l1 l2 p k sp e m b,
+    cmmExprDenote m ex = Some v ->
+    Val.bool_of_val v b ->
+    step (Sequence f (CmmCondBranch ex l1 l2 p) k sp e m)
+         (Sequence f (CmmBranch (if b then l1 else l2)) k sp e m)
+| step_switch : forall f ex v st k sp e m l,
+    cmmExprDenote m ex = Some v ->
+    switch_label v st = Some l ->
+    step (Sequence f (CmmSwitch ex st) k sp e m)
+         (Sequence f (CmmBranch l) k sp e m)
 .
 
 (* Monadic 
@@ -126,4 +198,5 @@ Fixpoint cmmNodeToCminorStmt (n:CmmNode) : stmt :=
   | CmmBranch t => Sgoto (cmmLabelToCminorLabel t)
   | CmmSwitch e tgts => Sskip (* FIXME: Implement switch table *)
   | CmmCall e optl grs off1 off2 off3 => Sskip (* FIXME: Add GHC calling convention and tailcall *)
+                                           | CmmForeignCall t form act succ ret_args ret_off interupt => Sskip
   end.

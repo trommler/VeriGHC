@@ -29,4 +29,5 @@ Inductive CmmNode : Set :=
 | CmmSwitch : CmmExpr -> SwitchTargets -> CmmNode
 | CmmCall   : CmmExpr -> option Label -> list GlobalReg -> ByteOff -> ByteOff
                                       -> ByteOff -> CmmNode
+| CmmForeignCall : ForeignTarget -> list CmmFormal -> list CmmActual -> ULabel -> ByteOff -> ByteOff -> bool -> CmmNode
 .
