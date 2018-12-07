@@ -55,6 +55,20 @@ Fixpoint cmmExprDenote (m : mem) (e : CmmExpr) : option val :=
   | _ => None
   end.
 
+
+(* This is much prettier in monadic notation *)
+Fixpoint cmmExprListDenote (m:mem) (es:list CmmExpr) : option (list val) :=
+  match es with
+  | [] => Some []
+  | e::es' => match cmmExprDenote m e with
+              | None => None
+              | Some v => match (cmmExprListDenote m es') with
+                          | Some vs => Some (v::vs)
+                          | None => None
+                          end
+              end
+  end.
+
 (* Cminor semantics *)
 
 Definition cmmLitToCminorConst (l:CmmLit) : constant :=

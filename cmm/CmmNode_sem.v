@@ -1,10 +1,13 @@
-Require Import compcert.lib.Maps.
 Require Import List.
 Import ListNotations.
 Require Import Coq.ZArith.BinInt.
 
+Require Import compcert.common.AST.
+Require Import compcert.common.Globalenvs.
 Require Import compcert.common.Memory.
 Require Import compcert.common.Values.
+
+Require Import compcert.lib.Maps.
 Require Import compcert.lib.Integers.
 
 Require Import GHC.CmmNode.
@@ -12,7 +15,7 @@ Require Import GHC.Label.
 Require Import GHC.Unique.
 Require Import GHC.Int.
 Require Import GHC.CmmSwitch.
-
+Require Import GHC.CmmMachOp.
 Require Import CmmExpr.
 
 Require Import CmmExpr_sem.
@@ -20,12 +23,23 @@ Require Import CmmType_sem.
 
 Require Import Cminor.
 
+Record cmm_function : Type := mkfunction {
+  fn_sig: signature;
+  (* fn_params: list ident; *)
+  (* fn_vars: list ident; *)
+  (* fn_stackspace: Z; *)
+  fn_body: list CmmNode
+}.
+
+Definition cmm_fundef := AST.fundef cmm_function.
+
 Inductive cont: Type :=
 | Kstop: cont
 | Klist: (list CmmNode) -> cont -> cont
-(*  | Kcall: option ident -> function -> val -> env -> cont -> cont.*)
+| Kcall: option ident -> cmm_function -> val -> env -> cont -> cont
 .
 
+Definition genv := Genv.t cmm_fundef unit.
 Definition env := PTree.t val.
 
 Fixpoint find_entry (l:Label) (ns:list CmmNode) : list CmmNode :=
@@ -50,7 +64,7 @@ Definition jumpish (n:CmmNode) : bool :=
 Fixpoint first_block (ns:list CmmNode) : list CmmNode :=
   match ns with
   | n::ns' => if jumpish n then [n] else n::first_block ns'
-  | [] => []
+  | [] => [] (* This must not happen, because the last Node must be jumpish *)
   end.
 
 Definition find_block (l:Label) (ns:list CmmNode) : list CmmNode :=
@@ -74,23 +88,31 @@ Definition switch_label (v:val) (st:SwitchTargets) : option Label :=
   | _ => None
   end.
 
-Record function : Type := mkfunction {
-  (* fn_sig: signature; *)
-  (* fn_params: list ident; *)
-  (* fn_vars: list ident; *)
-  (* fn_stackspace: Z; *)
-  fn_body: list CmmNode
-}.
-
 Inductive state : Type :=
-| Sequence : forall (f:function)
-    (n:CmmNode)
-    (k:cont)
-    (sp:val)
-    (e:env)
-    (m:mem),
-    state
+| Sequence :
+    forall (f:cmm_function)
+           (n:CmmNode)
+           (k:cont)
+           (sp:val)
+           (e:env)
+           (m:mem),
+      state
+| CallState:
+    forall (f:cmm_fundef)
+           (args:list val)
+           (k:cont)
+           (m:mem),
+      state
 .
+Definition cmmCallishMachOpDenote (m:mem) (cmo:CallishMachOp) (vs:list val) : option ((list val) * mem) :=
+  None. (* FIXME *) 
+
+Fixpoint assign_values (ress:list CmmFormal) (rs:list val) (e:env) : env :=
+  match ress, rs with
+  | (LR_LocalReg l t)::ress', r::rs' => assign_values ress' rs' (PTree.set l r e)
+  | [], [] => e
+  | _, _ => e (* This should not happen! *)
+  end.
 
 Inductive step : state -> state -> Prop :=
 | step_comment : forall f n ns k sp e m,
@@ -126,6 +148,12 @@ Inductive step : state -> state -> Prop :=
     switch_label v st = Some l ->
     step (Sequence f (CmmSwitch ex st) k sp e m)
          (Sequence f (CmmBranch l) k sp e m)
+| step_callish_machop : forall args vs m cmo rs m' ress e e' n ns k f sp,
+    cmmExprListDenote m args = Some vs ->
+    cmmCallishMachOpDenote m cmo vs = Some (rs, m') ->
+    assign_values ress rs e = e' ->
+    step (Sequence f (CmmUnsafeForeignCall (FT_PrimTarget cmo) ress args) (Klist (n::ns) k) sp e m)
+         (Sequence f n (Klist ns k) sp e' m') 
 .
 
 (* Monadic 
