@@ -42,6 +42,9 @@ Inductive cont: Type :=
 Definition genv := Genv.t cmm_fundef unit.
 Definition env := PTree.t val.
 
+Section CmmSmallStep.
+  Variable ge:genv.
+  
 Fixpoint find_entry (l:Label) (ns:list CmmNode) : list CmmNode :=
   match ns with
   | n::ns' => match n with
@@ -104,8 +107,15 @@ Inductive state : Type :=
            (m:mem),
       state
 .
+
 Definition cmmCallishMachOpDenote (m:mem) (cmo:CallishMachOp) (vs:list val) : option ((list val) * mem) :=
   None. (* FIXME *) 
+
+Definition foreignTargetDenote (m:mem) (ft:ForeignTarget) (vs:list val) : option ((list val) * mem) :=
+  match ft with
+  | FT_ForeignTarget e => None (* FIXME *)
+  | FT_PrimTarget cmo => cmmCallishMachOpDenote m cmo vs
+  end.
 
 Fixpoint assign_values (ress:list CmmFormal) (rs:list val) (e:env) : env :=
   match ress, rs with
@@ -148,13 +158,20 @@ Inductive step : state -> state -> Prop :=
     switch_label v st = Some l ->
     step (Sequence f (CmmSwitch ex st) k sp e m)
          (Sequence f (CmmBranch l) k sp e m)
-| step_callish_machop : forall args vs m cmo rs m' ress e e' n ns k f sp,
+| step_foreign_target : forall args vs m ft rs m' ress e e' n ns k f sp,
     cmmExprListDenote m args = Some vs ->
-    cmmCallishMachOpDenote m cmo vs = Some (rs, m') ->
+    foreignTargetDenote m ft vs = Some (rs, m') ->
     assign_values ress rs e = e' ->
-    step (Sequence f (CmmUnsafeForeignCall (FT_PrimTarget cmo) ress args) (Klist (n::ns) k) sp e m)
+    step (Sequence f (CmmUnsafeForeignCall ft ress args) (Klist (n::ns) k) sp e m)
          (Sequence f n (Klist ns k) sp e' m') 
+| step_call : forall f expr v lbl grs a_off r_a_off r_off k sp e m fd vs,
+    cmmExprDenote m expr = Some v ->
+    Genv.find_funct ge v = Some fd ->
+    (* PowerPC and SPARC ignore grs (live global regs) but Intel doesn't *)
+    step (Sequence f (CmmCall expr (Some lbl) grs a_off r_a_off r_off) (Klist [] k) sp e m)
+         (CallState fd vs (Kcall (Some lbl) f sp e k) m)
 .
+End CmmSmallStep.
 
 (* Monadic 
 
@@ -226,5 +243,5 @@ Fixpoint cmmNodeToCminorStmt (n:CmmNode) : stmt :=
   | CmmBranch t => Sgoto (cmmLabelToCminorLabel t)
   | CmmSwitch e tgts => Sskip (* FIXME: Implement switch table *)
   | CmmCall e optl grs off1 off2 off3 => Sskip (* FIXME: Add GHC calling convention and tailcall *)
-                                           | CmmForeignCall t form act succ ret_args ret_off interupt => Sskip
   end.
+
