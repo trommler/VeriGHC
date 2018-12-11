@@ -109,7 +109,90 @@ Inductive state : Type :=
 .
 
 Definition cmmCallishMachOpDenote (m:mem) (cmo:CallishMachOp) (vs:list val) : option ((list val) * mem) :=
-  None. (* FIXME *) 
+  match cmo with
+  | MO_F64_Pwr => match vs with
+                  | [v1;v2] => None
+                  | _ => None
+                  end
+    | MO_F64_Sin
+    | MO_F64_Cos
+    | MO_F64_Tan
+    | MO_F64_Sinh
+    | MO_F64_Cosh
+    | MO_F64_Tanh
+    | MO_F64_Asin
+    | MO_F64_Acos
+    | MO_F64_Atan
+    | MO_F64_Asinh
+    | MO_F64_Acosh
+    | MO_F64_Atanh
+    | MO_F64_Log
+    | MO_F64_Exp
+    | MO_F64_Fabs
+    | MO_F64_Sqrt
+    | MO_F32_Pwr
+    | MO_F32_Sin
+    | MO_F32_Cos
+    | MO_F32_Tan
+    | MO_F32_Sinh
+    | MO_F32_Cosh
+    | MO_F32_Tanh
+    | MO_F32_Asin
+    | MO_F32_Acos
+    | MO_F32_Atan
+    | MO_F32_Asinh
+    | MO_F32_Acosh
+    | MO_F32_Atanh
+    | MO_F32_Log
+    | MO_F32_Exp
+    | MO_F32_Fabs
+    | MO_F32_Sqrt => None
+    
+    | MO_UF_Conv w
+             
+    | MO_S_QuotRem w
+    | MO_U_QuotRem w
+    | MO_U_QuotRem2 w
+    | MO_Add2 w
+    | MO_AddWordC w
+    | MO_SubWordC w
+    | MO_AddIntC w
+    | MO_SubIntC w
+    | MO_U_Mul2 w => None
+                                
+    | MO_WriteBarrier
+    | MO_Touch => None
+    | MO_Prefetch_Data _ => None
+    | MO_Memcpy i
+    | MO_Memset i
+    | MO_Memmove i
+    | MO_Memcmp i => None
+            
+    | MO_PopCnt w
+    | MO_Pdep w
+    | MO_Pext w
+    | MO_Clz w
+    | MO_Ctz w => None
+
+    | MO_BSwap w => None
+
+    | MO_AtomicRMW w op => None
+    | MO_AtomicRead w => match vs with
+                         | [v1] => match Mem.loadv (widthToChunk w) m v1 with
+                                   | Some v => Some ([v], m)
+                                   | None => None
+                                   end
+                         | _ => None
+                         end
+    | MO_AtomicWrite w => match vs with
+                          | [v1;v2] => match Mem.storev (widthToChunk w) m v1 v2 with
+                                       | Some m' => Some ([],m')
+                                       | None => None
+                                       end
+                          | _ => None
+                          end
+    | MO_Cmpxchg w => None
+  end.
 
 Definition foreignTargetDenote (m:mem) (ft:ForeignTarget) (vs:list val) : option ((list val) * mem) :=
   match ft with

@@ -38,21 +38,21 @@ Definition cmmTypeDenote (t:CmmType) :=
   | CT_CmmType (VecCat _ _) _ => unit
   end.
 
-(* CMinor semantics *)
-
+Definition widthToChunk (w:Width) : memory_chunk :=
+  match w with
+  | W8  => Mint8unsigned
+  | W16 => Mint16unsigned
+  | W32 => Mint32
+  | W64 => Mint64
+  | _   => Many64 (* panic *)
+  end.
 (* TODO: add sign hint *)
 Definition cmmTypeToChunk (t:CmmType) : memory_chunk :=
   match t with
   | CT_CmmType cat width =>
     match cat with
     | GcPtrCat => Many64 (* all pointers are 64-bit *)
-    | BitsCat  => match width with
-                  | W8  => Mint8unsigned
-                  | W16 => Mint16unsigned
-                  | W32 => Mint32 (* How to deal with signed int *)
-                  | W64 => Mint64
-                  | _   => Many64 (* panic *)
-                  end
+    | BitsCat  => widthToChunk width
     | FloatCat => match width with
                   | W32 => Mfloat32
                   | W64 => Mfloat64
