@@ -7,6 +7,7 @@ Require Import compcert.common.AST.
 Require Import compcert.common.Values.
 
 Require Import compcert.lib.Integers.
+Require Import compcert.lib.Maps.
 
 Require Import GHC.CmmExpr.
 Require Import GHC.CmmType.
@@ -43,26 +44,55 @@ Definition moDenote (mo : MachOp) (ps : list (option val)) : option val :=
   | _, _ => None
   end.
 
+Definition globalRegToChunk (g:GlobalReg) : memory_chunk :=
+  match g with
+  | VanillaReg _ _ => Many64
+  | FloatReg _     => Mfloat32
+  | DoubleReg _    => Mfloat64
+  | LongReg _      => Mint64
+  | BaseReg        => Many64
+  | PicBaseReg     => Many64
+  end.
+
+Definition globalRegToPtr (g:GlobalReg) : val :=
+  Vptr 1%positive (Ptrofs.of_int64 Int64.zero).
+
+(* FIXME: Each register should have its own memory location :-) *)
+
 (* FIXME: Implement all expressions *)
-Fixpoint cmmExprDenote (m : mem) (e : CmmExpr) : option val :=
+Fixpoint cmmExprDenote (m:mem) (en:env) (sp:val) (e:CmmExpr) : option val :=
   match e with
   | CE_CmmLit l => cmmLitDenote l
-  | CE_CmmLoad e' t => match (cmmExprDenote m e') with
+  | CE_CmmLoad e' t => match (cmmExprDenote m en sp e') with
                        | None => None
                        | Some v => Mem.loadv (cmmTypeToChunk t) m v
                        end
-  | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote m) ps)
-  | _ => None
+  | CE_CmmReg r => match r with
+                   | CmmLocal (LR_LocalReg u t) => PTree.get u en
+                   | CmmGlobal g => Mem.loadv (globalRegToChunk g) m (globalRegToPtr g)
+                   end
+  | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote m en sp) ps)
+  | CE_CmmStackSlot a off => Some (Val.offset_ptr sp (Ptrofs.of_int64 off)) (* TODO parameter a: What is the semantics of an Area? *)
+  | CE_CmmRegOff r off => match r with
+                          | CmmLocal (LR_LocalReg u t) => match PTree.get u en with
+                                                          | Some v => Some(Val.offset_ptr sp (Ptrofs.of_int64 off))
+                                                          | None => None
+                                                          end
+                          | CmmGlobal g => match Mem.loadv (globalRegToChunk g) m (globalRegToPtr g) with
+                                           | Some v => Some(Val.offset_ptr sp (Ptrofs.of_int64 off))
+                                           | None => None
+                                           end
+                          end
   end.
 
 
 (* This is much prettier in monadic notation *)
-Fixpoint cmmExprListDenote (m:mem) (es:list CmmExpr) : option (list val) :=
+Fixpoint cmmExprListDenote (m:mem) (en:env) (sp:val) (es:list CmmExpr) : option (list val) :=
   match es with
   | [] => Some []
-  | e::es' => match cmmExprDenote m e with
+  | e::es' => match cmmExprDenote m en sp e with
               | None => None
-              | Some v => match (cmmExprListDenote m es') with
+              | Some v => match (cmmExprListDenote m en sp es') with
                           | Some vs => Some (v::vs)
                           | None => None
                           end
@@ -76,17 +106,6 @@ Definition cmmLitToCminorConst (l:CmmLit) : constant :=
   | CmmInt i W64 => Olongconst (Int64.repr i)
   | CmmInt i W32 => Ointconst (Int.repr i)
   | _            => Ointconst (Int.repr 0)
-  end.
-
-
-Definition globalRegToChunk (g:GlobalReg) : memory_chunk :=
-  match g with
-  | VanillaReg _ _ => Many64
-  | FloatReg _     => Mfloat32
-  | DoubleReg _    => Mfloat64
-  | LongReg _      => Mint64
-  | BaseReg        => Many64
-  | PicBaseReg     => Many64
   end.
 
 Definition globalRegToExpr (g:GlobalReg) :expr :=

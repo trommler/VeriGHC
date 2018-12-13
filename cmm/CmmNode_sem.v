@@ -215,14 +215,14 @@ Inductive step : state -> state -> Prop :=
     step (Sequence f(CmmEntry l) (Klist (n::ns) k) sp e m)
          (Sequence f n (Klist ns k) sp e m)
 | step_assign_local : forall f reg l t ex v n ns k sp e m,
-    cmmExprDenote m ex = Some v ->
+    cmmExprDenote m e sp ex = Some v ->
     cmmExprType ex = t ->
     CmmLocal (LR_LocalReg l t) = reg ->
     step (Sequence f (CmmAssign reg ex) (Klist (n::ns) k) sp e m)
          (Sequence f n (Klist ns k) sp (PTree.set l v e) m)
 | step_store : forall f lexp rexp ptr val ch n ns k sp e m m',
-    cmmExprDenote m lexp = Some ptr ->
-    cmmExprDenote m rexp = Some val ->
+    cmmExprDenote m e sp lexp = Some ptr ->
+    cmmExprDenote m e sp rexp = Some val ->
     cmmTypeToChunk (cmmExprType rexp) = ch ->
     Mem.storev ch m ptr val = Some m' ->
     step (Sequence f (CmmStore lexp rexp) (Klist (n::ns) k) sp e m)
@@ -232,27 +232,31 @@ Inductive step : state -> state -> Prop :=
     step (Sequence f (CmmBranch l) (Klist [] k) sp e m)
          (Sequence f (CmmEntry l) (Klist ns k) sp e m)
 | step_conditional : forall f ex v l1 l2 p k sp e m b,
-    cmmExprDenote m ex = Some v ->
+    cmmExprDenote m e sp ex = Some v ->
     Val.bool_of_val v b ->
     step (Sequence f (CmmCondBranch ex l1 l2 p) k sp e m)
          (Sequence f (CmmBranch (if b then l1 else l2)) k sp e m)
 | step_switch : forall f ex v st k sp e m l,
-    cmmExprDenote m ex = Some v ->
+    cmmExprDenote m e sp ex = Some v ->
     switch_label v st = Some l ->
     step (Sequence f (CmmSwitch ex st) k sp e m)
          (Sequence f (CmmBranch l) k sp e m)
 | step_foreign_target : forall args vs m ft rs m' ress e e' n ns k f sp,
-    cmmExprListDenote m args = Some vs ->
+    cmmExprListDenote m e sp args = Some vs ->
     foreignTargetDenote m ft vs = Some (rs, m') ->
     assign_values ress rs e = e' ->
     step (Sequence f (CmmUnsafeForeignCall ft ress args) (Klist (n::ns) k) sp e m)
          (Sequence f n (Klist ns k) sp e' m') 
 | step_call : forall f expr v lbl grs a_off r_a_off r_off k sp e m fd vs,
-    cmmExprDenote m expr = Some v ->
+    cmmExprDenote m e sp expr = Some v ->
     Genv.find_funct ge v = Some fd ->
     (* PowerPC and SPARC ignore grs (live global regs) but Intel doesn't *)
-    step (Sequence f (CmmCall expr (Some lbl) grs a_off r_a_off r_off) (Klist [] k) sp e m)
-         (CallState fd vs (Kcall (Some lbl) f sp e k) m)
+    step (Sequence f (CmmCall expr lbl grs a_off r_a_off r_off) (Klist [] k) sp e m)
+         (CallState fd vs (Kcall lbl f sp e k) m)
+| step_call_enter : forall fd vs lbl f sp e k m f' l sp' e',
+(* what do stack and environment look like upon proc entry? *)
+    step (CallState fd vs (Kcall lbl f sp e k) m)
+         (Sequence f' (CmmBranch l) k sp' e' m)
 .
 End CmmSmallStep.
 
