@@ -30,6 +30,20 @@ Inductive SectionType : Set :=
 
 Inductive section : Set:= S_section : SectionType -> CLabel -> section.
 
+Definition isSecConstant (sect:section) : bool :=
+  match sect with
+    S_section t _ => match t with
+                     | Text => true
+                     | ReadOnlyData => true
+                     | RelocatableReadOnlyData => true
+                     | ReadOnlyData16 => true
+                     | CString => true
+                     | Data => false
+                     | UninitialisedData => false
+                     | OtherSection => false
+                     end
+  end.
+
 Inductive CmmStatic : Set :=
 | CmmStaticLit: CmmLit -> CmmStatic
 | CmmUninitialised: Int -> CmmStatic

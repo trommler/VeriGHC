@@ -10,6 +10,7 @@ Require Import compcert.common.Values.
 Require Import compcert.lib.Maps.
 Require Import compcert.lib.Integers.
 
+Require Import GHC.BlockId.
 Require Import GHC.CmmNode.
 Require Import GHC.Label.
 Require Import GHC.Unique.
@@ -17,19 +18,20 @@ Require Import GHC.Int.
 Require Import GHC.CmmSwitch.
 Require Import GHC.CmmMachOp.
 Require Import CmmExpr.
+Require Import Cmm.
 
 Require Import CmmExpr_sem.
 Require Import CmmType_sem.
 
 Require Import Cminor.
 
-Record cmm_function : Type := mkfunction {
-  fn_sig: signature;
-  (* fn_params: list ident; *)
-  (* fn_vars: list ident; *)
-  (* fn_stackspace: Z; *)
-  fn_body: list CmmNode
-}.
+Record cmm_function : Type := mkfunction
+                                {
+                                  topInfo: CmmTopInfo;
+                                  globals: list GlobalReg;
+                                  entry: BlockId;
+                                  fn_body: Graph CmmNode
+                                }.
 
 Definition cmm_fundef := AST.fundef cmm_function.
 
