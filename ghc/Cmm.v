@@ -1,4 +1,6 @@
 (* definitions from compiler/cmm/Cmm.hs *)
+Require Import compcert.lib.Maps.
+
 Require Import GHC.BlockId.
 Require Import GHC.CmmNode.
 Require Import GHC.CmmExpr.
@@ -59,8 +61,8 @@ Record CmmStackInfo : Set := StackInfo {
                                }
 .
 
-Definition LabelMap (a:Set) := list a. (* FIXME: use a proper map *)
-Record CmmTopInfo : Set := TopInfo {
+Definition LabelMap (a:Type) := PTree.t a.
+Record CmmTopInfo : Type := TopInfo {
                                info_tbls  : LabelMap CmmInfoTable;
                                stack_info : CmmStackInfo;
                              }
