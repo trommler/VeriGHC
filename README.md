@@ -25,7 +25,7 @@ When updating:
 To build hs-to-coq:
 
 You need the `stack` tool available from
-[[https://docs.haskellstack.org/en/stable/install_and_upgrade/]]
+https://docs.haskellstack.org/en/stable/install_and_upgrade/
 or as a package from your favourite distribution.
 
 ``cd ext/hs-to-coq``
