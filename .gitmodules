@@ -4,3 +4,6 @@
 [submodule "ext/hs-to-coq"]
 	path = ext/hs-to-coq
 	url = https://github.com/trommler/hs-to-coq.git
+[submodule "ext/ghc"]
+	path = ext/ghc
+	url = https://gitlab.haskell.org/ghc/ghc.git
