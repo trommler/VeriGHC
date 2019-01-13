@@ -1,0 +1,4 @@
+# from hs-to-coq: Should skip these everywhere
+skip module Outputable
+skip module GHC.Show
+skip module Deriving
