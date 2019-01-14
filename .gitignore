@@ -41,3 +41,5 @@ CoqMakefile.conf
 # files created by file browsers
 .directory
 
+# hs-to-coq temporary directory
+.ghc-tmp/
