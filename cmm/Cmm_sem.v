@@ -68,7 +68,7 @@ Definition cmmGroupToAST (g:CmmGroup) : list (ident * globdef cmm_fundef unit) :
 Definition cmmProgramToAST (cmm_prog:CmmProgram) : cmm_program :=
   {| prog_defs := List.concat (List.map cmmGroupToAST cmm_prog);
      prog_public := nil;
-     prog_main := 1%positive (* FIXME: Where does a Cmm program start? hs_main? *)
+     prog_main := 1%positive (* This is the function passed to StgCRun *)
   |}.
 
 Inductive initial_state (p:cmm_program) : state -> Prop :=
@@ -79,4 +79,14 @@ Inductive initial_state (p:cmm_program) : state -> Prop :=
     Genv.find_funct_ptr ge b = Some f ->
     initial_state p (CallState f nil Kstop m0).
 
-(* FIXME: What is the final state? *)
+(* FIXME: Get return value r from register R1 *)
+Definition StgReturn : cmm_fundef := External (EF_runtime "StgReturn"
+                                                          {| sig_args := [Tint];
+                                                             sig_res := None;
+                                                             sig_cc := cc_default
+                                                          |}).
+
+(* TODO: Get return value from register R1 *)
+Inductive final_state : state -> int -> Prop :=
+| final_state_intro : forall s m r,
+    final_state (CallState StgReturn s Kstop m) r.
