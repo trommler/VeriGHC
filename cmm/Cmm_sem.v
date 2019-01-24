@@ -79,12 +79,13 @@ Inductive initial_state (p:cmm_program) : state -> Prop :=
     Genv.find_funct_ptr ge b = Some f ->
     initial_state p (CallState f nil Kstop m0).
 
-(* FIXME: Get return value r from register R1 *)
-Definition StgReturn : cmm_fundef := External (EF_runtime "StgReturn"
-                                                          {| sig_args := [Tint];
-                                                             sig_res := None;
-                                                             sig_cc := cc_default
-                                                          |}).
+Definition StgReturn : cmm_fundef :=
+  External (EF_runtime "StgReturn"
+                       {| sig_args := [Tint];
+                          sig_res := None;
+                          sig_cc := cc_default
+                       |}).
+
 
 (* TODO: Get return value from register R1 *)
 Inductive final_state : state -> int -> Prop :=

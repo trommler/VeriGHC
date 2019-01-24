@@ -28,6 +28,7 @@ cmm/CmmExpr_sem.v
 cmm/CmmType_sem.v
 cmm/CmmNode_sem.v
 cmm/Cmm_sem.v
+cmm/Identifiers.v
 Cminor/Cminor.v
 ext/VST/compcert/common/Switch.v
 

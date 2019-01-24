@@ -17,6 +17,7 @@ Require Import GHC.Unique.
 Require Import Cminor.Cminor.
 
 Require Import CmmType_sem.
+Require Import Identifiers.
 
 (* FIXME: Implement all literals *)
 Definition cmmLitDenote (l : CmmLit) : option val :=
@@ -27,8 +28,8 @@ Definition cmmLitDenote (l : CmmLit) : option val :=
                       | W64 => None
                       | _ => None
                       end
-  | CmmLabel l => None
-  | CmmLabelOff l off => None
+  | CmmLabel lab => None
+  | CmmLabelOff lab off => None
   | CmmLabelDiffOff l1 l2 off w => None
   | CmmBlock blk => None
   | CmmHighStackMark => None
@@ -54,10 +55,47 @@ Definition globalRegToChunk (g:GlobalReg) : memory_chunk :=
   | PicBaseReg     => Many64
   end.
 
-Definition globalRegToPtr (g:GlobalReg) : val :=
-  Vptr 1%positive (Ptrofs.of_int64 Int64.zero).
+Local Open Scope Z_scope.
 
-(* FIXME: Each register should have its own memory location :-) *)
+Definition globalRegToPtr (g:GlobalReg) : option val :=
+  let off_zero := (Ptrofs.of_int64 Int64.zero)
+  in match g with
+     | VanillaReg r _ => match Int64.unsigned r with
+                         | 1 => Some (Vptr _R1 off_zero)
+                         | 2 => Some (Vptr _R2 off_zero)
+                         | 3 => Some (Vptr _R3 off_zero)
+                         | 4 => Some (Vptr _R4 off_zero)
+                         | 5 => Some (Vptr _R5 off_zero)
+                         | 6 => Some (Vptr _R6 off_zero)
+                         | 7 => Some (Vptr _R7 off_zero)
+                         | 8 => Some (Vptr _R8 off_zero)
+                         | 9 => Some (Vptr _R9 off_zero)
+                         | 10 => Some (Vptr _R10 off_zero)
+                         | _ => None
+                         end
+     | FloatReg f     => match Int64.unsigned f with
+                         | 1 => Some (Vptr _F1 off_zero)
+                         | 2 => Some (Vptr _F2 off_zero)
+                         | 3 => Some (Vptr _F3 off_zero)
+                         | 4 => Some (Vptr _F4 off_zero)
+                         | 5 => Some (Vptr _F5 off_zero)
+                         | 6 => Some (Vptr _F6 off_zero)
+                         | _ => None
+                         end
+     | DoubleReg d    => match Int64.unsigned d with
+                         | 1 => Some (Vptr _D1 off_zero)
+                         | 2 => Some (Vptr _D2 off_zero)
+                         | 3 => Some (Vptr _D3 off_zero)
+                         | 4 => Some (Vptr _D4 off_zero)
+                         | 5 => Some (Vptr _D5 off_zero)
+                         | 6 => Some (Vptr _D6 off_zero)
+                         | _ => None
+                         end
+     | LongReg l      => None (* These seem to be unused now *)
+     | BaseReg        => Some (Vptr _BaseReg off_zero)
+     | PicBaseReg     => Some (Vptr _PicBaseReg off_zero)
+     end.
+
 
 (* FIXME: Implement all expressions *)
 Fixpoint cmmExprDenote (m:mem) (en:env) (sp:val) (e:CmmExpr) : option val :=
@@ -69,7 +107,10 @@ Fixpoint cmmExprDenote (m:mem) (en:env) (sp:val) (e:CmmExpr) : option val :=
                        end
   | CE_CmmReg r => match r with
                    | CmmLocal (LR_LocalReg u t) => PTree.get u en
-                   | CmmGlobal g => Mem.loadv (globalRegToChunk g) m (globalRegToPtr g)
+                   | CmmGlobal g => match globalRegToPtr g with
+                                    | None   => None
+                                    | Some p => Mem.loadv (globalRegToChunk g) m p
+                                    end
                    end
   | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote m en sp) ps)
   | CE_CmmStackSlot a off => Some (Val.offset_ptr sp (Ptrofs.of_int64 off)) (* TODO parameter a: What is the semantics of an Area? *)
@@ -78,10 +119,14 @@ Fixpoint cmmExprDenote (m:mem) (en:env) (sp:val) (e:CmmExpr) : option val :=
                                                           | Some v => Some(Val.offset_ptr sp (Ptrofs.of_int64 off))
                                                           | None => None
                                                           end
-                          | CmmGlobal g => match Mem.loadv (globalRegToChunk g) m (globalRegToPtr g) with
-                                           | Some v => Some(Val.offset_ptr sp (Ptrofs.of_int64 off))
-                                           | None => None
-                                           end
+                          | CmmGlobal g =>
+                            match globalRegToPtr g with
+                            | None   => None
+                            | Some p => match Mem.loadv (globalRegToChunk g) m p with
+                                        | Some v => Some(Val.offset_ptr sp (Ptrofs.of_int64 off))
+                                        | None => None
+                                        end
+                            end
                           end
   end.
 
