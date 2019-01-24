@@ -14,8 +14,6 @@ Require Import GHC.CmmType.
 Require Import GHC.CmmMachOp.
 Require Import GHC.Unique.
 
-Require Import Cminor.Cminor.
-
 Require Import CmmType_sem.
 Require Import Identifiers.
 
@@ -96,7 +94,7 @@ Definition globalRegToPtr (g:GlobalReg) : option val :=
      | PicBaseReg     => Some (Vptr _PicBaseReg off_zero)
      end.
 
-
+Definition env := PTree.t val.
 (* FIXME: Implement all expressions *)
 Fixpoint cmmExprDenote (m:mem) (en:env) (sp:val) (e:CmmExpr) : option val :=
   match e with
@@ -142,46 +140,4 @@ Fixpoint cmmExprListDenote (m:mem) (en:env) (sp:val) (es:list CmmExpr) : option 
                           | None => None
                           end
               end
-  end.
-
-(* Cminor semantics *)
-
-Definition cmmLitToCminorConst (l:CmmLit) : constant :=
-  match l with
-  | CmmInt i W64 => Olongconst (Int64.repr i)
-  | CmmInt i W32 => Ointconst (Int.repr i)
-  | _            => Ointconst (Int.repr 0)
-  end.
-
-Definition globalRegToExpr (g:GlobalReg) :expr :=
-  Econst (Oaddrsymbol 1%positive (Ptrofs.of_int64 Int64.zero)). (* TODO: Give each register its own memory location :-) *)
-
-Definition eight := Int64.repr 8.
-
-
-Fixpoint cmmExprToCminorExpr (e:CmmExpr) {struct e} : expr :=
-  let regToExpr := fun r => match r with
-                            | CmmLocal (LR_LocalReg l t) => Evar (uniqueToIdent l) (* What to do with type? *) 
-                            | CmmGlobal g => Eload (globalRegToChunk g) (globalRegToExpr g)
-                            end
-  in
-  match e with
-  | CE_CmmLit l => Econst (cmmLitToCminorConst l)
-  | CE_CmmLoad e t => Eload (cmmTypeToChunk t) (cmmExprToCminorExpr e)
-  | CE_CmmReg r => regToExpr r
-  | CE_CmmMachOp mo exs => let cmexs := List.map cmmExprToCminorExpr exs
-                           in
-                           let binop op := match cmexs with
-                                           | [x1;x2] => Ebinop op x1 x2
-                                           | _ => Econst (Ointconst (Int.repr 0)) (* panic *)
-                                           end
-                           in match mo with
-                              | MO_Add _ => binop Oadd
-                              | MO_Sub _ => binop Osub
-                              | MO_Eq _  => binop (Ocmpl Ceq)
-                              | MO_Ne _  => binop (Ocmpl Cne)
-                              | MO_Mul _ => binop Omul
-                              end
-  | CE_CmmStackSlot area slot => Econst (Oaddrstack (Ptrofs.of_int64 (Int64.mul slot eight))) 
-  | CE_CmmRegOff r off => Ebinop Oadd (regToExpr r) (Econst (cmmLitToCminorConst (CmmInt 0%Z W64))) (* FIXME: We need fromIntegral here *)
   end.
