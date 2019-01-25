@@ -26,10 +26,10 @@ Definition cmmLitDenote (l : CmmLit) : option val :=
                       | W64 => None
                       | _ => None
                       end
-  | CmmLabel lab => None
-  | CmmLabelOff lab off => None
+  | CmmLabel lab => Some (Vptr lab (Ptrofs.of_int64 Int64.zero))
+  | CmmLabelOff lab off => Some (Vptr lab (Ptrofs.of_int64 off))
   | CmmLabelDiffOff l1 l2 off w => None
-  | CmmBlock blk => None
+  | CmmBlock blk => Some (Vptr blk (Ptrofs.of_int64 Int64.zero))
   | CmmHighStackMark => None
   end.
 
