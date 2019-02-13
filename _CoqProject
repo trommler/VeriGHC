@@ -15,7 +15,6 @@ ghc/CmmMachOp.v
 ghc/CmmSwitch.v
 ghc/CmmType.v
 ghc/CmmNode.v
-ghc/Instr.v
 ghc/Int.v
 ghc/Label.v
 ghc/OrdList.v
