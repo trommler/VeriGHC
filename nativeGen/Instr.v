@@ -1,9 +1,21 @@
+Require Import GHC.Cmm.
+Require Import GHC.CmmExpr. (* for CLabel *)
+Require Import GHC.BlockId.
+Require Import GHC.Int.
+Require Import GHC.Reg.
 
+Require Import nativeGen.Regs.
+Require Import nativeGen.Format.
+Require Import nativeGen.Cond.
 
-(*
+Inductive RI :=
+| RIReg: Reg -> RI
+| RIImm: Imm -> RI
+.
+
 Inductive Instr := 
-| COMMENT:  FastString -> Instr 
-| LDATA:    Section -> CmmStatics -> Instr
+| COMMENT:  (* FastString -> *) Instr 
+| LDATA:    section -> CmmStatics -> Instr
 | NEWBLOCK: BlockId -> Instr
 | DELTA:    Int -> Instr
 | LD:       Format -> Reg -> AddrMode -> Instr
@@ -19,87 +31,62 @@ Inductive Instr :=
 | MR:       Reg -> Reg -> Instr
 | CMP:      Format -> Reg -> RI -> Instr
 | CMPL:     Format -> Reg -> RI -> Instr
-
-    | BCC     Cond BlockId (Maybe Bool) -- cond, block, hint
-    | BCCFAR  Cond BlockId (Maybe Bool) -- cond, block, hint
-                                    --   hint:
-                                    --    Just True:  branch likely taken
-                                    --    Just False: branch likely not taken
-                                    --    Nothing:    no hint
-    | JMP     CLabel                -- same as branch,
-                                    -- but with CLabel instead of block ID
-    | MTCTR   Reg
-    | BCTR    [Maybe BlockId] (Maybe CLabel) -- with list of local destinations, and jump table location if necessary
-    | BL      CLabel [Reg]          -- with list of argument regs
-    | BCTRL   [Reg]
-
-    | ADD     Reg Reg RI            -- dst, src1, src2
-    | ADDO    Reg Reg Reg           -- add and set overflow
-    | ADDC    Reg Reg Reg           -- (carrying) dst, src1, src2
-    | ADDE    Reg Reg Reg           -- (extended) dst, src1, src2
-    | ADDZE   Reg Reg               -- (to zero extended) dst, src
-    | ADDIS   Reg Reg Imm           -- Add Immediate Shifted dst, src1, src2
-    | SUBF    Reg Reg Reg           -- dst, src1, src2 ; dst = src2 - src1
-    | SUBFO   Reg Reg Reg           -- subtract from and set overflow
-    | SUBFC   Reg Reg RI            -- (carrying) dst, src1, src2 ;
-                                    -- dst = src2 - src1
-    | SUBFE   Reg Reg Reg           -- (extended) dst, src1, src2 ;
-                                    -- dst = src2 - src1
-    | MULL    Format Reg Reg RI
-    | MULLO   Format Reg Reg Reg    -- multiply and set overflow
-    | MFOV    Format Reg            -- move overflow bit (1|33) to register
-                                    -- pseudo-instruction; pretty printed as
-                                    -- mfxer dst
-                                    -- extr[w|d]i dst, dst, 1, [1|33]
-    | MULHU   Format Reg Reg Reg
-    | DIV     Format Bool Reg Reg Reg
-    | AND     Reg Reg RI            -- dst, src1, src2
-    | ANDC    Reg Reg Reg           -- AND with complement, dst = src1 & ~ src2
-    | NAND    Reg Reg Reg           -- dst, src1, src2
-    | OR      Reg Reg RI            -- dst, src1, src2
-    | ORIS    Reg Reg Imm           -- OR Immediate Shifted dst, src1, src2
-    | XOR     Reg Reg RI            -- dst, src1, src2
-    | XORIS   Reg Reg Imm           -- XOR Immediate Shifted dst, src1, src2
-
-    | EXTS    Format Reg Reg
-    | CNTLZ   Format Reg Reg
-
-    | NEG     Reg Reg
-    | NOT     Reg Reg
-
-    | SL      Format Reg Reg RI            -- shift left
-    | SR      Format Reg Reg RI            -- shift right
-    | SRA     Format Reg Reg RI            -- shift right arithmetic
-
-    | RLWINM  Reg Reg Int Int Int   -- Rotate Left Word Immediate then AND with Mask
-    | CLRLI   Format Reg Reg Int    -- clear left immediate (extended mnemonic)
-    | CLRRI   Format Reg Reg Int    -- clear right immediate (extended mnemonic)
-
-    | FADD    Format Reg Reg Reg
-    | FSUB    Format Reg Reg Reg
-    | FMUL    Format Reg Reg Reg
-    | FDIV    Format Reg Reg Reg
-    | FABS    Reg Reg               -- abs is the same for single and double
-    | FNEG    Reg Reg               -- negate is the same for single and double prec.
-
-    | FCMP    Reg Reg
-
-    | FCTIWZ  Reg Reg           -- convert to integer word
-    | FCTIDZ  Reg Reg           -- convert to integer double word
-    | FCFID   Reg Reg           -- convert from integer double word
-    | FRSP    Reg Reg           -- reduce to single precision
-                                -- (but destination is a FP register)
-
-    | CRNOR   Int Int Int       -- condition register nor
-    | MFCR    Reg               -- move from condition register
-
-    | MFLR    Reg               -- move from link register
-    | FETCHPC Reg               -- pseudo-instruction:
-                                -- bcl to next insn, mflr reg
-    | HWSYNC                    -- heavy weight sync
-    | ISYNC                     -- instruction synchronize
-    | LWSYNC                    -- memory barrier
-    | NOP                       -- no operation, PowerPC 64 bit
-                                -- needs this as place holder to
-                                -- reload TOC pointer
-*)
+| BCC:      Cond -> BlockId -> option bool -> Instr
+| BCCFAR:   Cond -> BlockId -> option bool -> Instr
+| JMP:      CLabel -> Instr
+| MTCTR:    Reg -> Instr
+| BCTR:     list (option BlockId) -> option CLabel -> Instr
+| BL:       CLabel -> list Reg -> Instr
+| BCTRL:    list Reg -> Instr
+| ADD:      Reg -> Reg -> RI -> Instr
+| ADDO:     Reg -> Reg -> Reg -> Instr
+| ADDC:     Reg -> Reg -> Reg -> Instr
+| ADDE:     Reg -> Reg -> Reg -> Instr
+| ADDZE:    Reg -> Reg -> Instr
+| ADDIS:    Reg -> Reg -> Imm -> Instr
+| SUBF:     Reg -> Reg -> Reg -> Instr
+| SUBFO:    Reg -> Reg -> Reg -> Instr
+| SUBFC:    Reg -> Reg -> RI -> Instr
+| SUBFE:    Reg -> Reg -> Reg -> Instr
+| MULL:     Format -> Reg -> Reg -> RI -> Instr
+| MULLO:    Format -> Reg -> Reg -> Reg -> Instr
+| MFOV:     Format -> Reg -> Instr
+| MULHU:    Format -> Reg -> Reg -> Reg -> Instr
+| DIV:      Format -> bool -> Reg -> Reg -> Reg -> Instr
+| AND:      Reg -> Reg -> RI -> Instr
+| ANDC:     Reg -> Reg -> Reg -> Instr
+| NAND:     Reg -> Reg -> Reg -> Instr
+| OR:       Reg -> Reg -> RI -> Instr
+| ORIS:     Reg -> Reg -> Imm -> Instr
+| XOR:      Reg -> Reg -> RI -> Instr
+| XORIS:    Reg -> Reg -> Imm -> Instr
+| EXTS:     Format -> Reg -> Reg -> Instr
+| CNTLZ:    Format -> Reg -> Reg -> Instr
+| NEG:      Reg -> Reg -> Instr
+| NOT:      Reg -> Reg -> Instr
+| SL:       Format -> Reg -> Reg -> RI -> Instr
+| SR:       Format -> Reg -> Reg -> RI -> Instr
+| SRA:      Format -> Reg -> Reg -> RI -> Instr
+| RLWINM:   Reg -> Reg -> Int -> Int -> Int -> Instr
+| CLRLI:    Format -> Reg -> Reg -> Int -> Instr
+| CLRRI:    Format -> Reg -> Reg -> Int -> Instr
+| FADD:     Format -> Reg -> Reg -> Reg -> Instr
+| FSUB:     Format -> Reg -> Reg -> Reg -> Instr
+| FMUL:     Format -> Reg -> Reg -> Reg -> Instr
+| FDIV:     Format -> Reg -> Reg -> Reg -> Instr
+| FABS:     Reg -> Reg -> Instr
+| FNEG:     Reg -> Reg -> Instr
+| FCMP:     Reg -> Reg -> Instr
+| FCTIWZ:   Reg -> Reg -> Instr
+| FCTIDZ:   Reg -> Reg -> Instr
+| FCFID:    Reg -> Reg -> Instr
+| FRSP:     Reg -> Reg -> Instr
+| CRNOR:    Int -> Int -> Int -> Instr
+| MFCR:     Reg -> Instr
+| MFLR:     Reg -> Instr
+| FETCHPC:  Reg -> Instr
+| HWSYNC:   Instr
+| ISYNC:    Instr
+| LWSYNC:   Instr
+| NOP:      Instr
+.

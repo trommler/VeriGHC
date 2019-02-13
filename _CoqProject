@@ -6,6 +6,7 @@
 -R ghc GHC
 -R cmm Cmm
 -R common common
+-R nativeGen nativeGen
 common/HaskellValues.v
 ghc/BlockId.v
 ghc/Cmm.v
@@ -28,5 +29,8 @@ cmm/CmmType_sem.v
 cmm/CmmNode_sem.v
 cmm/Cmm_sem.v
 cmm/Identifiers.v
-
+nativeGen/Instr.v
+nativeGen/Regs.v
+nativeGen/Format.v
+nativeGen/Cond.v
 
