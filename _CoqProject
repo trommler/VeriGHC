@@ -7,6 +7,7 @@
 -R cmm Cmm
 -R common common
 -R nativeGen nativeGen
+-R cmmCore CmmCore
 common/HaskellValues.v
 ghc/BlockId.v
 ghc/Cmm.v
@@ -32,4 +33,5 @@ nativeGen/Instr.v
 nativeGen/Regs.v
 nativeGen/Format.v
 nativeGen/Cond.v
-
+cmmCore/CmmCoreType.v
+cmmCore/CmmCoreExpr.v
