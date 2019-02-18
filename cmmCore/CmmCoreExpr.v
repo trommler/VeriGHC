@@ -58,19 +58,32 @@ Inductive CmmExpr : Set :=
 
 Definition cmmLabelType (lbl:CLabel) : CC_CmmType := bWord.
 
-(*
+Lemma noW8isFloatWidth : isFloatWidth W8 -> False.
+Proof.
+  intro. inversion H; discriminate.
+Qed.
+
+Lemma noW16isFloatWidth : isFloatWidth W16 -> False.
+Proof.
+  intro. inversion H; discriminate.
+Qed.
+
+Definition floatLitType (w:Width) : isFloatWidth w -> CC_CmmType :=
+  match w with
+  | W8  => fun pf : isFloatWidth W8 => match noW8isFloatWidth pf with end
+  | W16 => fun pf : isFloatWidth W16 => match noW16isFloatWidth pf with end
+  | W32 => fun _ => cmmFloat
+  | W64 => fun _ => cmmDouble
+  end.
+
 Definition cmmLitType (l : CC_CmmLit) : CC_CmmType :=
   match l with
   | CmmInt _ width => cmmBits width
-  | CmmFloat _ width pf => match width with
-                           | W32 => cmmFloat
-                           | W64 => cmmDouble
-                           end
+  | CmmFloat _ width pf => (floatLitType width) pf
   | CmmLabel lbl => cmmLabelType lbl
   | CmmLabelOff lbl _ => cmmLabelType lbl
   | CmmLabelDiffOff _ _ _ width => cmmBits width
   end.
- *)
 
 Definition localRegType (l:LocalReg) : CC_CmmType :=
   match l with
@@ -99,7 +112,6 @@ Fixpoint cmmExprType (e : CmmExpr) : CC_CmmType :=
   | CE_CmmLoad _ rep => rep
   | CE_CmmReg reg => cmmRegType reg
   | CE_CmmMachOp op args => machOpResultType op (List.map cmmExprType args)
-  | CE_CmmStackSlot _ _ => bWord
   | CE_CmmRegOff reg _ => cmmRegType reg
   end.
 *)
