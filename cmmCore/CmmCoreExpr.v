@@ -2,10 +2,12 @@
 Require Import List.
 
 Require Import GHC.BlockId.
-Require Import CmmCore.CmmCoreType.
 Require Import GHC.Int.
 Require Import GHC.Unique.
 Require Import GHC.CmmMachOp.
+Require Import GHC.CmmType.
+
+Require Import CmmCore.CmmCoreType.
 
 Require Import compcert.common.AST.
 
@@ -35,17 +37,13 @@ Inductive Rational := Ratio: Int -> Int -> Rational.
 
 Definition CLabel := ident.
 
-Inductive isFloatWidth (w:Width) : Prop :=
-| ifw_single: w=W32 -> isFloatWidth w
-| ifw_double: w=W64 -> isFloatWidth w
-.
 
 Inductive CC_CmmLit : Set :=
-| CmmInt: Integer -> Width -> CC_CmmLit
-| CmmFloat: Rational -> forall (w:Width), isFloatWidth w -> CC_CmmLit
+| CmmInt: Integer -> { w : Width | isIntWidth w} -> CC_CmmLit
+| CmmFloat: Rational -> {w : Width | isFloatWidth w} -> CC_CmmLit
 | CmmLabel: CLabel -> CC_CmmLit
 | CmmLabelOff: CLabel -> Int -> CC_CmmLit
-| CmmLabelDiffOff: CLabel -> CLabel -> Int -> Width -> CC_CmmLit
+| CmmLabelDiffOff: CLabel -> CLabel -> Int -> { w : Width | isIntWidth w} -> CC_CmmLit
 .
 
 Inductive CmmExpr : Set :=
@@ -58,6 +56,7 @@ Inductive CmmExpr : Set :=
 
 Definition cmmLabelType (lbl:CLabel) : CC_CmmType := bWord.
 
+(*
 Lemma noW8isFloatWidth : isFloatWidth W8 -> False.
 Proof.
   intro. inversion H; discriminate.
@@ -75,11 +74,12 @@ Definition floatLitType (w:Width) : isFloatWidth w -> CC_CmmType :=
   | W32 => fun _ => cmmFloat
   | W64 => fun _ => cmmDouble
   end.
+ *)
 
 Definition cmmLitType (l : CC_CmmLit) : CC_CmmType :=
   match l with
   | CmmInt _ width => cmmBits width
-  | CmmFloat _ width pf => (floatLitType width) pf
+  | CmmFloat _ width => cmmFloat width
   | CmmLabel lbl => cmmLabelType lbl
   | CmmLabelOff lbl _ => cmmLabelType lbl
   | CmmLabelDiffOff _ _ _ width => cmmBits width
@@ -93,9 +93,9 @@ Definition localRegType (l:LocalReg) : CC_CmmType :=
 Definition globalRegType (g:GlobalReg) : CC_CmmType :=
   match g with
   | VanillaReg _ _ => bWord (* we might want to look at the second parameter *)
-  | FloatReg _ => cmmFloat
-  | DoubleReg _ => cmmDouble
-  | LongReg _ => cmmBits W64
+  | FloatReg _ => cmmFloat (exist _ W32 I)
+  | DoubleReg _ => cmmFloat (exist _ W64 I)
+  | LongReg _ => b64
   | _ => bWord
   end.
                                          
