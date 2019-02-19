@@ -34,16 +34,16 @@ Definition isCoreCmmType (t:CmmType) : Prop :=
            
 Definition CC_CmmType := sig isCoreCmmType.
   
-Definition cmmBits (w : {w' : Width | isIntWidth w'}) : CC_CmmType :=
+Definition CC_cmmBits (w : {w' : Width | isIntWidth w'}) : CC_CmmType :=
   match w with
-  | exist width pf => exist _ (CT_CmmType BitsCat width) pf
+  | exist width pf => exist _ (cmmBits width) pf
   end.
 
-Definition cmmFloat (w : {w' : Width | isFloatWidth w'}) : CC_CmmType :=
+Definition CC_cmmFloat (w : {w' : Width | isFloatWidth w'}) : CC_CmmType :=
   match w with
-  | exist width pf => exist _ (CT_CmmType FloatCat width) pf
+  | exist width pf => exist _ (cmmFloat width) pf
   end.
 
 
-Definition b64 : CC_CmmType := cmmBits (exist _ W64 I).
-Definition bWord : CC_CmmType := cmmBits (exist _ W64 I). (* Need DynFlags here *) 
+Definition b64 : CC_CmmType := CC_cmmBits (exist _ W64 I).
+Definition bWord : CC_CmmType := CC_cmmBits (exist _ W64 I). (* Need DynFlags here *) 

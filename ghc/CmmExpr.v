@@ -19,8 +19,23 @@ Inductive GlobalReg : Set :=
 | FloatReg: Int -> GlobalReg
 | DoubleReg: Int -> GlobalReg
 | LongReg: Int -> GlobalReg
-                    (* ... and some more *)
+| XmmReg: Int -> GlobalReg
+| YmmReg: Int -> GlobalReg
+| ZmmReg: Int -> GlobalReg
+| Sp: GlobalReg
+| SpLim: GlobalReg
+| Hp: GlobalReg
+| HpLim: GlobalReg
+| CCCS: GlobalReg
+| CurrentTSO: GlobalReg
+| CurrentNursery: GlobalReg
+| HpAlloc: GlobalReg
+| EagerBlackholeInfo: GlobalReg
+| GCEnter1: GlobalReg
+| GCFun: GlobalReg
 | BaseReg: GlobalReg
+| MachSp: GlobalReg
+| UnwindReturnReg: GlobalReg
 | PicBaseReg: GlobalReg
 .
 

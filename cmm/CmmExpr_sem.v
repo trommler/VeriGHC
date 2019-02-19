@@ -51,6 +51,7 @@ Definition globalRegToChunk (g:GlobalReg) : memory_chunk :=
   | LongReg _      => Mint64
   | BaseReg        => Many64
   | PicBaseReg     => Many64
+  | _              => Many64 (* This is cheating, but TODO: semantics for Cmm Core *)
   end.
 
 Local Open Scope Z_scope.
@@ -92,6 +93,7 @@ Definition globalRegToPtr (g:GlobalReg) : option val :=
      | LongReg l      => None (* These seem to be unused now *)
      | BaseReg        => Some (Vptr _BaseReg off_zero)
      | PicBaseReg     => Some (Vptr _PicBaseReg off_zero)
+     | _ => None (* All other TODO: Implement the registers in Cmm Core*)
      end.
 
 Definition env := PTree.t val.
