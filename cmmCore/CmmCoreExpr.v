@@ -56,26 +56,6 @@ Inductive CmmExpr : Set :=
 
 Definition cmmLabelType (lbl:CLabel) : CC_CmmType := bWord.
 
-(*
-Lemma noW8isFloatWidth : isFloatWidth W8 -> False.
-Proof.
-  intro. inversion H; discriminate.
-Qed.
-
-Lemma noW16isFloatWidth : isFloatWidth W16 -> False.
-Proof.
-  intro. inversion H; discriminate.
-Qed.
-
-Definition floatLitType (w:Width) : isFloatWidth w -> CC_CmmType :=
-  match w with
-  | W8  => fun pf : isFloatWidth W8 => match noW8isFloatWidth pf with end
-  | W16 => fun pf : isFloatWidth W16 => match noW16isFloatWidth pf with end
-  | W32 => fun _ => cmmFloat
-  | W64 => fun _ => cmmDouble
-  end.
- *)
-
 Definition cmmLitType (l : CC_CmmLit) : CC_CmmType :=
   match l with
   | CmmInt _ width => cmmBits width
