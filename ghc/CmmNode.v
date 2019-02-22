@@ -29,7 +29,6 @@ Inductive CmmNode : Set :=
 | CmmSwitch : CmmExpr -> SwitchTargets -> CmmNode
 | CmmCall   : CmmExpr -> option Label -> list GlobalReg -> ByteOff -> ByteOff
                                       -> ByteOff -> CmmNode
-(* CmmForeignCall is lowered to a CmmUnsafeForeignCall in CmmSink.hs  
+(* CmmForeignCall is lowered to a CmmUnsafeForeignCall in CmmSink.hs *)
 | CmmForeignCall : ForeignTarget -> list CmmFormal -> list CmmActual -> ULabel -> ByteOff -> ByteOff -> bool -> CmmNode
-*)
 .
