@@ -60,7 +60,7 @@ Definition jumpish (n:CmmNode) : bool :=
   | CmmCondBranch _ _ _ _ => true
   | CmmSwitch _ _ => true
   | CmmCall _ _ _ _ _ _ => true
-  | CmmUnsafeForeignCall _ _ _ => true
+  | CmmForeignCall _ _ _ _ _ _ _ => true
   | _ => false
   end.
 
