@@ -163,7 +163,7 @@ Definition machOpResultType (mo:MachOp) (tys:list CmmType) : CmmType :=
   | MO_VF_Mul  l w
   | MO_VF_Quot l w
   | MO_VF_Neg  l w => cmmVec l (cmmFloat w)
-  | MO_AlignmentCheck _ _ => match tys with
+  | MO_AlignmentCheck _ r => match tys with
                              | nil => cmmBits r (* should never happen*)
                              | cons h _ => h
                              end 
