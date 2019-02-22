@@ -1,5 +1,6 @@
 (* Coq representation of compiler/cmm/CmmType.hs *)
 Require Import Eqdep.
+Require Import BinNums.
 
 Require Import compcert.lib.Integers.
 Require Import GHC.Int.
@@ -44,19 +45,36 @@ Definition cmmFloat : Width -> CmmType :=
 Definition b64 : CmmType := cmmBits W64.
 Definition bWord : CmmType := cmmBits W64. (* Need DynFlags here *) 
 
+Local Open Scope Z_scope.
+
 Definition widthFromBytes (n:Int) : Width :=
   match n with
-  | one => W8
-  | two => W16
-  | four => W32
-  | eight => W64
-  | sixteen => W128
-  | thirtytwo => W256
-  | sixtyfour => W512
-  | _ => W80
+  | Int64.mkint x _ => match x with
+                       | 1 => W8
+                       | 2 => W16
+                       | 4 => W32
+                       | 8 => W64
+                       | 16 => W128
+                       | 32 => W256
+                       | 64 => W512
+                       | _ => W80
+                       end
   end.
+
+Definition widthInBytes (w:Width) : Int :=
+  Int64.repr (match w with
+              | W8 => 1
+              | W16 => 2
+              | W32 => 4
+              | W64 => 8
+              | W128 => 16
+              | W256 => 32
+              | W512 => 64
+              | _ => 0
+              end)
+.
 
 Definition cmmVec (n:Int) (t:CmmType) : CmmType :=
   match t with
-  | CT_CmmType cat w => CT_CmmType (VecCat n cat) (widthFromBytes (n*widthInBytes w))
+  | CT_CmmType cat w => CT_CmmType (VecCat n cat) (widthFromBytes (Int64.mul n (widthInBytes w)))
   end.
