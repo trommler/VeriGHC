@@ -40,6 +40,55 @@ Definition moDenote (mo : MachOp) (ps : list (option val)) : option val :=
   | MO_Eq _,  [Some v1;Some v2] => Val.cmpl Ceq v1 v2
   | MO_Ne _,  [Some v1;Some v2] => Val.cmpl Cne v1 v2
   | MO_Mul _, [Some v1;Some v2] => Some (Val.mull v1 v2)
+  | MO_S_MulMayOflo _, [Some v1;Some v2] => None
+  | MO_S_Quot _, [Some v1;Some v2] => Val.divls v1 v2
+  | MO_S_Rem _, [Some v1;Some v2] => Val.modls v1 v2
+  | MO_S_Neg _, [Some v] => Some (Val.negl v)
+(* Unsigned multiply/divide *)
+  | MO_U_MulMayOflo _, [Some v1;Some v2] => None
+  | MO_U_Quot _, [Some v1;Some v2] => Val.divlu v1 v2
+  | MO_U_Rem _, [Some v1;Some v2] => Val.modlu v1 v2
+(* Signed comparisons *)
+  | MO_S_Ge _, [Some v1;Some v2] => Val.cmpl Cge v1 v2
+  | MO_S_Le _, [Some v1;Some v2] => Val.cmpl Cle v1 v2
+  | MO_S_Gt _, [Some v1;Some v2] => Val.cmpl Cgt v1 v2
+  | MO_S_Lt _, [Some v1;Some v2] => Val.cmpl Clt v1 v2
+(* Unsigned comparisons *)
+  | MO_U_Ge _, [Some v1;Some v2] => Val.cmplu Cge v1 v2
+  | MO_U_Le _, [Some v1;Some v2] => Val.cmplu Cle v1 v2
+  | MO_U_Gt _, [Some v1;Some v2] => Val.cmplu Cgt v1 v2
+  | MO_U_Lt _, [Some v1;Some v2] => Val.cmplu Clt v1 v2
+(* Floating point arithmetic *)
+  | MO_F_Add _, [Some v1;Some v2] => Some (Val.addf v1 v2)
+  | MO_F_Sub _, [Some v1;Some v2] => Some (Val.subf v1 v2)
+  | MO_F_Neg _, [Some v1] => None
+  | MO_F_Mul _, [Some v1;Some v2] => Some (Val.mulf v1 v2)
+  | MO_F_Quot _, [Some v1;Some v2] => Some (Val.divf v1 v2)
+(* Floating point comparison *)
+  | MO_F_Eq _, [Some v1;Some v2] => Some (Val.cmpf Ceq v1 v2)
+  | MO_F_Ne _, [Some v1;Some v2] => Some (Val.cmpf Cne v1 v2)
+  | MO_F_Ge _, [Some v1;Some v2] => Some (Val.cmpf Cge v1 v2)
+  | MO_F_Le _, [Some v1;Some v2] => Some (Val.cmpf Cle v1 v2)
+  | MO_F_Gt _, [Some v1;Some v2] => Some (Val.cmpf Cgt v1 v2)
+  | MO_F_Lt _, [Some v1;Some v2] => Some (Val.cmpf Clt v1 v2)
+(* Bitwise operations.  Not all of these may be supported
+   at all sizes, and only integral Widths are valid. *)
+  | MO_And _, [Some v1;Some v2] => Some (Val.andl v1 v2)
+  | MO_Or _, [Some v1;Some v2] => Some (Val.orl v1 v2)
+  | MO_Xor _, [Some v1;Some v2] => Some (Val.xorl v1 v2)
+  | MO_Not _, [Some v1] => Some (Val.notl v1)
+  | MO_Shl _, [Some v1;Some v2] => Some (Val.shrl v1 v2)
+  | MO_U_Shr _, [Some v1;Some v2] => Some (Val.shrlu v1 v2)
+  | MO_S_Shr _, [Some v1;Some v2] => Some (Val.shrxl v1 v2)
+(* Conversions.  Some of these will be NOPs.
+   Floating-point conversions use the signed variant. *)
+  | MO_SF_Conv _ _, [Some v1] => Val.floatoflong v1
+  | MO_FS_Conv _ _, [Some v1] => Val.longoffloat v1
+  | MO_SS_Conv _ _, [Some v1] => Some v1
+  | MO_UU_Conv _ _, [Some v1] => Some v1
+  | MO_XX_Conv _ _, [Some v1] => Some v1
+  | MO_FF_Conv _ _, [Some v1] => Some v1
+
   | _, _ => None
   end.
 
