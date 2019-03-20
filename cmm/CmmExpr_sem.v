@@ -33,6 +33,10 @@ Definition cmmLitDenote (l : CmmLit) : option val :=
   | CmmHighStackMark => None
   end.
 
+
+(* FIXME: Define what valid pointers are in Cmm *)
+Definition all_ptr_valid (b:block) (off:Z) : bool := true.
+
 Definition moDenote (mo : MachOp) (ps : list (option val)) : option val :=
   match mo,ps with
   | MO_Add _, [Some v1;Some v2] => Some (Val.addl v1 v2)
@@ -54,10 +58,10 @@ Definition moDenote (mo : MachOp) (ps : list (option val)) : option val :=
   | MO_S_Gt _, [Some v1;Some v2] => Val.cmpl Cgt v1 v2
   | MO_S_Lt _, [Some v1;Some v2] => Val.cmpl Clt v1 v2
 (* Unsigned comparisons *)
-  | MO_U_Ge _, [Some v1;Some v2] => Val.cmplu Cge v1 v2
-  | MO_U_Le _, [Some v1;Some v2] => Val.cmplu Cle v1 v2
-  | MO_U_Gt _, [Some v1;Some v2] => Val.cmplu Cgt v1 v2
-  | MO_U_Lt _, [Some v1;Some v2] => Val.cmplu Clt v1 v2
+  | MO_U_Ge _, [Some v1;Some v2] => Val.cmplu all_ptr_valid Cge v1 v2
+  | MO_U_Le _, [Some v1;Some v2] => Val.cmplu all_ptr_valid Cle v1 v2
+  | MO_U_Gt _, [Some v1;Some v2] => Val.cmplu all_ptr_valid Cgt v1 v2
+  | MO_U_Lt _, [Some v1;Some v2] => Val.cmplu all_ptr_valid Clt v1 v2
 (* Floating point arithmetic *)
   | MO_F_Add _, [Some v1;Some v2] => Some (Val.addf v1 v2)
   | MO_F_Sub _, [Some v1;Some v2] => Some (Val.subf v1 v2)
@@ -79,7 +83,7 @@ Definition moDenote (mo : MachOp) (ps : list (option val)) : option val :=
   | MO_Not _, [Some v1] => Some (Val.notl v1)
   | MO_Shl _, [Some v1;Some v2] => Some (Val.shrl v1 v2)
   | MO_U_Shr _, [Some v1;Some v2] => Some (Val.shrlu v1 v2)
-  | MO_S_Shr _, [Some v1;Some v2] => Some (Val.shrxl v1 v2)
+  | MO_S_Shr _, [Some v1;Some v2] => Val.shrxl v1 v2
 (* Conversions.  Some of these will be NOPs.
    Floating-point conversions use the signed variant. *)
   | MO_SF_Conv _ _, [Some v1] => Val.floatoflong v1
