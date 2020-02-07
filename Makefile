@@ -1,3 +1,6 @@
+FOREIGN_HS_TO_COQ = 1
+HS_TO_COQ_DIR = ext/hs-to-coq
+
 include ext/hs-to-coq/common.mk
 
 .PHONY: coq clean
