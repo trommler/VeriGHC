@@ -43,3 +43,7 @@ CoqMakefile.conf
 
 # hs-to-coq temporary directory
 .ghc-tmp/
+# dependencies for hs-to-coq
+deps/
+# generated and copied coq files
+lib/

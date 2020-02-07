@@ -1,0 +1,31 @@
+axiomatize module CmmType
+
+# need Word8, etc.
+skip CmmType.narrowU
+skip CmmType.narrowS
+
+# DynFlags
+## sPlatformConstants not included in DynFlags
+skip CmmType.rEP_CostCentreStack_mem_alloc
+skip CmmType.rEP_CostCentreStack_scc_count
+skip CmmType.rEP_StgEntCounter_allocd
+skip CmmType.rEP_StgEntCounter_allocs
+
+## show instance for error message
+skip CmmType.cIntWidth
+skip CmmType.cInt
+
+order CmmType.Eq__Width CmmType.cmmEqType CmmType.cmmEqType_ignoring_ptrhood
+
+# something strange with this *derived* instance
+skip CmmType.Ord__Width
+
+## recursive instance definition! replace when we can parse
+redefine Local Definition CmmType.Eq___CmmCat_op_zeze__ : CmmCat -> (CmmCat -> bool) := fun x y => true.
+# fix cat arg_261__ arg_262__ := match arg_261__ , arg_262__ with | GcPtrCat , GcPtrCat => true | BitsCat , BitsCat => true | FloatCat , FloatCat => true| VecCat a1 a2 , VecCat b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1)) ((cat a2 b2))) | _ , _ => false end.
+
+# needs nat type classes
+skip CmmType.vecElemType
+
+order CmmType.Eq___CmmCat CmmType.cmmEqType
+order CmmType.Eq___Width  CmmType.cmmEqType

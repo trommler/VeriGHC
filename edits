@@ -1,3 +1,14 @@
+
+# Taken from ext/hs-to-coq/examples/ghc/edits
+# Punned
+rename value CmmType.CmmType = CmmType.Mk_CmmType
+
+# packages we don't yet support 'integer-simple' and 'integer-gmp'
+skip module GHC.Integer.Type
+rename type GHC.Integer.Type.Integer = GHC.Num.Integer
+
+# End ext/hs-to-coq/examples/ghc/edits
+
 # from hs-to-coq: Should skip these everywhere
 skip module Outputable
 skip module GHC.Show
