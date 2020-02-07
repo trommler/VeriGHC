@@ -1,4 +1,4 @@
-axiomatize module CmmType
+skip class Outputable.Outputable
 
 # need Word8, etc.
 skip CmmType.narrowU

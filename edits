@@ -1,11 +1,19 @@
 
 # Taken from ext/hs-to-coq/examples/ghc/edits
+# don't try to format error messages
+rename value Outputable.pprPanic = Panic.panicStr
+
+rewrite forall x, Outputable.ppr x = Panic.someSDoc
+
 # Punned
 rename value CmmType.CmmType = CmmType.Mk_CmmType
 
 # packages we don't yet support 'integer-simple' and 'integer-gmp'
 skip module GHC.Integer.Type
 rename type GHC.Integer.Type.Integer = GHC.Num.Integer
+
+# skip serialization-related classes
+skip class Outputable.Outputable
 
 # End ext/hs-to-coq/examples/ghc/edits
 
