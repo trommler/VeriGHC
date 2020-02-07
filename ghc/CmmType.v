@@ -1,6 +1,6 @@
 (* Coq representation of compiler/cmm/CmmType.hs *)
 Require Import Eqdep.
-Require Import BinNums.
+Require Import Coq.ZArith.BinInt. 
 
 Require Import compcert.lib.Integers.
 Require Import GHC.Int.
@@ -47,6 +47,7 @@ Definition bWord : CmmType := cmmBits W64. (* Need DynFlags here *)
 
 Local Open Scope Z_scope.
 
+
 Definition widthFromBytes (n:Int) : Width :=
   match n with
   | Int64.mkint x _ => match x with
@@ -60,6 +61,7 @@ Definition widthFromBytes (n:Int) : Width :=
                        | _ => W80
                        end
   end.
+
 
 Definition widthInBytes (w:Width) : Int :=
   Int64.repr (match w with

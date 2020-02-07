@@ -1,4 +1,5 @@
 Require Import Coq.Numbers.BinNums.
+Require Import Coq.ZArith.BinInt.
 Require Import List.
 Import ListNotations.
 
@@ -79,6 +80,7 @@ Inductive initial_state (p:cmm_program) : state -> Prop :=
     Genv.find_funct_ptr ge b = Some f ->
     initial_state p (CallState f nil Kstop m0).
 
+(*
 Definition StgReturn : cmm_fundef :=
   External (EF_runtime "StgReturn"
                        {| sig_args := [Tint];
@@ -91,3 +93,4 @@ Definition StgReturn : cmm_fundef :=
 Inductive final_state : state -> int -> Prop :=
 | final_state_intro : forall s m r,
     final_state (CallState StgReturn s Kstop m) r.
+*)

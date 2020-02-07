@@ -108,7 +108,7 @@ Definition globalRegToChunk (g:GlobalReg) : memory_chunk :=
   end.
 
 Local Open Scope Z_scope.
-
+(*
 Definition globalRegToPtr (g:GlobalReg) : option val :=
   let off_zero := (Ptrofs.of_int64 Int64.zero)
   in match g with
@@ -149,8 +149,9 @@ Definition globalRegToPtr (g:GlobalReg) : option val :=
      | _ => None (* All other TODO: Implement the registers in Cmm Core*)
      end.
 
+*)
 Definition env := PTree.t val.
-(* FIXME: Implement all expressions *)
+(* FIXME: Implement all expressions *) (*
 Fixpoint cmmExprDenote (m:mem) (en:env) (sp:val) (e:CmmExpr) : option val :=
   match e with
   | CE_CmmLit l => cmmLitDenote l
@@ -196,3 +197,4 @@ Fixpoint cmmExprListDenote (m:mem) (en:env) (sp:val) (es:list CmmExpr) : option 
                           end
               end
   end.
+*)

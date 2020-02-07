@@ -1,3 +1,5 @@
+include ext/hs-to-coq/common.mk
+
 .PHONY: coq clean
 
 coq: CoqMakefile

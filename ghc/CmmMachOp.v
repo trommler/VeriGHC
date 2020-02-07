@@ -146,7 +146,7 @@ Definition machOpResultType (mo:MachOp) (tys:list CmmType) : CmmType :=
   | MO_FS_Conv _ to
   | MO_SF_Conv _ to
   | MO_FF_Conv _ to => cmmFloat to
-  | MO_V_Insert  l w => cmmVec l (cmmBits w)
+  | MO_V_Insert  l w => cmmVec l (cmmBits w) 
   | MO_V_Extract _ w => cmmBits w
   | MO_V_Add l w
   | MO_V_Sub l w

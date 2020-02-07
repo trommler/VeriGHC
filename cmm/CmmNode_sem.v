@@ -33,14 +33,14 @@ Record cmm_function : Type := mkfunction
 
 Definition cmm_fundef := AST.fundef cmm_function.
 
+Definition genv := Genv.t cmm_fundef unit.
+Definition env := PTree.t val.
+
 Inductive cont: Type :=
 | Kstop: cont
 | Klist: (list CmmNode) -> cont -> cont
 | Kcall: option ident -> cmm_function -> val -> env -> cont -> cont
 .
-
-Definition genv := Genv.t cmm_fundef unit.
-Definition env := PTree.t val.
 
 Section CmmSmallStep.
   Variable ge:genv.
@@ -207,6 +207,7 @@ Fixpoint assign_values (ress:list CmmFormal) (rs:list val) (e:env) : env :=
   | _, _ => e (* This should not happen! *)
   end.
 
+(*
 Inductive step : state -> state -> Prop :=
 | step_comment : forall f n ns k sp e m,
     step (Sequence f CmmComment (Klist (n::ns) k) sp e m)
@@ -257,5 +258,5 @@ Inductive step : state -> state -> Prop :=
 (* what do stack and environment look like upon proc entry? *)
     step (CallState fd vs (Kcall lbl f sp e k) m)
          (Sequence f' (CmmBranch l) k sp' e' m)
-.
+. *)
 End CmmSmallStep.
