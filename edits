@@ -22,3 +22,11 @@ skip class Outputable.Outputable
 skip module Outputable
 skip module GHC.Show
 skip module Deriving
+
+
+# from ext/hs-to-coq/examples/ghc/axiomatize-types.edits
+rename module IdInfo Core
+
+rename value IdInfo.IdInfo      = Core.Mk_IdInfo
+rename value IdInfo.DFunId      = Core.Mk_DFunId
+rename value IdInfo.JoinId      = Core.Mk_JoinId

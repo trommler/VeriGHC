@@ -11,6 +11,10 @@ MODULES        = \
    CmmType \
    CLabel \
    CmmMachOp \
+   Hoopl/Unique \
+   Hoopl/Label \
+   BlockId \
+   CmmExpr \
 
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
@@ -78,6 +82,7 @@ HS_TO_COQ_GHC_OPTS=\
      --iface-dir ext/hs-to-coq/base \
      --iface-dir ext/hs-to-coq/examples/containers/lib \
      --iface-dir ext/hs-to-coq/examples/transformers/lib \
+     --iface-dir ext/hs-to-coq/examples/ghc/lib \
      --iface-dir $(OUT) \
      --dependency-dir deps \
      -e edits \

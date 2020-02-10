@@ -1,0 +1,3 @@
+axiomatize module Hoopl.Unique
+
+skip class Hoopl.Collections.IsSet

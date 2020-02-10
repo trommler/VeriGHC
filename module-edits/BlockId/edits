@@ -1,0 +1,4 @@
+axiomatize module BlockId
+
+# requires Hoopl, which is not translated, yet
+skip BlockId.mkBlockId

@@ -1,0 +1,4 @@
+axiomatize module Hoopl.Label
+
+rename value Hoopl.Label.Label = Hoopl.Label.MkLabel
+
