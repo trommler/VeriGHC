@@ -1,7 +1,8 @@
 
 # Taken from ext/hs-to-coq/examples/ghc/edits
 # don't try to format error messages
-rename value Outputable.pprPanic = Panic.panicStr
+rename type Outputable.SDoc        = GHC.Base.String
+rename value Outputable.pprPanic   = Panic.panicStr
 
 rewrite forall x, Outputable.ppr x = Panic.someSDoc
 

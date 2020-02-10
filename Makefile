@@ -7,11 +7,13 @@ include ext/hs-to-coq/common.mk
 
 HANDMOD        =
 
-MODULES        = CmmType
+MODULES        = \
+   CmmType \
+   CLabel \
 
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
-BROKEN_MODULES =
+BROKEN_MODULES = \
 
 VFILES_GEN     = $(addsuffix .v,$(MODULES))
 VFILES_MAN     = $(addsuffix .v,$(HANDMOD))
