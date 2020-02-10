@@ -10,6 +10,7 @@ HANDMOD        =
 MODULES        = \
    CmmType \
    CLabel \
+   CmmMachOp \
 
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
