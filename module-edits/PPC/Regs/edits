@@ -1,0 +1,7 @@
+axiomatize module PPC.Regs
+
+# these require Platform
+skip PPC.Regs.callClobberedRegs
+skip PPC.Regs.allFPArgRegs
+skip PPC.Regs.allocatableRegs
+skip PPC.Regs.tmpReg

@@ -1,0 +1,4 @@
+axiomatize module Reg
+
+# skip Reg.getHiVirtualRegFromLo
+# skip Reg.getHiVRegFromLo

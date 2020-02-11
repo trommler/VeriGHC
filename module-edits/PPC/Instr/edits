@@ -1,0 +1,23 @@
+
+# require Platform
+skip PPC.Instr.ppc_mkStackAllocInstr
+skip PPC.Instr.ppc_mkStackDeallocInstr
+skip PPC.Instr.ppc_mkStackAllocInstr'
+skip PPC.Instr.allocMoreStack
+skip PPC.Instr.ppc_regUsageOfInstr
+skip PPC.Instr.interesting
+axiomatize definition PPC.Instr.ppc_mkSpillInstr
+axiomatize definition PPC.Instr.ppc_mkLoadInstr
+skip PPC.Instr.stackFrameHeaderSize
+skip PPC.Instr.maxSpillSlots
+skip PPC.Instr.spillSlotToOffset
+
+# require Cmm
+skip constructor PPC.Instr.LDATA
+skip PPC.Instr.makeFarBranches
+
+# skipped in Instruction
+skip method Instruction.Instruction regUsageOfInstr
+skip method Instruction.Instruction mkRegRegMoveInstr
+skip method Instruction.Instruction mkStackAllocInstr
+skip method Instruction.Instruction mkStackDeallocInstr

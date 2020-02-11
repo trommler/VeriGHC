@@ -1,0 +1,2 @@
+# we don't need the panic message here
+in Format.intFormat skip case pattern other

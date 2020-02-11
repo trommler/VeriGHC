@@ -1,0 +1,16 @@
+axiomatize module Instruction
+
+# require Cmm
+skip Instruction.topInfoTable
+skip Instruction.entryBlocks
+
+# types depending on Cmm
+skip Instruction.NatCmm
+skip Instruction.NatCmmDecl
+skip Instruction.NatBasicBlock
+
+# require Platform
+skip method Instruction.Instruction regUsageOfInstr
+skip method Instruction.Instruction mkRegRegMoveInstr
+skip method Instruction.Instruction mkStackAllocInstr
+skip method Instruction.Instruction mkStackDeallocInstr

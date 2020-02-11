@@ -15,6 +15,14 @@ MODULES        = \
    Hoopl/Label \
    BlockId \
    CmmExpr \
+   Format \
+   RegClass \
+   Reg \
+   PPC/Regs \
+   PPC/Cond \
+   Instruction \
+   PPC/Instr \
+   PPC/CodeGen \
 
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
