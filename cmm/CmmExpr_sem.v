@@ -9,10 +9,10 @@ Require Import compcert.common.Values.
 Require Import compcert.lib.Integers.
 Require Import compcert.lib.Maps.
 
-Require Import GHC.CmmExpr.
-Require Import GHC.CmmType.
-Require Import GHC.CmmMachOp.
-Require Import GHC.Unique.
+Require Import CmmExpr.
+Require Import CmmType.
+Require Import CmmMachOp.
+Require Import Unique.
 
 Require Import CmmType_sem.
 Require Import Identifiers.

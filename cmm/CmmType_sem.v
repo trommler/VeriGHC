@@ -1,4 +1,4 @@
-Require Import GHC.CmmType.
+Require Import CmmType.
 
 Require Import compcert.lib.Integers.
 Require Import compcert.lib.Floats.

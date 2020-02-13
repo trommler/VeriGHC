@@ -9,13 +9,13 @@
 -R nativeGen nativeGen
 -R cmmCore CmmCore
 common/HaskellValues.v
-ghc/BlockId.v
-ghc/Cmm.v
-ghc/CmmExpr.v
-ghc/CmmMachOp.v
+#ghc/BlockId.v
+#ghc/Cmm.v
+#ghc/CmmExpr.v
+#ghc/CmmMachOp.v
 ghc/CmmSwitch.v
-ghc/CmmType.v
-ghc/CmmNode.v
+#ghc/CmmType.v
+#ghc/CmmNode.v
 ghc/Int.v
 ghc/Label.v
 ghc/OrdList.v
@@ -26,12 +26,12 @@ cmm/heap.v
 cmm/cmm.v
 cmm/CmmExpr_sem.v
 cmm/CmmType_sem.v
-cmm/CmmNode_sem.v
-cmm/Cmm_sem.v
+#cmm/CmmNode_sem.v
+#cmm/Cmm_sem.v
 cmm/Identifiers.v
-nativeGen/Instr.v
-nativeGen/Regs.v
-nativeGen/Format.v
-nativeGen/Cond.v
+#nativeGen/Instr.v
+#nativeGen/Regs.v
+#nativeGen/Format.v
+#nativeGen/Cond.v
 cmmCore/CmmCoreType.v
 cmmCore/CmmCoreExpr.v
