@@ -5,7 +5,9 @@ HS_TO_COQ_DIR = ext/hs-to-coq
 
 include ext/hs-to-coq/common.mk
 
-HANDMOD        =
+HANDMOD        = \
+   Hoopl/Block \
+
 
 MODULES        = \
    CmmType \
@@ -15,6 +17,10 @@ MODULES        = \
    Hoopl/Label \
    BlockId \
    CmmExpr \
+   CmmSwitch \
+   SMRep \
+   CmmNode \
+   Cmm \
    Format \
    RegClass \
    Reg \
@@ -22,6 +28,8 @@ MODULES        = \
    PPC/Cond \
    Instruction \
    PPC/Instr \
+   Debug \
+   NCGMonad \
    PPC/CodeGen \
 
 # These modules translate, but do not compile, at the moment and
@@ -47,7 +55,9 @@ EDITFILES      = edits $(addsuffix /edits,$(EDITPATHS)) $(addsuffix /*.v, $(EDIT
 
 .PHONY: coq clean
 
-all: coq
+all: vfiles coq
+
+vfiles : $(OUT)/edits $(OUT)/Makefile $(OUTFILES)
 
 $(OUT)/README.md:
 	mkdir -p $(OUT)
@@ -125,6 +135,7 @@ CoqMakefile: Makefile _CoqProject
 	coq_makefile -f _CoqProject -o CoqMakefile
 
 clean:: CoqMakefile
+	rm -rf $(OUT)
 	$(MAKE) -f CoqMakefile clean
 	rm -f CoqMakefile CoqMakefile.conf .coqdepend.d
 
