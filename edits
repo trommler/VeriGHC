@@ -1,13 +1,11 @@
-
+##################################################
 # Taken from ext/hs-to-coq/examples/ghc/edits
+##################################################
 # don't try to format error messages
 rename type Outputable.SDoc        = GHC.Base.String
 rename value Outputable.pprPanic   = Panic.panicStr
 
 rewrite forall x, Outputable.ppr x = Panic.someSDoc
-
-# Punned
-rename value CmmType.CmmType = CmmType.Mk_CmmType
 
 # packages we don't yet support 'integer-simple' and 'integer-gmp'
 skip module GHC.Integer.Type
@@ -23,10 +21,29 @@ skip module Outputable
 skip module GHC.Show
 skip module Deriving
 
-
+#########################################################
 # from ext/hs-to-coq/examples/ghc/axiomatize-types.edits
+#########################################################
 rename module IdInfo Core
 
 rename value IdInfo.IdInfo      = Core.Mk_IdInfo
 rename value IdInfo.DFunId      = Core.Mk_DFunId
 rename value IdInfo.JoinId      = Core.Mk_JoinId
+
+#######################################################
+# from ext/hs-to-coq/examples/ghc/no-type-edits
+#######################################################
+rename module CoreSyn Core
+skip module ForeignCall
+rename type ForeignCall.ForeignCall = unit
+rename type ForeignCall.CCallConv = unit
+
+#######################################################
+# my stuff
+#######################################################
+
+# Punned
+rename value CmmType.CmmType  = CmmType.Mk_CmmType
+rename value Debug.DebugBlock = Debug.MkDebugBlock
+
+

@@ -1,0 +1,24 @@
+axiomatize module PPC.CodeGen
+
+skip PPC.CodeGen.cmmTopCodeGen
+skip PPC.CodeGen.basicBlockCodeGen
+skip PPC.CodeGen.stmstToInstrs
+skip PPC.CodeGen.stmtToInstrs
+skip PPC.CodeGen.getRegisterReg
+skip PPC.CodeGen.jumpTableEntry
+skip PPC.CodeGen.mangleIndexTree
+skip PPC.CodeGen.extendSExpr
+skip PPC.CodeGen.extendUExpr
+skip PPC.CodeGen.getAmode
+
+
+# Things we need next
+skip PPC.CodeGen.getRegister
+skip PPC.CodeGen.getRegister'
+
+# 64-bit operations for 32-bit platforms
+skip PPC.CodeGen.getI64Amodes
+skip PPC.CodeGen.assignMem_I64Code
+skip PPC.CodeGen.assignReg_I64Code
+skip PPC.CodeGen.iselExpr64
+

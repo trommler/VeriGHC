@@ -1,0 +1,8 @@
+axiomatize module Debug
+
+rename value Debug.UnwindPoint=Debug.MkUnwindPoint
+rename value Debug.DebugBlock=Debug.MkDebugBlock
+
+skip Debug.BlockContext
+skip Debug.cmmDebugGen
+skip Debug.blockContexts

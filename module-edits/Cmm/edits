@@ -1,0 +1,31 @@
+axiomatize module Cmm
+
+skip Cmm.C_SRT
+skip Cmm.needsSRT
+skip Cmm.ProfilingInfo
+skip Cmm.CmmInfoTable
+skip Cmm.CmmTopInfo
+
+# requires SDoc
+skip Cmm.pprBBlock
+
+# requires Hoopl.Graph
+skip Cmm.CmmGraph
+skip Cmm.GenCmmGraph
+skip Cmm.CmmDecl
+skip Cmm.RawCmmDecl
+skip Cmm.topInfoTable
+skip Cmm.RawCmmGroup
+skip Cmm.CmmGroup
+skip Cmm.CmmProgram
+
+# requires Hoopl.Block
+skip Cmm.CmmBlock
+
+# requires Word8
+skip constructor Cmm.CmmString
+
+# Punned
+rename value Cmm.Section=Cmm.MkSection
+rename value Cmm.ListGraph=Cmm.MkListGraph
+rename value Cmm.CmmInfoTable= Cmm.MkCmmInfoTable

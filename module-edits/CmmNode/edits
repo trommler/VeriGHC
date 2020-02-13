@@ -1,0 +1,41 @@
+axiomatize module CmmNode
+
+# hs-to-coq does not generate correct code for CmmNode
+# `e` and `x` are not parameters but type indices
+# Inductive CmmNode e x : Type
+#   := | CmmEntry
+#    : Hoopl.Label.Label -> CmmTickScope -> CmmNode Hoopl.Block.C Hoopl.Block.O
+# [...]
+skip CmmNode.CmmNode
+
+add CmmNode Inductive CmmNode.CmmNode : Type -> (Type -> Type)
+  := | CmmEntry
+   : Hoopl.Label.Label -> (CmmTickScope -> CmmNode Hoopl.Block.C Hoopl.Block.O)
+  |  CmmComment : FastString.FastString -> CmmNode Hoopl.Block.O Hoopl.Block.O
+  |  CmmAssign
+   : CmmExpr.CmmReg -> (CmmExpr.CmmExpr -> CmmNode Hoopl.Block.O Hoopl.Block.O)
+  |  CmmStore
+   : CmmExpr.CmmExpr -> (CmmExpr.CmmExpr -> CmmNode Hoopl.Block.O Hoopl.Block.O)
+  |  CmmUnsafeForeignCall
+   : ForeignTarget ->
+     (list CmmFormal -> (list CmmActual -> CmmNode Hoopl.Block.O Hoopl.Block.O))
+  |  CmmBranch : Hoopl.Label.Label -> CmmNode Hoopl.Block.O Hoopl.Block.C
+  |  CmmSwitch
+   : CmmExpr.CmmExpr ->
+     (CmmSwitch.SwitchTargets -> CmmNode Hoopl.Block.O Hoopl.Block.C)
+.
+
+# cannot handle record types in GADTs
+# skip constructor CmmNode.CmmCondBranch
+# skip constructor CmmNode.CmmCall
+# skip constructor CmmNode.CmmForeignCall
+
+# no debug and no performance instrumentation
+# skip constructor CmmNode.CmmTick
+# skip constructor CmmNode.CmmUnwind
+
+skip class Hoopl.Graph.NonLocal
+
+# Punned
+rename value CmmNode.ForeignConvention = CmmNode.MkForeignConvention
+rename value CmmNode.ForeignTarget     = CmmNode.MkForeignTarget

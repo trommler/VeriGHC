@@ -1,0 +1,20 @@
+axiomatize module SMRep
+
+skip SMRep.StgWord
+skip SMRep.fromStgWord
+skip SMRep.toStgWord
+skip SMRep.StgHalfWord
+skip SMRep.fromStgHalfWord
+skip SMRep.toStgHalfWord
+skip SMRep.ConstrDescription
+skip SMRep.ClosureTypeInfo
+skip SMRep.stringToWord8s
+skip SMRep.pprWord8String
+skip SMRep.pprTypeInfo
+skip SMRep.mkHeapRep
+skip SMRep.closureTypeHdrSize
+
+skip constructor SMRep.HeapRep
+
+# rename value SMRep.StgWord = SMRep.MkStgWord
+
