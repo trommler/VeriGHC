@@ -1,0 +1,21 @@
+axiomatize module NCGMonad
+
+# Punned
+rename value NCGMonad.NatM_State=NCGMonad.MkNatM_State
+rename value NCGMonad.NatM=NCGMonad.MkNatM
+
+# skip NCGMonad.getDebugBlock
+# skip NCGMonad.mapAccumLNat
+# skip NCGMonad.getFileId
+
+axiomatize definition NCGMonad.getPicBaseNat
+
+# axiomatize the following as we do not have TargetReg, because that
+# requires Platform
+# axiomatize definition NCGMonad.getNewRegNat
+# axiomatize definition NCGMonad.getNewRegPairNat
+
+
+
+# "Order, please! Order!"
+order NCGMonad.Functor__NatM NCGMonad.Applicative__NatM NCGMonad.Monad__NatM NCGMonad.MonadUnique__NatM
