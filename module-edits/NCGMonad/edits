@@ -16,6 +16,8 @@ axiomatize definition NCGMonad.getPicBaseNat
 # axiomatize definition NCGMonad.getNewRegPairNat
 
 
-
+# The ordering of definitions is going to be fun. Monad return is defined as
+# Applicative pure and Applicative <*> is defined as Monad ap, sigh!
+# So far we axiomatize everything and leave this issue for later.
 # "Order, please! Order!"
 order NCGMonad.Functor__NatM NCGMonad.Applicative__NatM NCGMonad.Monad__NatM NCGMonad.MonadUnique__NatM
