@@ -1,0 +1,10 @@
+axiomatize module PIC
+
+skip PIC.initializePicBase_x86
+
+# Universe inconsistency
+skip class PIC.CmmMakeDynamicReferenceM
+
+# needs NatCmmDecl
+skip PIC.initializePicBase_ppc
+

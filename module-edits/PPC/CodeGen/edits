@@ -1,8 +1,8 @@
-axiomatize module PPC.CodeGen
+# axiomatize module PPC.CodeGen
 
 skip PPC.CodeGen.cmmTopCodeGen
 skip PPC.CodeGen.basicBlockCodeGen
-skip PPC.CodeGen.stmstToInstrs
+skip PPC.CodeGen.stmtsToInstrs
 skip PPC.CodeGen.stmtToInstrs
 skip PPC.CodeGen.getRegisterReg
 skip PPC.CodeGen.jumpTableEntry
@@ -10,11 +10,24 @@ skip PPC.CodeGen.mangleIndexTree
 skip PPC.CodeGen.extendSExpr
 skip PPC.CodeGen.extendUExpr
 skip PPC.CodeGen.getAmode
+skip PPC.CodeGen.generateJumpTableForInstr
 
+# not needed yet
+skip PPC.CodeGen.genCCall
+skip PPC.CodeGen.genCCall'
+skip PPC.CodeGen.condReg
+skip PPC.CodeGen.condIntReg
+skip PPC.CodeGen.condIntCode
+skip PPC.CodeGen.condFltReg
+skip PPC.CodeGen.coerceInt2FP'
+skip PPC.CodeGen.coerceInt2FP
+skip PPC.CodeGen.coerceFP2Int'
+skip PPC.CodeGen.coerceFP2Int
+skip PPC.CodeGen.genBranch
+skip PPC.CodeGen.genSwitch
+skip PPC.CodeGen.remainderCode
+skip PPC.CodeGen.shiftMulCode
 
-# Things we need next
-skip PPC.CodeGen.getRegister
-skip PPC.CodeGen.getRegister'
 
 # 64-bit operations for 32-bit platforms
 skip PPC.CodeGen.getI64Amodes
@@ -22,3 +35,7 @@ skip PPC.CodeGen.assignMem_I64Code
 skip PPC.CodeGen.assignReg_I64Code
 skip PPC.CodeGen.iselExpr64
 
+# Punned
+rename value PPC.CodeGen.CondCode=PPC.CodeGen.MkCondCode
+rename value PPC.CodeGen.ChildCode64=PPC.CodeGen.MkChildCode64
+rename value PPC.CodeGen.Amode=PPC.CodeGen.MkAmode

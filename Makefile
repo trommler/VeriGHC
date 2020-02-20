@@ -30,6 +30,8 @@ MODULES        = \
    PPC/Instr \
    Debug \
    NCGMonad \
+   Platform \
+   PIC \
    PPC/CodeGen \
 
 # These modules translate, but do not compile, at the moment and
