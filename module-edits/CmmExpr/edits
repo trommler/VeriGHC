@@ -25,7 +25,6 @@ skip class CmmExpr.DefinerOfRegs
 # Punned
 rename value CmmExpr.VGcPtr   = CmmExpr.MkVGcPtr
 rename value CmmExpr.LocalReg = CmmExpr.MkLocalReg
-rename value CmmExpr.CmmReg   = CmmExpr.MkCmmReg
 rename value CmmExpr.CmmLit   = CmmExpr.MkCmmLit
 
 # now this looks really stupid Eq is a constraint on Ord
