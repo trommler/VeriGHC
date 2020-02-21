@@ -45,5 +45,6 @@ rename type ForeignCall.CCallConv = unit
 # Punned
 rename value CmmType.CmmType  = CmmType.Mk_CmmType
 rename value Debug.DebugBlock = Debug.MkDebugBlock
+rename value CmmExpr.CmmReg   = CmmExpr.MkCmmReg
 
 
