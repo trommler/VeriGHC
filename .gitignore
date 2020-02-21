@@ -47,3 +47,5 @@ CoqMakefile.conf
 deps/
 # generated and copied coq files
 lib/
+# stamp files for submodules
+.stamp-hs-to-coq

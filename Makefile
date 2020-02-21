@@ -3,7 +3,7 @@ OUT=lib
 FOREIGN_HS_TO_COQ = 1
 HS_TO_COQ_DIR = ext/hs-to-coq
 
-include ext/hs-to-coq/common.mk
+include $(HS_TO_COQ_DIR)/common.mk
 
 HANDMOD        = \
    Hoopl/Block \
@@ -61,6 +61,14 @@ all: vfiles coq
 
 vfiles : $(OUT)/edits $(OUT)/Makefile $(OUTFILES)
 
+.stamp-hs-to-coq: .git/modules/ext/hs-to-coq/HEAD
+	cd $(HS_TO_COQ_DIR) && stack setup && stack build
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/base-src -f Makefile all
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers -f Makefile all
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/transformers -f Makefile all
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/ghc -f Makefile all
+	touch $@
+
 $(OUT)/README.md:
 	mkdir -p $(OUT)
 	mkdir -p deps
@@ -72,7 +80,7 @@ $(OUT)/edits:
 	mkdir -p $(OUT)
 	ln -fs ../edits $(OUT)/edits
 
-$(OUT)/_CoqProject: $(OUT)/README.md Makefile
+$(OUT)/_CoqProject: $(OUT)/README.md Makefile .stamp-hs-to-coq
 	> $@
 	echo '-Q . ""' >> $@
 	echo '-R ../ext/hs-to-coq/base ""' >> $@
@@ -137,6 +145,11 @@ CoqMakefile: Makefile _CoqProject
 	coq_makefile -f _CoqProject -o CoqMakefile
 
 clean:: CoqMakefile
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/ghc -f Makefile clean
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/base-src -f Makefile clean
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers -f Makefile clean
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/transformers -f Makefile clean
+	rm -f .stamp-hs-to-coq
 	rm -rf $(OUT)
 	$(MAKE) -f CoqMakefile clean
 	rm -f CoqMakefile CoqMakefile.conf .coqdepend.d
