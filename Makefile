@@ -32,6 +32,8 @@ MODULES        = \
    NCGMonad \
    Platform \
    PIC \
+   PprCmmExpr \
+   TargetReg \
    PPC/CodeGen \
 
 # These modules translate, but do not compile, at the moment and
