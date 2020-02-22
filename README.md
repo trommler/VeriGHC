@@ -15,7 +15,7 @@ When updating:
 
 ``make``
 
-(and wait for very long time)
+(and wait for a very long time)
 
 ``cd ../..``
 
