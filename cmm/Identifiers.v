@@ -4,7 +4,7 @@ Require Import compcert.common.AST.
 
 Local Open Scope positive_scope.
 
-(*
+
 Definition _BaseReg : ident := 2.
 Definition _PicBaseReg : ident := 3.
 
@@ -30,4 +30,3 @@ Definition _D3 : ident := 28.
 Definition _D4 : ident := 29.
 Definition _D5 : ident := 30.
 Definition _D6 : ident := 31.
-*)

@@ -20,7 +20,13 @@ Require Import Identifiers.
 (* FIXME: Implement all literals *)
 Definition cmmLitDenote (l : CmmLit) : option val :=
   match l with
-  | CmmInt n _ => Some (Vlong (Int64.repr n)) (* Ignore upper bits *)
+  | CmmInt n w => match w with
+                  | W8  => Some (Vint (Int.repr n))
+                  | W16 => Some (Vint (Int.repr n))
+                  | W32 => Some (Vint (Int.repr n))
+                  | W64 => Some (Vlong (Int64.repr n))
+                  | _   => None 
+                  end
   | CmmFloat rat w => match w with
                       | W32 => None
                       | W64 => None
@@ -108,11 +114,11 @@ Definition globalRegToChunk (g:GlobalReg) : memory_chunk :=
   end.
 
 Local Open Scope Z_scope.
-(*
+
 Definition globalRegToPtr (g:GlobalReg) : option val :=
   let off_zero := (Ptrofs.of_int64 Int64.zero)
   in match g with
-     | VanillaReg r _ => match Int64.unsigned r with
+     | VanillaReg r _ => match r with
                          | 1 => Some (Vptr _R1 off_zero)
                          | 2 => Some (Vptr _R2 off_zero)
                          | 3 => Some (Vptr _R3 off_zero)
@@ -125,7 +131,7 @@ Definition globalRegToPtr (g:GlobalReg) : option val :=
                          | 10 => Some (Vptr _R10 off_zero)
                          | _ => None
                          end
-     | FloatReg f     => match Int64.unsigned f with
+     | FloatReg f     => match f with
                          | 1 => Some (Vptr _F1 off_zero)
                          | 2 => Some (Vptr _F2 off_zero)
                          | 3 => Some (Vptr _F3 off_zero)
@@ -134,7 +140,7 @@ Definition globalRegToPtr (g:GlobalReg) : option val :=
                          | 6 => Some (Vptr _F6 off_zero)
                          | _ => None
                          end
-     | DoubleReg d    => match Int64.unsigned d with
+     | DoubleReg d    => match d with
                          | 1 => Some (Vptr _D1 off_zero)
                          | 2 => Some (Vptr _D2 off_zero)
                          | 3 => Some (Vptr _D3 off_zero)
@@ -149,7 +155,7 @@ Definition globalRegToPtr (g:GlobalReg) : option val :=
      | _ => None (* All other TODO: Implement the registers in Cmm Core*)
      end.
 
-*)
+
 Definition env := PTree.t val.
 (* FIXME: Implement all expressions *) (*
 Fixpoint cmmExprDenote (m:mem) (en:env) (sp:val) (e:CmmExpr) : option val :=
