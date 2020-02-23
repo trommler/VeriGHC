@@ -34,7 +34,8 @@ MODULES        = \
    PIC \
    PprCmmExpr \
    TargetReg \
-   PPC/CodeGen \
+
+# PPC/CodeGen \
 
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
@@ -140,8 +141,8 @@ $(OUTFILES_MAN): $(OUT)/%.v : manual/%.v
 
 
 coq: CoqMakefile $(OUT)/Makefile $(OUTFILES)
-	$(MAKE) -f CoqMakefile
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
+	$(MAKE) -f CoqMakefile
 
 CoqMakefile: Makefile _CoqProject
 	coq_makefile -f _CoqProject -o CoqMakefile

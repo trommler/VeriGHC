@@ -1,6 +1,7 @@
 Require Import Peano_dec.
 Require Import Compare_dec.
-Require Import List.
+Require Import Coq.Lists.List.
+Import ListNotations.
 
 Require Import compcert.common.Values.
 

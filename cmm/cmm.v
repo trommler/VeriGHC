@@ -7,7 +7,7 @@ Require Import ProofIrrelevance.
 
 Require Import compcert.lib.Integers.
 
-Require Import GHC.CmmType.
+Require Import CmmType.
 Require Import Cmm.CmmType_sem.
 
 Require Import heap.

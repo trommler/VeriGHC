@@ -1,4 +1,4 @@
-Require Import List.
+Require Import Coq.Lists.List.
 Import ListNotations.
 Require Import BinPosDef.
 
@@ -26,11 +26,12 @@ Definition cmmLitDenote (l : CmmLit) : option val :=
                       | W64 => None
                       | _ => None
                       end
-  | CmmLabel lab => Some (Vptr lab (Ptrofs.of_int64 Int64.zero))
-  | CmmLabelOff lab off => Some (Vptr lab (Ptrofs.of_int64 off))
-  | CmmLabelDiffOff l1 l2 off w => None
-  | CmmBlock blk => Some (Vptr blk (Ptrofs.of_int64 Int64.zero))
+  | CmmLabel lab => None (*Some (Vptr lab (Ptrofs.of_int64 Int64.zero)) *)
+  | CmmLabelOff lab off => None (* Some (Vptr lab (Ptrofs.of_int64 off)) *)
+  | CmmLabelDiffOff _ _ _ => None (* FIXME: See issue #6 *)
+  | CmmBlock blk => None (* Some (Vptr blk (Ptrofs.of_int64 Int64.zero)) *)
   | CmmHighStackMark => None
+  | _ => None (* CmmVec *)
   end.
 
 
@@ -90,7 +91,6 @@ Definition moDenote (mo : MachOp) (ps : list (option val)) : option val :=
   | MO_FS_Conv _ _, [Some v1] => Val.longoffloat v1
   | MO_SS_Conv _ _, [Some v1] => Some v1
   | MO_UU_Conv _ _, [Some v1] => Some v1
-  | MO_XX_Conv _ _, [Some v1] => Some v1
   | MO_FF_Conv _ _, [Some v1] => Some v1
 
   | _, _ => None

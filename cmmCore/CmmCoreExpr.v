@@ -1,12 +1,12 @@
 (* Coq implementation of compiler/cmm/CmmExpr.hs *)
 Require Import List.
 
-Require Import GHC.BlockId.
-Require Import GHC.Int.
-Require Import GHC.Unique.
-Require Import GHC.CmmMachOp.
-Require Import GHC.CmmType.
-Require Import GHC.CmmExpr.
+Require Import BlockId.
+Require Import Int.
+Require Import Unique.
+Require Import CmmMachOp.
+Require Import CmmType.
+Require Import CmmExpr.
 
 Require Import CmmCore.CmmCoreType.
 
