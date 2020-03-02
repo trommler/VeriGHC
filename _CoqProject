@@ -16,7 +16,6 @@
 # my libraries
 -R cmm Cmm
 -R common common
--R nativeGen nativeGen
 -R cmmCore CmmCore
 common/HaskellValues.v
 cmm/heap.v
