@@ -1,26 +1,19 @@
-axiomatize module CmmExpr
-# translation eats all memory on my machine :-(
-
-# translate simple definitions
-unaxiomatize definition CmmExpr.cmmExprType
-unaxiomatize definition CmmExpr.cmmExprWidth
-unaxiomatize definition CmmExpr.maybeInvertCmmExpr
-unaxiomatize definition CmmExpr.cmmRegType
-unaxiomatize definition CmmExpr.localRegType
-unaxiomatize definition CmmExpr.globalRegType
-unaxiomatize definition CmmExpr.isArgReg
-unaxiomatize definition CmmExpr.baseReg
-unaxiomatize definition CmmExpr.spReg
-unaxiomatize definition CmmExpr.hpReg
-unaxiomatize definition CmmExpr.spLimReg
-unaxiomatize definition CmmExpr.nodeReg
-unaxiomatize definition CmmExpr.node
+# skip vector literals for now, issues with Eq instance
+#skip constructor CmmExpr.CmmLit.CmmVec
+#in CmmExpr.Eq___CmmLit_op_zeze__ skip case pattern CmmVec _
+axiomatize definition CmmExpr.Eq___CmmLit
+axiomatize definition CmmExpr.Eq___CmmReg
+axiomatize definition CmmExpr.Ord__CmmReg
+axiomatize definition CmmExpr.Eq___CmmExpr
 
 # These classes do not work or I am missing something
 # Don't need them yet so let's just skip them
 skip class CmmExpr.UserOfRegs
 skip class CmmExpr.DefinerOfRegs
 
+# require UserOfRegs/DefinderOfRegs classes
+skip CmmExpr.foldLocalRegsUsed
+skip CmmExpr.foldLocalRegsDefd
 
 # Punned
 rename value CmmExpr.VGcPtr   = CmmExpr.MkVGcPtr
@@ -31,3 +24,4 @@ rename value CmmExpr.CmmLit   = CmmExpr.MkCmmLit
 # This works with CmmReg?!
 order CmmExpr.Eq___LocalReg CmmExpr.Ord__LocalReg
 order CmmExpr.Eq___GlobalReg CmmExpr.Ord__GlobalReg
+
