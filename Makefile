@@ -34,12 +34,12 @@ MODULES        = \
    PIC \
    PprCmmExpr \
    TargetReg \
-
-# PPC/CodeGen \
+   PPC/CodeGen \
 
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
 BROKEN_MODULES = \
+   PPC/CodeGen \
 
 VFILES_GEN     = $(addsuffix .v,$(MODULES))
 VFILES_MAN     = $(addsuffix .v,$(HANDMOD))
