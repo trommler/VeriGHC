@@ -153,7 +153,7 @@ clean:: CoqMakefile
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers -f Makefile clean
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/transformers -f Makefile clean
 	rm -f .stamp-hs-to-coq
-	rm -rf $(OUT)
+	rm -rf $(OUT) deps
 	$(MAKE) -f CoqMakefile clean
 	rm -f CoqMakefile CoqMakefile.conf .coqdepend.d
 
