@@ -86,7 +86,7 @@ $(OUT)/edits:
 $(OUT)/_CoqProject: $(OUT)/README.md Makefile .stamp-hs-to-coq
 	> $@
 	echo '-Q . ""' >> $@
-	echo '-R ../ext/hs-to-coq/base ""' >> $@
+	echo '-Q ../ext/hs-to-coq/base ""' >> $@
 	echo '-Q ../ext/hs-to-coq/base-thy  Proofs' >> $@
 	echo '-Q ../ext/hs-to-coq/examples/containers/lib   ""' >> $@
 	echo '-Q ../ext/hs-to-coq/examples/containers/theories  ""' >> $@
