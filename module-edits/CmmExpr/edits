@@ -1,3 +1,5 @@
+axiomatize module CmmExpr
+
 # skip vector literals for now, issues with Eq instance
 #skip constructor CmmExpr.CmmLit.CmmVec
 #in CmmExpr.Eq___CmmLit_op_zeze__ skip case pattern CmmVec _
@@ -18,7 +20,6 @@ skip CmmExpr.foldLocalRegsDefd
 # Punned
 rename value CmmExpr.VGcPtr   = CmmExpr.MkVGcPtr
 rename value CmmExpr.LocalReg = CmmExpr.MkLocalReg
-rename value CmmExpr.CmmLit   = CmmExpr.MkCmmLit
 
 # now this looks really stupid Eq is a constraint on Ord
 # This works with CmmReg?!

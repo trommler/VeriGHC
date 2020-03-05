@@ -13,7 +13,6 @@ skip PPC.Instr.maxSpillSlots
 skip PPC.Instr.spillSlotToOffset
 
 # require Cmm
-skip constructor PPC.Instr.LDATA
 skip PPC.Instr.makeFarBranches
 
 # skipped in Instruction

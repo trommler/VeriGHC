@@ -26,6 +26,5 @@ skip Cmm.CmmBlock
 skip constructor Cmm.CmmString
 
 # Punned
-rename value Cmm.Section=Cmm.MkSection
 rename value Cmm.ListGraph=Cmm.MkListGraph
 rename value Cmm.CmmInfoTable= Cmm.MkCmmInfoTable

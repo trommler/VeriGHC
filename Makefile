@@ -29,6 +29,7 @@ UTILS          = \
    Name \
    Literal \
    CoreSyn \
+   OrdList \
 
 CMM2PPC        = \
    CmmType \
@@ -48,10 +49,10 @@ CMM2PPC        = \
    PPC/Regs \
    PPC/Cond \
    Instruction \
+   Platform \
    PPC/Instr \
    Debug \
    NCGMonad \
-   Platform \
    PIC \
    PprCmmExpr \
    TargetReg \

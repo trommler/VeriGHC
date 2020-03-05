@@ -1,9 +1,4 @@
 axiomatize module Platform
 
-# causes weird error message
-# No interpretation for string "Partial record selector: field `armABI' has no match in constructor `ArchUnknown' of type `Arch'".
-skip constructor Platform.ArchARM
-skip constructor Platform.ArchPPC_64
-
 # Punned
-rename value Platform.Platform=Platform.MkPlatform
+rename value Platform.Platform=Platform.Mk_Platform

@@ -35,7 +35,6 @@ skip DynFlags.dynamic_flags_deps
 skip DynFlags.setTarget
 skip DynFlags.setTargetWithPlatform
 skip DynFlags.addWay
-skip DynFlags.targetPlatform
 skip DynFlags.interpretPackageEnv
 skip DynFlags.versionedAppDir
 skip DynFlags.setObjTarget
