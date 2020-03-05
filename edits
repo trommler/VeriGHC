@@ -1,11 +1,129 @@
 ##################################################
 # Taken from ext/hs-to-coq/examples/ghc/edits
 ##################################################
+####################################################
+# Replace IntMap with Map
+####################################################
+rename type Data.IntMap.Internal.IntMap = IntMap.IntMap
+rename value Data.IntMap.Internal.empty = IntMap.empty
+rename value Data.IntMap.Internal.singleton = IntMap.singleton
+rename value Data.IntMap.Internal.null = IntMap.null
+rename value Data.IntMap.Internal.keys = IntMap.keys
+rename value Data.IntMap.Internal.keysSet = IntMap.keysSet
+rename value Data.IntMap.Internal.elems = IntMap.elems
+rename value Data.IntMap.Internal.member = IntMap.member
+rename value Data.IntMap.Internal.size = IntMap.size
+rename value Data.IntMap.Internal.insert = IntMap.insert
+rename value Data.IntMap.Internal.insertWith = IntMap.insertWith
+rename value Data.IntMap.Internal.delete = IntMap.delete
+rename value Data.IntMap.Internal.alter = IntMap.alter
+rename value Data.IntMap.Internal.adjust = IntMap.adjust
+rename value Data.IntMap.Internal.map = IntMap.map
+rename value Data.IntMap.Internal.mapWithKey = IntMap.mapWithKey
+rename value Data.IntMap.Internal.mergeWithKey = IntMap.mergeWithKey
+rename value Data.IntMap.Internal.filter = IntMap.filter
+rename value Data.IntMap.Internal.filterWithKey = IntMap.filterWithKey
+rename value Data.IntMap.Internal.union = IntMap.union
+rename value Data.IntMap.Internal.unionWith = IntMap.unionWith
+rename value Data.IntMap.Internal.intersection = IntMap.intersection
+rename value Data.IntMap.Internal.intersectionWith = IntMap.intersectionWith
+rename value Data.IntMap.Internal.difference = IntMap.difference
+rename value Data.IntMap.Internal.partition = IntMap.partition
+rename value Data.IntMap.Internal.toList = IntMap.toList
+rename value Data.IntMap.Internal.foldr = IntMap.foldr
+rename value Data.IntMap.Internal.foldrWithKey = IntMap.foldrWithKey
+rename value Data.IntMap.Internal.findWithDefault = IntMap.findWithDefault
+rename value Data.IntMap.Internal.lookup = IntMap.lookup
+
+####################################################
+### DVarSet => VarSet,  DVarEnv => VarEnv
+##
+## We do this translation by implementing DVarSets using
+## the same implementation as VarSets. (Both are definitions
+## in Coq.)
+
+rename type UniqDSet.UniqDSet = UniqSet.UniqSet
+rename value UniqDSet.unitUniqDSet = UniqSet.unitUniqSet
+rename value UniqDSet.unionManyUniqDSets = UniqSet.unionManyUniqSets 
+rename value UniqDSet.unionUniqDSets = UniqSet.unionUniqSets
+rename value UniqDSet.sizeUniqDSet = UniqSet.sizeUniqSet
+rename value UniqDSet.partitionUniqDSet = UniqSet.partitionUniqSet
+rename value UniqDSet.mkUniqDSet = UniqSet.mkUniqSet
+rename value UniqDSet.minusUniqDSet = UniqSet.minusUniqSet
+rename value UniqDSet.isEmptyUniqDSet = UniqSet.isEmptyUniqSet
+rename value UniqDSet.intersectUniqDSets = UniqSet.intersectUniqSets
+rename value UniqDSet.foldUniqDSet = UniqSet.nonDetFoldUniqSet
+rename value UniqDSet.filterUniqDSet = UniqSet.filterUniqSet
+rename value UniqDSet.addOneToUniqDSet = UniqSet.addOneToUniqSet
+rename value UniqDSet.addListToUniqDSet = UniqSet.addListToUniqSet
+rename value UniqDSet.emptyUniqDSet = UniqSet.emptyUniqSet
+rename value UniqDSet.delOneFromUniqDSet = UniqSet.delOneFromUniqSet
+rename value UniqDSet.delListFromUniqDSet = UniqSet.delListFromUniqSet
+rename value UniqDSet.elementOfUniqDSet = UniqSet.elementOfUniqSet
+rename value UniqDSet.uniqDSetMinusUniqSet = UniqSet.minusUniqSet
+rename value UniqDSet.uniqDSetIntersectUniqSet = UniqSet.intersectUniqSets
+rename value UniqDSet.uniqDSetToList = UniqSet.nonDetEltsUniqSet
+rename value UniqDSet.foldDVarSet = Core.nonDetFoldUniqSet
+
+rename type UniqDFM.UniqDFM = UniqFM.UniqFM
+rename value UniqDFM.unitUDFM = UniqFM.unitUFM
+rename value UniqDFM.addListToUDFM = UniqFM.addListToUFM
+rename value UniqDFM.addToUDFM = UniqFM.addToUFM 
+rename value UniqDFM.addToUDFM_C = UniqFM.addToUFM_C 
+rename value UniqDFM.allUDFM = UniqFM.allUFM 
+rename value UniqDFM.alterUDFM = UniqFM.alterUFM
+rename value UniqDFM.anyUDFM  = UniqFM.anyUFM 
+rename value UniqDFM.delFromUDFM = UniqFM.delFromUFM 
+rename value UniqDFM.delListFromUDFM = UniqFM.delListFromUFM 
+rename value UniqDFM.disjointUDFM = UniqFM.disjointUFM
+rename value UniqDFM.elemUDFM = UniqFM.elemUFM 
+rename value UniqDFM.eltsUDFM = UniqFM.eltsUFM 
+rename value UniqDFM.emptyUDFM = UniqFM.emptyUFM 
+rename value UniqDFM.filterUDFM = UniqFM.filterUFM
+rename value UniqDFM.foldUDFM  = UniqFM.nonDetFoldUFM 
+rename value UniqDFM.isNullUDFM = UniqFM.isNullUFM 
+rename value UniqDFM.listToUDFM  = UniqFM.listToUFM 
+rename value UniqDFM.lookupUDFM = UniqFM.lookupUFM
+rename value UniqDFM.mapUDFM = UniqFM.mapUFM 
+rename value UniqDFM.minusUDFM  = UniqFM.minusUFM 
+rename value UniqDFM.partitionUDFM = UniqFM.partitionUFM 
+rename value UniqDFM.plusUDFM = UniqFM.plusUFM
+rename value UniqDFM.plusUDFM_C = UniqFM.plusUFM_C 
+rewrite forall x, UniqDFM.udfmToUfm x = x
+rename value UniqDFM.unitUFM = UniqDFM.unitUFM
+
 # don't try to format error messages
 rename type Outputable.SDoc        = GHC.Base.String
 rename value Outputable.pprPanic   = Panic.panicStr
+rename value Outputable.<+>           = GHC.Base.mappend
+rename value Outputable.<>            = GHC.Base.mappend
+rename value Outputable.text          = Datatypes.id
+rename value Outputable.empty         = Panic.someSDoc
+rename value Outputable.comma         = Panic.someSDoc
 
 rewrite forall x, Outputable.ppr x = Panic.someSDoc
+rewrite forall x, Outputable.ptext x       = Panic.someSDoc
+rewrite forall x, Outputable.int x         = Panic.someSDoc
+rewrite forall x, Outputable.char x        = Panic.someSDoc
+rewrite forall x, Outputable.ftext x       = Panic.someSDoc
+rewrite forall x, Outputable.fsep x        = Panic.someSDoc
+rewrite forall x, Outputable.vcat x        = Panic.someSDoc
+
+rename value Outputable.vbar          = Panic.someSDoc
+rename value Outputable.warnPprTrace  = Panic.warnPprTrace
+
+rewrite forall x, Outputable.parens x = x
+rewrite forall x, Outputable.brackets x = x
+rewrite forall x, Outputable.doubleQuotes x = x
+rewrite forall x y,       Outputable.punctuate x y = Panic.someSDoc
+rewrite forall x str msg, Outputable.pprTraceDebug str msg x = x
+rewrite forall x y,       x Outputable.$$ y = Panic.someSDoc
+rewrite forall v str num msg, Outputable.warnPprTrace b str num msg v = v
+rewrite forall s n d, Outputable.assertPprPanic s n d = GHC.Err.error d
+rewrite forall x y, x Outputable.$$ y = x
+
+# packages we don't yet support 'bytestring'
+rename type Data.ByteString.Internal.ByteString = GHC.Base.String
 
 # packages we don't yet support 'integer-simple' and 'integer-gmp'
 skip module GHC.Integer.Type
@@ -13,6 +131,44 @@ rename type GHC.Integer.Type.Integer = GHC.Num.Integer
 
 # skip serialization-related classes
 skip class Outputable.Outputable
+skip class Outputable.OutputableBndr
+skip class Json.ToJson
+skip class Binary.Binary
+# and other non-interesting classes
+skip class GHC.PackageDb.BinaryStringRep
+skip class GHC.PackageDb.DbUnitIdModuleRep
+
+# Punned
+rename value BasicTypes.EP   = BasicTypes.Mk_EP
+rename value BasicTypes.Fixity   = BasicTypes.Mk_Fixity
+rename value BasicTypes.InlinePragma = BasicTypes.Mk_InlinePragma
+rename value BasicTypes.OverlapFlag   = BasicTypes.Mk_OverlapFlag
+rename value BasicTypes.StringLiteral = BasicTypes.Mk_StringLiteral
+rename value BasicTypes.SourceText = BasicTypes.Mk_SourceText
+rename value BasicTypes.WarningTxt   = BasicTypes.Mk_WarningTxt
+rename value UniqSet.UniqSet   = UniqSet.Mk_UniqSet
+rename value EnumSet.EnumSet   = EnumSet.Mk_EnumSet
+rename value Module.Module = Module.Mk_Module
+rename value Module.ModuleName = Module.Mk_ModuleName
+rename value Module.NDModule = Module.Mk_NDModule
+rename value Module.ModLocation = Module.Mk_ModLocation
+rename value Module.ModuleEnv = Module.Mk_ModuleEnv
+rename value Module.ComponentId = Module.Mk_ComponentId
+rename value Module.IndefUnitId = Module.Mk_IndefUnitId
+rename value Module.IndefModule = Module.Mk_IndefModule
+rename value Module.InstalledUnitId   = Module.Mk_InstalledUnitId
+rename value Module.InstalledModule   = Module.Mk_InstalledModule
+rename value Module.InstalledModuleEnv   = Module.Mk_InstalledModuleEnv
+rename value Module.DefUnitId   = Module.Mk_DefUnitId
+rename value DynFlags.PackageArg = DynFlags.Mk_PackageArg
+rename value DynFlags.Option = DynFlags.Mk_Option
+rename value DynFlags.ModRenaming = DynFlags.Mk_ModRenaming
+rename value DynFlags.FlushOut = DynFlags.Mk_FlushOut
+rename value DynFlags.LlvmTarget = DynFlags.Mk_LlvmTarget
+rename value DynFlags.FilesToClean = DynFlags.Mk_FilesToClean
+rename value OccName.OccName = OccName.Mk_OccName
+rename value Name.Name = Name.Mk_Name
+rename value Name.BuiltInSyntax = Name.Mk_BuiltInSyntax
 
 # End ext/hs-to-coq/examples/ghc/edits
 
@@ -21,27 +177,49 @@ skip module Outputable
 skip module GHC.Show
 skip module Deriving
 
+# These constructor are named after their argument, not their return type,
+# so use a different, non-confusing convention here
+rename value SrcLoc.RealSrcLoc  = SrcLoc.ARealSrcLoc
+rename value SrcLoc.RealSrcSpan = SrcLoc.ARealSrcSpan
+rename value SrcLoc.SrcLoc      = SrcLoc.ASrcLoc
+
 #########################################################
 # from ext/hs-to-coq/examples/ghc/axiomatize-types.edits
 #########################################################
+skip module Data.ByteString
+
 rename module IdInfo Core
 
 rename value IdInfo.IdInfo      = Core.Mk_IdInfo
 rename value IdInfo.DFunId      = Core.Mk_DFunId
 rename value IdInfo.JoinId      = Core.Mk_JoinId
 
-#######################################################
-# from ext/hs-to-coq/examples/ghc/no-type-edits
-#######################################################
-rename module CoreSyn Core
+#
+# axiomatized types
+#
+rename type TyCoRep.Coercion      = AxiomatizedTypes.Coercion
+rename type TyCoRep.Type_         = AxiomatizedTypes.Type_
+rename type TyCoRep.ThetaType     = AxiomatizedTypes.ThetaType
+rename type TyCoRep.TyBinder      = AxiomatizedTypes.TyBinder
+rename type TyCoRep.TyThing       = AxiomatizedTypes.TyThing
+rename type TyCoRep.Kind          = AxiomatizedTypes.Kind
+rename type TyCoRep.PredType      = AxiomatizedTypes.PredType
+
+#
+# we never use any operations on these types, so perfectly sound to forget
+# they exist. Could also axiomatize, but then would need to add Default/Eq
+# instances for them too.
+#
 skip module ForeignCall
-rename type ForeignCall.ForeignCall = unit
-rename type ForeignCall.CCallConv = unit
+rename type PrimOp.PrimOp           = AxiomatizedTypes.PrimOp
+rename type ForeignCall.ForeignCall = AxiomatizedTypes.ForeignCall
+rename type ForeignCall.CType       = AxiomatizedTypes.CType
+rename type ForeignCall.CCallConv   = AxiomatizedTypes.CCallConv
+rename type CostCentre.CostCentre   = AxiomatizedTypes.CostCentre
 
 #######################################################
 # my stuff
 #######################################################
-
 # Punned
 rename value CmmType.CmmType  = CmmType.Mk_CmmType
 rename value Debug.DebugBlock = Debug.MkDebugBlock

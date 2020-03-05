@@ -1,0 +1,213 @@
+#
+# Even though we are axiomatizing this module, it draws on a LOT of the code base, 
+# so we have to skip definitions that refer to parts that we aren't concerned with.
+#
+axiomatize module DynFlags
+
+rename type GHC.Num.Int = BinNums.N
+
+redefine Axiom DynFlags.Settings : Type.
+redefine Axiom DynFlags.FlushOut : Type.
+redefine Axiom DynFlags.FlushErr : Type.
+redefine Axiom DynFlags.DynFlags : Type.
+redefine Axiom DynFlags.FlagSpec : Type -> Type. 
+
+skip DynFlags.FlagMaker
+skip DynFlags.FatalMessager
+skip DynFlags.DynFlagMaker
+skip DynFlags.DynP
+skip DynFlags.LogAction
+
+# needs monadtrans instances for these types
+# plus a lot of type annotations 
+skip DynFlags.HasDynFlags__ReaderT
+skip DynFlags.HasDynFlags__MaybeT
+skip DynFlags.HasDynFlags__WriterT
+skip DynFlags.HasDynFlags__ExceptT
+
+skip DynFlags.parseDynamicFilePragma
+skip DynFlags.parseDynamicFlagsCmdLine
+skip DynFlags.parseDynamicFlagsFull
+skip DynFlags.flagsDynamic
+skip DynFlags.flagsAll
+skip DynFlags.flagsAllDeps
+skip DynFlags.dynamic_flags_deps
+skip DynFlags.setTarget
+skip DynFlags.setTargetWithPlatform
+skip DynFlags.addWay
+skip DynFlags.targetPlatform
+skip DynFlags.interpretPackageEnv
+skip DynFlags.versionedAppDir
+skip DynFlags.setObjTarget
+skip DynFlags.setVerboseCore2Core
+skip DynFlags.initDynFlags
+skip DynFlags.setDumpFlag
+skip DynFlags.setDumpFlag'
+skip DynFlags.forceRecompile
+skip DynFlags.setUnsafeGlobalDynFlags
+skip DynFlags.v_unsafeGlobalDynFlags
+skip DynFlags.defaultHscTarget
+skip DynFlags.defaultObjectTarget
+skip DynFlags.wayGeneralFlags
+skip DynFlags.wayUnsetGeneralFlags
+skip DynFlags.wayOptc
+skip DynFlags.wayOptl
+skip DynFlags.wayOptP
+skip DynFlags.whenGeneratingDynamicToo
+skip DynFlags.default_PIC
+skip DynFlags.ifGeneratingDynamicToo
+skip DynFlags.whenCannotGenerateDynamicToo
+skip DynFlags.ifCannotGenerateDynamicToo
+skip DynFlags.generateDynamicTooConditional
+skip DynFlags.defaultLogActionHPrintDoc
+skip DynFlags.defaultLogActionHPutStrDoc
+skip DynFlags.interpreterDynamic
+skip DynFlags.defaultFatalMessager
+skip DynFlags.defaultLogAction
+skip DynFlags.defaultFlushErr
+skip DynFlags.setLanguage
+skip DynFlags.lang_set
+skip DynFlags.enableGlasgowExts
+skip DynFlags.setExtensionFlag
+skip DynFlags.setExtensionFlag'
+skip DynFlags.disableGlasgowExts
+skip DynFlags.unSetExtensionFlag
+skip DynFlags.unSetExtensionFlag'
+skip DynFlags.unSetGeneralFlag
+skip DynFlags.setPackageTrust
+skip DynFlags.flagsPackage
+skip DynFlags.setGeneralFlag
+skip DynFlags.unSetGeneralFlag'
+skip DynFlags.setGeneralFlag'
+skip DynFlags.setDPHOpt
+skip DynFlags.setOptLevel
+skip DynFlags.updOptLevel
+skip DynFlags.wopt
+skip DynFlags.enableUnusedBinds
+skip DynFlags.setWarningFlag
+skip DynFlags.wopt_set
+skip DynFlags.disableUnusedBinds
+skip DynFlags.unSetWarningFlag
+skip DynFlags.wopt_unset
+skip DynFlags.safeImportsOn
+skip DynFlags.setSafeHaskell
+skip DynFlags.combineSafeFlags
+skip DynFlags.depFlagSpecOp
+skip DynFlags.flagSpec'
+skip DynFlags.depFlagSpecOp'
+skip DynFlags.flagGhciSpec'
+skip DynFlags.flagHiddenSpec'
+skip DynFlags.mkFlag
+skip DynFlags.useInstead
+skip DynFlags.nop
+skip DynFlags.dynamicGhc
+skip DynFlags.setWarnSafe
+skip DynFlags.setWarnUnsafe
+skip DynFlags.setGenDeriving
+skip DynFlags.setOverlappingInsts
+skip DynFlags.setIncoherentInsts
+skip DynFlags.checkTemplateHaskellOk
+skip DynFlags.setOptHpcDir
+skip DynFlags.setRtsOptsEnabled
+skip DynFlags.setRtsOpts
+skip DynFlags.addFrameworkPath
+skip DynFlags.addIncludePath
+skip DynFlags.addLibraryPath
+skip DynFlags.addImportPath
+skip DynFlags.setMainIs
+skip DynFlags.distrustPackage
+skip DynFlags.trustPackage
+skip DynFlags.ignorePackage
+skip DynFlags.hidePackage
+skip DynFlags.exposePluginPackageId
+skip DynFlags.exposePluginPackage
+skip DynFlags.exposePackageId
+skip DynFlags.exposePackage
+skip DynFlags.clearPkgConf
+skip DynFlags.removeGlobalPkgConf
+skip DynFlags.removeUserPkgConf
+skip DynFlags.addPkgConfRef
+skip DynFlags.setDebugLevel
+skip DynFlags.setVerbosity
+skip DynFlags.removeWayDyn
+skip DynFlags.floatSuffix
+skip DynFlags.upd
+skip DynFlags.optIntSuffixM
+skip DynFlags.intSuffixM
+skip DynFlags.noArgM
+skip DynFlags.updM
+skip DynFlags.setTmpDir
+skip DynFlags.parseModuleName
+skip DynFlags.setUnitId
+skip DynFlags.modRenamingWithImplicit
+skip DynFlags.modRenamings
+skip DynFlags.lAttributes
+skip DynFlags.lCPU
+skip DynFlags.lDataLayout
+skip DynFlags.ftcCurrentModule
+skip DynFlags.ftcGhcSession
+skip DynFlags.getLogAction
+skip DynFlags.getLogFinaliser
+
+skip DynFlags.LogFinaliser
+skip DynFlags.LogOutput
+
+
+# CmdLineParser
+skip DynFlags.package_flags_deps
+skip DynFlags.gopt_unset
+skip DynFlags.unrecognisedWarning
+skip DynFlags.make_ord_flag
+skip DynFlags.make_dep_flag
+skip DynFlags.add_dep_message
+skip DynFlags.intSuffix
+skip DynFlags.sepArg
+skip DynFlags.hasArg
+skip DynFlags.noArg
+skip DynFlags.allFlagsDeps
+
+# Language Extension
+skip DynFlags.xopt_unset
+skip DynFlags.xopt_set
+skip DynFlags.flattenExtensionFlags
+skip DynFlags.languageExtensions
+skip DynFlags.dopt
+skip DynFlags.xopt
+skip DynFlags.dynFlagDependencies
+skip DynFlags.impliedXFlags
+skip DynFlags.impliedGFlags
+skip DynFlags.supportedExtensions
+skip DynFlags.xFlags
+skip DynFlags.xFlagsDeps
+skip DynFlags.supportedLanguageOverlays
+skip DynFlags.fLangFlags
+skip DynFlags.fLangFlagsDeps
+skip DynFlags.depFlagSpec'
+skip DynFlags.unusedBindsFlags
+skip DynFlags.glasgowExtsFlags
+skip DynFlags.rtsIsProfiled
+skip DynFlags.defaultLogOutput
+skip DynFlags.jsonLogOutput
+skip DynFlags.jsonLogAction
+skip DynFlags.jsonLogFinaliser
+skip DynFlags.setLogAction
+skip DynFlags.putLogMsg
+skip DynFlags.setFatalWarningFlag
+skip DynFlags.unSetFatalWarningFlag
+skip DynFlags.parsePackageFlag
+skip DynFlags.parsePackageArg
+skip DynFlags.parseUnitIdArg
+
+# can't derive Eq/Ord for enums
+skip DynFlags.Ord__SseVersion
+skip DynFlags.Ord__Way
+skip DynFlags.Eq___WarningFlag
+skip DynFlags.Eq___GeneralFlag
+skip DynFlags.Eq___DumpFlag
+
+order instance DynFlags.Eq___Option DynFlags.Eq___LinkerInfo_op_zeze__
+
+order instance DynFlags.Eq___PackageArg DynFlags.Eq___ModRenaming DynFlags.Eq___PackageFlag_op_zeze__
+
+order DynFlags.Eq___BmiVersion  DynFlags.Ord__BmiVersion
+order DynFlags.Eq___Deprecation DynFlags.Ord__Deprecation

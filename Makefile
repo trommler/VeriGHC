@@ -6,10 +6,31 @@ HS_TO_COQ_DIR = ext/hs-to-coq
 include $(HS_TO_COQ_DIR)/common.mk
 
 HANDMOD        = \
+   FastString \
+   AxiomatizedTypes \
+   IntMap \
    Hoopl/Block \
 
+UTILS          = \
+   Util \
+   SrcLoc \
+   Unique \
+   UniqSupply \
+   BasicTypes \
+   DynFlags \
+   Panic \
+   OccName \
+   Module \
+   EnumSet \
+   UniqFM \
+   UniqSet \
+   FiniteMap \
+   Maybes \
+   Name \
+   Literal \
+   CoreSyn \
 
-MODULES        = \
+CMM2PPC        = \
    CmmType \
    CLabel \
    CmmMachOp \
@@ -35,6 +56,10 @@ MODULES        = \
    PprCmmExpr \
    TargetReg \
    PPC/CodeGen \
+
+MODULES        = \
+   $(UTILS) \
+   $(CMM2PPC) \
 
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
@@ -69,7 +94,6 @@ vfiles : $(OUT)/edits $(OUT)/Makefile $(OUTFILES)
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/base-src -f Makefile all
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers -f Makefile all
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/transformers -f Makefile all
-	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/ghc -f Makefile all
 	touch $@
 
 $(OUT)/README.md:
@@ -85,13 +109,12 @@ $(OUT)/edits:
 
 $(OUT)/_CoqProject: $(OUT)/README.md Makefile .stamp-hs-to-coq
 	> $@
-	echo '-Q . ""' >> $@
+	echo '-R . ""' >> $@
 	echo '-Q ../ext/hs-to-coq/base ""' >> $@
 	echo '-Q ../ext/hs-to-coq/base-thy  Proofs' >> $@
 	echo '-Q ../ext/hs-to-coq/examples/containers/lib   ""' >> $@
 	echo '-Q ../ext/hs-to-coq/examples/containers/theories  ""' >> $@
 	echo '-Q ../ext/hs-to-coq/examples/transformers/lib  ""' >> $@
-	echo '-Q ../ext/hs-to-coq/examples/ghc/lib  ""' >> $@
 	echo $(filter-out $(addsuffix .v,$(BROKEN_MODULES)), $(VFILES)) >> $@
 
 $(OUT)/Makefile: $(OUT)/README.md $(OUT)/_CoqProject $(OUTFILES) Makefile
@@ -113,7 +136,6 @@ HS_TO_COQ_GHC_OPTS=\
      --iface-dir ext/hs-to-coq/base \
      --iface-dir ext/hs-to-coq/examples/containers/lib \
      --iface-dir ext/hs-to-coq/examples/transformers/lib \
-     --iface-dir ext/hs-to-coq/examples/ghc/lib \
      --iface-dir $(OUT) \
      --dependency-dir deps \
      -e edits \

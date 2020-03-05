@@ -1,0 +1,56 @@
+axiomatize module Literal
+
+axiomatize definition Literal.absent_lits
+axiomatize definition Literal.inCharRange
+
+# just to access type info, remove to break dependency on Core
+skip Literal.absentLiteralOf
+
+# needs Real.FrealFral Real.Rational
+skip Literal.double2IntLit
+skip Literal.float2IntLit
+
+# debugging strings, grr!
+skip Literal.mkMachInt
+skip Literal.mkMachWord
+
+# types we don't fully support (yet)
+skip Literal.narrow16IntLit
+skip Literal.narrow16WordLit
+skip Literal.narrow32IntLit
+skip Literal.narrow32WordLit
+skip Literal.narrow8IntLit
+skip Literal.narrow8WordLit
+skip Literal.inInt64Range 
+skip Literal.mkMachInt64 
+skip Literal.inWord64Range
+skip Literal.mkMachWord64 
+skip Literal.mkMachInt64Wrap
+skip Literal.mkMachIntWrap
+skip Literal.mkMachWord64Wrap 
+skip Literal.mkMachWordWrap
+skip Literal.mapLitValue
+
+
+
+# ppr
+skip Literal.pprIntegerVal
+skip Literal.pprLiteral
+
+# literal Eq defined in terms of ord
+order Literal.cmpLit Literal.Eq___Literal_op_zeze__ Literal.Eq___Literal_op_zsze__
+order Literal.Eq___Literal Literal.Ord__Literal
+
+redefine Local Definition Literal.Eq___Literal_op_zeze__ : Literal -> (Literal -> bool) :=
+  fun a b =>
+    match cmpLit a b with
+      | Eq => true
+      | _ => false
+    end.
+
+redefine Local Definition Literal.Eq___Literal_op_zsze__ : Literal -> (Literal -> bool) :=
+  fun a b =>
+    match cmpLit a b with
+      | Eq => false
+      | _ => true
+    end.

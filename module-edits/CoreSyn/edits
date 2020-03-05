@@ -1,0 +1,263 @@
+import module AxiomatizedTypes
+import module Literal
+
+####################################
+# skipping or redefining unfolding info so that it is 'NoUnfolding'
+#
+axiomatize definition CoreSyn.unfoldingTemplate
+#
+#  These are 'smart' constructors for constructors that no longer exist.
+#
+skip CoreSyn.bootUnfolding
+skip CoreSyn.mkOtherCon
+skip CoreSyn.evaldUnfolding
+
+####################################
+# removing Tick datacons from Expr
+#
+
+#
+# Skip constructor (in Unfolding) produces a redundant case in this function
+#
+# skip CoreSyn.hasSomeUnfolding
+skip equation CoreSyn.hasSomeUnfolding _
+
+#
+#  These are 'smart' constructors for constructors that no longer exist.
+#
+# skip CoreSyn.mkTyBind
+# skip CoreSyn.mkTyArg
+# skip CoreSyn.mkTyApps
+# skip CoreSyn.mkCoBind
+# skip CoreSyn.mkCoApps
+
+####################################
+#
+# Tick-related functions
+#
+
+skip CoreSyn.mkNoCount
+skip CoreSyn.mkNoScope
+
+axiomatize definition CoreSyn.tickishCounts
+axiomatize definition CoreSyn.tickishIsCode
+
+skip CoreSyn.tickishCanSplit
+skip CoreSyn.tickishContains
+
+#
+# record selector, no place to add default
+#
+skip CoreSyn.uf_tmpl
+skip CoreSyn.ru_rhs
+
+#
+# ordering
+#
+order CoreSyn.Eq___DataCon CoreSyn.Eq___AltCon_op_zeze__ CoreSyn.Eq___AltCon CoreSyn.Ord__AltCon
+order CoreSyn.Eq___Tickish CoreSyn.Ord__Tickish
+
+#
+# Termination & mutual recursion edits
+#
+inline mutual CoreSyn.deTagAlt
+inline mutual CoreSyn.deTagBind
+
+inline mutual CoreSyn.deAnnotate
+inline mutual CoreSyn.deAnnAlt
+
+
+# CoreSyn.collectNAnnBndrs is defined in the midamble
+skip CoreSyn.collectNAnnBndrs
+#
+# It needs a default constraint, as well as a termination argument
+# ISSUE: unfortunately our termination edits don't work in the presence 
+# of a default constraint because the type changes.
+#
+# set type CoreSyn.collectNAnnBndrs : forall {bndr} {annot} `{(GHC.Err.Default annot)}, nat -> (CoreSyn.AnnExpr bndr annot -> (list bndr * CoreSyn.AnnExpr bndr annot))
+# in CoreSyn.collectNAnnBndrs termination collect { measure arg_0__ }
+#
+
+in CoreSyn.collectAnnArgs termination go { measure (size_AnnExpr' (snd arg_0__)) }
+obligations CoreSyn.collectAnnArgs solve_collectAnnArgsTicks
+
+in CoreSyn.collectAnnArgsTicks termination go { measure (size_AnnExpr' (snd arg_0__)) }
+obligations CoreSyn.collectAnnArgsTicks solve_collectAnnArgsTicks
+
+in CoreSyn.collectAnnBndrs     termination collect { measure (size_AnnExpr' (snd arg_1__)) }
+
+#
+# The original version of this function uses 'minimum' and an indirect test
+# of whether (occs := map nameOccName local_names) is nonempty. 
+#
+redefine Definition CoreSyn.chooseOrphanAnchor (local_names : list Name.Name) : IsOrphan :=
+    match  GHC.Base.map Name.nameOccName local_names with
+    | cons hd tl => NotOrphan (Data.Foldable.foldr GHC.Base.min hd tl)
+    | nil => Mk_IsOrphan
+    end.
+
+#
+# Skipping unnecessary functions
+#
+
+# no type information
+skip CoreSyn.exprToType
+skip CoreSyn.applyTypeToArg
+
+# needs GHC.Types.Double & other types ( GHC.Types.Float, GHC.Int.Int64)
+skip CoreSyn.mkDoubleLitDouble
+skip CoreSyn.mkFloatLitFloat
+skip CoreSyn.mkInt64LitInt64
+
+# needs Literal.mkMachInt
+skip CoreSyn.mkIntLit
+skip CoreSyn.mkIntLitInt
+
+# needs Literal.mlMachWord64, Literal.mkMachWOrd
+skip CoreSyn.mkWord64LitWord64
+skip CoreSyn.mkWordLit
+skip CoreSyn.mkWordLitWord
+
+#
+# Default instances
+#
+skip CoreSyn.Default__Class
+skip CoreSyn.Default__DataCon
+skip CoreSyn.Default__IdInfo
+skip CoreSyn.Default__RnEnv2
+skip CoreSyn.Default__Var
+skip CoreSyn.Default__PatSyn
+skip CoreSyn.Default__CoreRule
+skip CoreSyn.Default__RuleEnv
+
+# my edits
+skip CoreSyn.OutCoercion
+skip CoreSyn.InCoercion
+skip CoreSyn.AnnExpr'
+skip CoreSyn.AnnExpr
+skip CoreSyn.AnnBind
+skip CoreSyn.AnnAlt
+skip CoreSyn.Expr
+skip CoreSyn.isTypeArg
+skip CoreSyn.isTyCoArg
+skip CoreSyn.varToCoreExpr
+skip CoreSyn.varsToCoreExprs
+skip CoreSyn.AltCon
+skip CoreSyn.Unfolding
+skip CoreSyn.IdUnfoldingFun
+skip CoreSyn.isFragileUnfolding
+skip CoreSyn.canUnfold
+skip CoreSyn.isCompulsoryUnfolding
+skip CoreSyn.expandUnfolding_maybe
+skip CoreSyn.isExpandableUnfolding
+skip CoreSyn.isCheapUnfolding
+skip CoreSyn.isConLikeUnfolding
+skip CoreSyn.isEvaldUnfolding
+skip CoreSyn.isValueUnfolding
+skip CoreSyn.maybeUnfoldingTemplate
+skip CoreSyn.unfoldingTemplate
+skip CoreSyn.isStableUnfolding
+skip CoreSyn.mkConApp
+skip CoreSyn.mkConApp2
+skip CoreSyn.cmpAltCon
+skip CoreSyn.Ord__AltCon_compare
+skip CoreSyn.Ord__AltCon
+skip CoreSyn.RuleBase
+skip CoreSyn.RuleEnv
+skip CoreSyn.emptyRuleEnv
+skip CoreSyn.CoreVect
+skip CoreSyn.OutType
+skip CoreSyn.InType
+skip CoreSyn.mkTyBind
+skip CoreSyn.mkTyArg
+skip CoreSyn.mkTyApps
+skip CoreSyn.CoreBndr
+skip CoreSyn.TaggedBndr
+skip CoreSyn.TaggedExpr
+skip CoreSyn.CoreExpr
+skip CoreSyn.InExpr
+skip CoreSyn.InBndr
+skip CoreSyn.OutExpr
+skip CoreSyn.OutBndr
+skip CoreSyn.CoreRule
+skip CoreSyn.CoreBind
+skip CoreSyn.ru_fn
+skip CoreSyn.setRuleIdName
+skip CoreSyn.ruleActivation
+skip CoreSyn.ruleModule
+skip CoreSyn.ruleArity
+skip CoreSyn.ruleName
+skip CoreSyn.ruleIdName
+skip CoreSyn.isAutoRule
+skip CoreSyn.isBuiltinRule
+skip CoreSyn.OutBind
+skip CoreSyn.InBind
+skip CoreSyn.CoreProgram
+skip CoreSyn.Bind
+skip CoreSyn.TaggedBind
+skip CoreSyn.Arg
+skip CoreSyn.CoreArg
+skip CoreSyn.InArg
+skip CoreSyn.OutArg
+skip CoreSyn.TaggedArg
+skip CoreSyn.Alt
+skip CoreSyn.CoreAlt
+skip CoreSyn.TaggedAlt
+skip CoreSyn.OutAlt
+skip CoreSyn.InAlt
+skip CoreSyn.RuleFun
+skip CoreSyn.valBndrCount
+skip CoreSyn.mkVarApps
+skip CoreSyn.mkCoBind
+skip CoreSyn.isRuntimeVar
+skip CoreSyn.collectValBinders
+skip CoreSyn.collectTyBinders
+skip CoreSyn.collectTyAndValBinders
+skip CoreSyn.collectArgsTicks
+skip CoreSyn.collectAnnArgsTicks
+skip CoreSyn.InScopeEnv
+skip CoreSyn.rhssOfBind
+skip CoreSyn.rhssOfAlts
+skip CoreSyn.otherCons
+skip CoreSyn.noUnfolding
+skip CoreSyn.mkStringLit
+skip CoreSyn.mkRuleEnv
+skip CoreSyn.mkLetRec
+skip CoreSyn.mkLetNonRec
+skip CoreSyn.mkLet
+skip CoreSyn.mkLets
+skip CoreSyn.mkLams
+skip CoreSyn.mkFloatLit
+skip CoreSyn.mkDoubleLit
+skip CoreSyn.mkCoApps
+skip CoreSyn.mkCharLit
+skip CoreSyn.mkApps
+skip CoreSyn.isValArg
+skip CoreSyn.isStableSource
+skip CoreSyn.valArgCount
+skip CoreSyn.isRuntimeArg
+skip CoreSyn.isLocalRule
+skip CoreSyn.isBootUnfolding
+skip CoreSyn.hasSomeUnfolding
+skip CoreSyn.flattenBinds
+skip CoreSyn.exprToCoercion_maybe
+skip CoreSyn.deTagExpr
+skip CoreSyn.deTagBind
+skip CoreSyn.deTagAlt
+skip CoreSyn.deAnnotate'
+skip CoreSyn.deAnnotate
+skip CoreSyn.deAnnBind
+skip CoreSyn.deAnnAlt
+skip CoreSyn.collectNBinders
+skip CoreSyn.collectBinders
+skip CoreSyn.collectArgs
+skip CoreSyn.collectAnnBndrs
+skip CoreSyn.collectAnnArgs
+skip CoreSyn.cmpAlt
+skip CoreSyn.ltAlt
+skip CoreSyn.bindersOf
+skip CoreSyn.bindersOfBinds
+skip CoreSyn.Eq___AltCon
+
+rename value CoreSyn.IsOrphan   = CoreSyn.Mk_IsOrphan
+
