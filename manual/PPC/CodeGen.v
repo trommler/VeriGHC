@@ -197,12 +197,12 @@ Definition condReg : NCGMonad.NatM CondCode -> NCGMonad.NatM Register :=
          GHC.Base.return_ (Any format code)) in
     getCond GHC.Base.>>= cont_0__.
 
-Fixpoint coerceFP2Int (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
-        : NCGMonad.NatM Register
-        := DynFlags.getDynFlags GHC.Base.>>=
-           (fun dflags =>
-              let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
-              coerceFP2Int' arch fromRep toRep x)
+Fixpoint coerceFP2Int (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr) {struct x}
+  : NCGMonad.NatM Register
+  := DynFlags.getDynFlags GHC.Base.>>=
+                          (fun dflags =>
+                             let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
+                             coerceFP2Int' arch fromRep toRep x)
 with coerceFP2Int' (arg_0__ : Platform.Arch) (arg_1__ arg_2__ : CmmType.Width) (arg_3__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register
      := match arg_0__, arg_1__, arg_2__, arg_3__ with
         | Platform.ArchPPC, _, toRep, x =>
