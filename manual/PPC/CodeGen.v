@@ -197,303 +197,303 @@ Definition condReg : NCGMonad.NatM CondCode -> NCGMonad.NatM Register :=
          GHC.Base.return_ (Any format code)) in
     getCond GHC.Base.>>= cont_0__.
 
-Definition getAmode : InstrForm -> CmmExpr.CmmExpr -> NCGMonad.NatM Amode :=
-  fix coerceFP2Int (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
+Fixpoint coerceFP2Int (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
         : NCGMonad.NatM Register
         := DynFlags.getDynFlags GHC.Base.>>=
            (fun dflags =>
               let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
-              coerceFP2Int' arch fromRep toRep x) with coerceFP2Int' (arg_0__ : Platform.Arch)
-                                                                     (arg_1__ arg_2__ : CmmType.Width) (arg_3__
-                                                                       : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                                         := match arg_0__, arg_1__, arg_2__, arg_3__ with
-                                                            | Platform.ArchPPC, _, toRep, x =>
-                                                                DynFlags.getDynFlags GHC.Base.>>=
-                                                                (fun dflags =>
-                                                                   let cont_4__ arg_5__ :=
-                                                                     let 'pair src code := arg_5__ in
-                                                                     NCGMonad.getNewRegNat Format.FF64 GHC.Base.>>=
-                                                                     (fun tmp =>
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.appOL code (OrdList.toOL (cons
-                                                                                                              (PPC.Instr.FCTIWZ
-                                                                                                               tmp src)
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.FF64
-                                                                                                                tmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #2))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.II32
-                                                                                                                 dst
-                                                                                                                 (PPC.Regs.spRel
+              coerceFP2Int' arch fromRep toRep x)
+with coerceFP2Int' (arg_0__ : Platform.Arch) (arg_1__ arg_2__ : CmmType.Width) (arg_3__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register
+     := match arg_0__, arg_1__, arg_2__, arg_3__ with
+        | Platform.ArchPPC, _, toRep, x =>
+          DynFlags.getDynFlags GHC.Base.>>=
+                               (fun dflags =>
+                                  let cont_4__ arg_5__ :=
+                                      let 'pair src code := arg_5__ in
+                                      NCGMonad.getNewRegNat Format.FF64 GHC.Base.>>=
+                                                            (fun tmp =>
+                                                               let code' :=
+                                                                   fun dst =>
+                                                                     OrdList.appOL code (OrdList.toOL (cons
+                                                                                                         (PPC.Instr.FCTIWZ
+                                                                                                            tmp src)
+                                                                                                         (cons
+                                                                                                            (PPC.Instr.ST
+                                                                                                               Format.FF64
+                                                                                                               tmp
+                                                                                                               (PPC.Regs.spRel
+                                                                                                                  dflags
+                                                                                                                  #2))
+                                                                                                            (cons
+                                                                                                               (PPC.Instr.LD
+                                                                                                                  Format.II32
+                                                                                                                  dst
+                                                                                                                  (PPC.Regs.spRel
+                                                                                                                     dflags
+                                                                                                                     #3))
+                                                                                                               nil)))) in
+                                                               GHC.Base.return_ (Any (Format.intFormat toRep)
+                                                                                     code')) in
+                                  getSomeReg x GHC.Base.>>= cont_4__)
+        | Platform.ArchPPC_64 _, _, toRep, x =>
+          DynFlags.getDynFlags GHC.Base.>>=
+                               (fun dflags =>
+                                  let cont_8__ arg_9__ :=
+                                      let 'pair src code := arg_9__ in
+                                      NCGMonad.getNewRegNat Format.FF64 GHC.Base.>>=
+                                                            (fun tmp =>
+                                                               let code' :=
+                                                                   fun dst =>
+                                                                     OrdList.appOL code (OrdList.toOL (cons
+                                                                                                         (PPC.Instr.FCTIDZ
+                                                                                                            tmp src)
+                                                                                                         (cons
+                                                                                                            (PPC.Instr.ST
+                                                                                                               Format.FF64
+                                                                                                               tmp
+                                                                                                               (PPC.Regs.spRel
                                                                                                                   dflags
                                                                                                                   #3))
-                                                                                                                nil)))) in
-                                                                        GHC.Base.return_ (Any (Format.intFormat toRep)
-                                                                                          code')) in
-                                                                   getSomeReg x GHC.Base.>>= cont_4__)
-                                                            | Platform.ArchPPC_64 _, _, toRep, x =>
-                                                                DynFlags.getDynFlags GHC.Base.>>=
+                                                                                                            (cons
+                                                                                                               (PPC.Instr.LD
+                                                                                                                  Format.II64
+                                                                                                                  dst
+                                                                                                                  (PPC.Regs.spRel
+                                                                                                                     dflags
+                                                                                                                     #3))
+                                                                                                               nil)))) in
+                                                               GHC.Base.return_ (Any (Format.intFormat toRep)
+                                                                                     code')) in
+                                  getSomeReg x GHC.Base.>>= cont_8__)
+        | _, _, _, _ =>
+          Panic.panic (GHC.Base.hs_string__
+                         "PPC.CodeGen.coerceFP2Int: unknown arch")
+        end
+with getSomeReg (expr : CmmExpr.CmmExpr) : NCGMonad.NatM
+                                             (Reg.Reg *
+                                              InstrBlock)%type
+     := getRegister expr GHC.Base.>>=
+                    (fun r =>
+                       match r with
+                       | Any rep code =>
+                         NCGMonad.getNewRegNat rep GHC.Base.>>=
+                                               (fun tmp =>
+                                                  GHC.Base.return_ (pair tmp (code
+                                                                                tmp)))
+                       | Fixed _ reg code =>
+                         GHC.Base.return_ (pair reg code)
+                       end)
+with getRegister (e : CmmExpr.CmmExpr)
+     : NCGMonad.NatM Register
+     := DynFlags.getDynFlags
+          GHC.Base.>>=
+          (fun dflags =>
+             getRegister' dflags e)
+with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr)
+     : NCGMonad.NatM Register
+     := match arg_0__, arg_1__ with
+        | dflags, CmmExpr.Mk_CmmReg (CmmExpr.CmmGlobal CmmExpr.PicBaseReg) =>
+          match Platform.platformOS (DynFlags.targetPlatform dflags) with
+          | Platform.OSAIX =>
+            let tocAddr :=
+                PPC.Regs.AddrRegImm PPC.Regs.toc (PPC.Regs.ImmLit (Datatypes.id
+                                                                     (GHC.Base.hs_string__ "ghc_toc_table[TC]"))) in
+            let code :=
+                fun dst => OrdList.toOL (cons (PPC.Instr.LD Format.II32 dst tocAddr) nil) in
+            GHC.Base.return_ (Any Format.II32 code)
+          | _ =>
+            if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
+            then NCGMonad.getPicBaseNat (PPC.Instr.archWordFormat (Platform.target32Bit
+                                                                     (DynFlags.targetPlatform dflags)))
+                                        GHC.Base.>>=
+                                        (fun reg =>
+                                           GHC.Base.return_ (Fixed (PPC.Instr.archWordFormat (Platform.target32Bit
+                                                                                                (DynFlags.targetPlatform dflags))) reg
+                                                                   OrdList.nilOL)) else
+              GHC.Base.return_ (Fixed Format.II64 PPC.Regs.toc OrdList.nilOL)
+          end
+        | _, _ =>
+          let j_5__ :=
+              match arg_0__, arg_1__ with
+              | _, other =>
+                Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
+                                                                            other)
+              end in
+          let j_21__ :=
+              match arg_0__, arg_1__ with
+              | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
+                NCGMonad.getNewLabelNat GHC.Base.>>=
+                                        (fun lbl =>
+                                           DynFlags.getDynFlags GHC.Base.>>=
                                                                 (fun dflags =>
-                                                                   let cont_8__ arg_9__ :=
-                                                                     let 'pair src code := arg_9__ in
-                                                                     NCGMonad.getNewRegNat Format.FF64 GHC.Base.>>=
-                                                                     (fun tmp =>
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.appOL code (OrdList.toOL (cons
-                                                                                                              (PPC.Instr.FCTIDZ
-                                                                                                               tmp src)
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.FF64
-                                                                                                                tmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #3))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.II64
-                                                                                                                 dst
-                                                                                                                 (PPC.Regs.spRel
-                                                                                                                  dflags
-                                                                                                                  #3))
-                                                                                                                nil)))) in
-                                                                        GHC.Base.return_ (Any (Format.intFormat toRep)
-                                                                                          code')) in
-                                                                   getSomeReg x GHC.Base.>>= cont_8__)
-                                                            | _, _, _, _ =>
-                                                                Panic.panic (GHC.Base.hs_string__
-                                                                             "PPC.CodeGen.coerceFP2Int: unknown arch")
-                                                            end with getSomeReg (expr : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                                                           (Reg.Reg *
-                                                                                                            InstrBlock)%type
-                                                                       := getRegister expr GHC.Base.>>=
-                                                                          (fun r =>
-                                                                             match r with
-                                                                             | Any rep code =>
-                                                                                 NCGMonad.getNewRegNat rep GHC.Base.>>=
-                                                                                 (fun tmp =>
-                                                                                    GHC.Base.return_ (pair tmp (code
-                                                                                                            tmp)))
-                                                                             | Fixed _ reg code =>
-                                                                                 GHC.Base.return_ (pair reg code)
-                                                                             end) with getRegister (e : CmmExpr.CmmExpr)
-                                                                                         : NCGMonad.NatM Register
-                                                                                         := DynFlags.getDynFlags
-                                                                                            GHC.Base.>>=
-                                                                                            (fun dflags =>
-                                                                                               getRegister' dflags e)
-  with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr)
-         : NCGMonad.NatM Register
-         := match arg_0__, arg_1__ with
-            | dflags, CmmExpr.Mk_CmmReg (CmmExpr.CmmGlobal CmmExpr.PicBaseReg) =>
-                match Platform.platformOS (DynFlags.targetPlatform dflags) with
-                | Platform.OSAIX =>
-                    let tocAddr :=
-                      PPC.Regs.AddrRegImm PPC.Regs.toc (PPC.Regs.ImmLit (Datatypes.id
-                                                                         (GHC.Base.hs_string__ "ghc_toc_table[TC]"))) in
-                    let code :=
-                      fun dst => OrdList.toOL (cons (PPC.Instr.LD Format.II32 dst tocAddr) nil) in
-                    GHC.Base.return_ (Any Format.II32 code)
-                | _ =>
-                    if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                    then NCGMonad.getPicBaseNat (PPC.Instr.archWordFormat (Platform.target32Bit
-                                                                           (DynFlags.targetPlatform dflags)))
-                         GHC.Base.>>=
-                         (fun reg =>
-                            GHC.Base.return_ (Fixed (PPC.Instr.archWordFormat (Platform.target32Bit
-                                                                               (DynFlags.targetPlatform dflags))) reg
-                                              OrdList.nilOL)) else
-                    GHC.Base.return_ (Fixed Format.II64 PPC.Regs.toc OrdList.nilOL)
-                end
-            | _, _ =>
-                let j_5__ :=
-                  match arg_0__, arg_1__ with
-                  | _, other =>
-                      Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
-                                                                                other)
-                  end in
-                let j_21__ :=
-                  match arg_0__, arg_1__ with
-                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
-                      NCGMonad.getNewLabelNat GHC.Base.>>=
-                      (fun lbl =>
-                         DynFlags.getDynFlags GHC.Base.>>=
-                         (fun dflags =>
-                            PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
-                            (fun dynRef =>
-                               let cont_6__ arg_7__ :=
-                                 let 'MkAmode addr addr_code := arg_7__ in
-                                 let format := Format.floatFormat frep in
-                                 let code :=
-                                   fun dst =>
-                                     OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
-                                                     (Cmm.Statics lbl (cons (Cmm.CmmStaticLit (CmmExpr.CmmFloat f frep))
-                                                                            nil))) (OrdList.snocOL addr_code
-                                                                                                   (PPC.Instr.LD format
-                                                                                                    dst addr)) in
-                                 GHC.Base.return_ (Any format code) in
-                               getAmode D dynRef GHC.Base.>>= cont_6__)))
-                  | dflags, CmmExpr.Mk_CmmLit lit =>
-                      if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                      then let imm := PPC.Regs.litToImm lit in
-                           let code :=
-                             fun dst =>
-                               OrdList.toOL (cons (PPC.Instr.LIS dst (PPC.Regs.HA imm)) (cons (PPC.Instr.ADD
-                                                                                               dst dst (PPC.Instr.RIImm
+                                                                   PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
+                                                                                               (fun dynRef =>
+                                                                                                  let cont_6__ arg_7__ :=
+                                                                                                      let 'MkAmode addr addr_code := arg_7__ in
+                                                                                                      let format := Format.floatFormat frep in
+                                                                                                      let code :=
+                                                                                                          fun dst =>
+                                                                                                            OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
+                                                                                                                                            (Cmm.Statics lbl (cons (Cmm.CmmStaticLit (CmmExpr.CmmFloat f frep))
+                                                                                                                                                                   nil))) (OrdList.snocOL addr_code
+                                                                                                                                                                                          (PPC.Instr.LD format
+                                                                                                                                                                                                        dst addr)) in
+                                                                                                      GHC.Base.return_ (Any format code) in
+                                                                                                  getAmode D dynRef GHC.Base.>>= cont_6__)))
+              | dflags, CmmExpr.Mk_CmmLit lit =>
+                if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
+                then let imm := PPC.Regs.litToImm lit in
+                     let code :=
+                         fun dst =>
+                           OrdList.toOL (cons (PPC.Instr.LIS dst (PPC.Regs.HA imm)) (cons (PPC.Instr.ADD
+                                                                                             dst dst (PPC.Instr.RIImm
                                                                                                         (PPC.Regs.LO
-                                                                                                         imm))) nil)) in
-                           let rep := CmmExpr.cmmLitType dflags lit in
-                           GHC.Base.return_ (Any (Format.cmmTypeFormat rep) code) else
-                      NCGMonad.getNewLabelNat GHC.Base.>>=
-                      (fun lbl =>
-                         DynFlags.getDynFlags GHC.Base.>>=
-                         (fun dflags =>
-                            PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
-                            (fun dynRef =>
-                               let cont_14__ arg_15__ :=
-                                 let 'MkAmode addr addr_code := arg_15__ in
-                                 let rep := CmmExpr.cmmLitType dflags lit in
-                                 let format := Format.cmmTypeFormat rep in
-                                 let code :=
-                                   fun dst =>
-                                     OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
-                                                     (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil)))
-                                                    (OrdList.snocOL addr_code (PPC.Instr.LD format dst addr)) in
-                                 GHC.Base.return_ (Any format code) in
-                               getAmode D dynRef GHC.Base.>>= cont_14__)))
-                  | _, _ => j_5__
-                  end in
-                let j_180__ :=
-                  match arg_0__, arg_1__ with
-                  | dflags, CmmExpr.CmmLoad mem pk =>
-                      let format := Format.cmmTypeFormat pk in
-                      if negb (CmmType.isWord64 pk) : bool
-                      then let platform := DynFlags.targetPlatform dflags in
-                           let cont_24__ arg_25__ :=
-                             let 'MkAmode addr addr_code := arg_25__ in
-                             let code :=
-                               fun dst =>
-                                 if andb Util.debugIsOn (negb ((TargetReg.targetClassOfReg platform dst
-                                                                GHC.Base.==
-                                                                RegClass.RcDouble) GHC.Base.==
-                                                               CmmType.isFloatType pk)) : bool
-                                 then (Panic.assertPanic (GHC.Base.hs_string__
+                                                                                                           imm))) nil)) in
+                     let rep := CmmExpr.cmmLitType dflags lit in
+                     GHC.Base.return_ (Any (Format.cmmTypeFormat rep) code) else
+                  NCGMonad.getNewLabelNat GHC.Base.>>=
+                                          (fun lbl =>
+                                             DynFlags.getDynFlags GHC.Base.>>=
+                                                                  (fun dflags =>
+                                                                     PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
+                                                                                                 (fun dynRef =>
+                                                                                                    let cont_14__ arg_15__ :=
+                                                                                                        let 'MkAmode addr addr_code := arg_15__ in
+                                                                                                        let rep := CmmExpr.cmmLitType dflags lit in
+                                                                                                        let format := Format.cmmTypeFormat rep in
+                                                                                                        let code :=
+                                                                                                            fun dst =>
+                                                                                                              OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
+                                                                                                                                              (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil)))
+                                                                                                                             (OrdList.snocOL addr_code (PPC.Instr.LD format dst addr)) in
+                                                                                                        GHC.Base.return_ (Any format code) in
+                                                                                                    getAmode D dynRef GHC.Base.>>= cont_14__)))
+              | _, _ => j_5__
+              end in
+          let j_180__ :=
+              match arg_0__, arg_1__ with
+              | dflags, CmmExpr.CmmLoad mem pk =>
+                let format := Format.cmmTypeFormat pk in
+                if negb (CmmType.isWord64 pk) : bool
+                then let platform := DynFlags.targetPlatform dflags in
+                     let cont_24__ arg_25__ :=
+                         let 'MkAmode addr addr_code := arg_25__ in
+                         let code :=
+                             fun dst =>
+                               if andb Util.debugIsOn (negb ((TargetReg.targetClassOfReg platform dst
+                                                                                         GHC.Base.==
+                                                                                         RegClass.RcDouble) GHC.Base.==
+                                                                                                            CmmType.isFloatType pk)) : bool
+                               then (Panic.assertPanic (GHC.Base.hs_string__
                                                           "ext/hs-to-coq/examples/ghc/ghc/compiler/nativeGen/PPC/CodeGen.hs")
-                                       #443)
-                                 else OrdList.snocOL addr_code (PPC.Instr.LD format dst addr) in
-                             GHC.Base.return_ (Any format code) in
-                           getAmode D mem GHC.Base.>>= cont_24__ else
-                      if negb (Platform.target32Bit (DynFlags.targetPlatform dflags)) : bool
-                      then let cont_27__ arg_28__ :=
-                             let 'MkAmode addr addr_code := arg_28__ in
-                             let code :=
+                                                       #443)
+                               else OrdList.snocOL addr_code (PPC.Instr.LD format dst addr) in
+                         GHC.Base.return_ (Any format code) in
+                     getAmode D mem GHC.Base.>>= cont_24__ else
+                  if negb (Platform.target32Bit (DynFlags.targetPlatform dflags)) : bool
+                  then let cont_27__ arg_28__ :=
+                           let 'MkAmode addr addr_code := arg_28__ in
+                           let code :=
                                fun dst => OrdList.snocOL addr_code (PPC.Instr.LD Format.II64 dst addr) in
-                             GHC.Base.return_ (Any Format.II64 code) in
-                           getAmode DS mem GHC.Base.>>= cont_27__ else
-                      j_21__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_32__ arg_33__ :=
-                        let 'MkAmode addr addr_code := arg_33__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_32__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_36__ arg_37__ :=
-                        let 'MkAmode addr addr_code := arg_37__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_36__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_40__ arg_41__ :=
-                        let 'MkAmode addr addr_code := arg_41__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_40__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_44__ arg_45__ :=
-                        let 'MkAmode addr addr_code := arg_45__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_44__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_48__ arg_49__ :=
-                        let 'MkAmode addr addr_code := arg_49__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_48__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_52__ arg_53__ :=
-                        let 'MkAmode addr addr_code := arg_53__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_52__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W32 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_56__ arg_57__ :=
-                        let 'MkAmode addr addr_code := arg_57__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II32 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_56__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W32 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_60__ arg_61__ :=
-                        let 'MkAmode addr addr_code := arg_61__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II32 dst
-                                                                             addr))) in
-                      getAmode DS mem GHC.Base.>>= cont_60__
-                  | dflags, CmmExpr.CmmMachOp mop (cons x nil) =>
-                      let arch32 := Platform.target32Bit (DynFlags.targetPlatform dflags) in
-                      let conversionNop :=
-                        fun new_format expr =>
-                          getRegister' dflags expr GHC.Base.>>=
-                          (fun e_code => GHC.Base.return_ (swizzleRegisterRep e_code new_format)) in
-                      let triv_ucode_float :=
-                        fun width instr => trivialUCode (Format.floatFormat width) instr x in
-                      let triv_ucode_int :=
-                        fun width instr => trivialUCode (Format.intFormat width) instr x in
-                      let j_72__ :=
-                        match mop with
-                        | CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W8 => conversionNop Format.II8 x
-                        | CmmMachOp.MO_UU_Conv CmmType.W8 to =>
-                            trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt #255
-                                                                                     CmmType.W32))
-                        | CmmMachOp.MO_UU_Conv CmmType.W16 to =>
-                            trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt #65535
-                                                                                     CmmType.W32))
-                        | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                        end in
-                      let j_82__ :=
-                        match mop with
-                        | CmmMachOp.MO_UU_Conv CmmType.W64 to =>
+                           GHC.Base.return_ (Any Format.II64 code) in
+                       getAmode DS mem GHC.Base.>>= cont_27__ else
+                    j_21__
+              | _
+                , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W32) (cons
+                                                                                     (CmmExpr.CmmLoad mem _) nil) =>
+                let cont_32__ arg_33__ :=
+                    let 'MkAmode addr addr_code := arg_33__ in
+                    GHC.Base.return_ (Any Format.II32 (fun dst =>
+                                                         OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst
+                                                                                                addr))) in
+                getAmode D mem GHC.Base.>>= cont_32__
+              | _
+                , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W64) (cons
+                                                                                     (CmmExpr.CmmLoad mem _) nil) =>
+                let cont_36__ arg_37__ :=
+                    let 'MkAmode addr addr_code := arg_37__ in
+                    GHC.Base.return_ (Any Format.II64 (fun dst =>
+                                                         OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst
+                                                                                                addr))) in
+                getAmode D mem GHC.Base.>>= cont_36__
+              | _
+                , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W32) (cons
+                                                                                      (CmmExpr.CmmLoad mem _) nil) =>
+                let cont_40__ arg_41__ :=
+                    let 'MkAmode addr addr_code := arg_41__ in
+                    GHC.Base.return_ (Any Format.II32 (fun dst =>
+                                                         OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
+                                                                                                addr))) in
+                getAmode D mem GHC.Base.>>= cont_40__
+              | _
+                , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W32) (cons
+                                                                                      (CmmExpr.CmmLoad mem _) nil) =>
+                let cont_44__ arg_45__ :=
+                    let 'MkAmode addr addr_code := arg_45__ in
+                    GHC.Base.return_ (Any Format.II32 (fun dst =>
+                                                         OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
+                                                                                                addr))) in
+                getAmode D mem GHC.Base.>>= cont_44__
+              | _
+                , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W64) (cons
+                                                                                      (CmmExpr.CmmLoad mem _) nil) =>
+                let cont_48__ arg_49__ :=
+                    let 'MkAmode addr addr_code := arg_49__ in
+                    GHC.Base.return_ (Any Format.II64 (fun dst =>
+                                                         OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
+                                                                                                addr))) in
+                getAmode D mem GHC.Base.>>= cont_48__
+              | _
+                , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W64) (cons
+                                                                                      (CmmExpr.CmmLoad mem _) nil) =>
+                let cont_52__ arg_53__ :=
+                    let 'MkAmode addr addr_code := arg_53__ in
+                    GHC.Base.return_ (Any Format.II64 (fun dst =>
+                                                         OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
+                                                                                                addr))) in
+                getAmode D mem GHC.Base.>>= cont_52__
+              | _
+                , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W32 CmmType.W64) (cons
+                                                                                      (CmmExpr.CmmLoad mem _) nil) =>
+                let cont_56__ arg_57__ :=
+                    let 'MkAmode addr addr_code := arg_57__ in
+                    GHC.Base.return_ (Any Format.II64 (fun dst =>
+                                                         OrdList.snocOL addr_code (PPC.Instr.LD Format.II32 dst
+                                                                                                addr))) in
+                getAmode D mem GHC.Base.>>= cont_56__
+              | _
+                , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W32 CmmType.W64) (cons
+                                                                                      (CmmExpr.CmmLoad mem _) nil) =>
+                let cont_60__ arg_61__ :=
+                    let 'MkAmode addr addr_code := arg_61__ in
+                    GHC.Base.return_ (Any Format.II64 (fun dst =>
+                                                         OrdList.snocOL addr_code (PPC.Instr.LA Format.II32 dst
+                                                                                                addr))) in
+                getAmode DS mem GHC.Base.>>= cont_60__
+              | dflags, CmmExpr.CmmMachOp mop (cons x nil) =>
+                let arch32 := Platform.target32Bit (DynFlags.targetPlatform dflags) in
+                let conversionNop :=
+                    fun new_format expr =>
+                      getRegister' dflags expr GHC.Base.>>=
+                                   (fun e_code => GHC.Base.return_ (swizzleRegisterRep e_code new_format)) in
+                let triv_ucode_float :=
+                    fun width instr => trivialUCode (Format.floatFormat width) instr x in
+                let triv_ucode_int :=
+                    fun width instr => trivialUCode (Format.intFormat width) instr x in
+                let j_72__ :=
+                    match mop with
+                    | CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W8 => conversionNop Format.II8 x
+                    | CmmMachOp.MO_UU_Conv CmmType.W8 to =>
+                      trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt #255
+                                                                                              CmmType.W32))
+                    | CmmMachOp.MO_UU_Conv CmmType.W16 to =>
+                      trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt #65535
+                                                                                              CmmType.W32))
+                    | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
+                    end in
+                let j_82__ :=
+                    match mop with
+                    | CmmMachOp.MO_UU_Conv CmmType.W64 to =>
                             if arch32 : bool
                             then Panic.panic (GHC.Base.hs_string__
                                               "PPC.CodeGen.getRegister no 64 bit target") else
@@ -757,94 +757,96 @@ Definition getAmode : InstrForm -> CmmExpr.CmmExpr -> NCGMonad.NatM Amode :=
                     j_187__
                 | _, _ => j_187__
                 end
-            end with coerceInt2FP (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
-                       : NCGMonad.NatM Register
-                       := DynFlags.getDynFlags GHC.Base.>>=
+        end
+with coerceInt2FP (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
+     : NCGMonad.NatM Register
+     := DynFlags.getDynFlags GHC.Base.>>=
                           (fun dflags =>
                              let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
-                             coerceInt2FP' arch fromRep toRep x) with coerceInt2FP' (arg_0__ : Platform.Arch)
-                                                                                    (arg_1__ arg_2__ : CmmType.Width)
-                                                                                    (arg_3__ : CmmExpr.CmmExpr)
-                                                                        : NCGMonad.NatM Register
-                                                                        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-                                                                           | Platform.ArchPPC, fromRep, toRep, x =>
-                                                                               let cont_4__ arg_5__ :=
-                                                                                 let 'pair src code := arg_5__ in
-                                                                                 NCGMonad.getNewLabelNat GHC.Base.>>=
-                                                                                 (fun lbl =>
-                                                                                    NCGMonad.getNewRegNat Format.II32
-                                                                                    GHC.Base.>>=
-                                                                                    (fun itmp =>
-                                                                                       NCGMonad.getNewRegNat Format.FF64
-                                                                                       GHC.Base.>>=
-                                                                                       (fun ftmp =>
-                                                                                          DynFlags.getDynFlags
-                                                                                          GHC.Base.>>=
-                                                                                          (fun dflags =>
-                                                                                             PIC.cmmMakeDynamicReference
-                                                                                             dflags PIC.DataReference
-                                                                                             lbl GHC.Base.>>=
-                                                                                             (fun dynRef =>
-                                                                                                let cont_6__ arg_7__ :=
-                                                                                                  let 'MkAmode addr
-                                                                                                     addr_code :=
-                                                                                                    arg_7__ in
-                                                                                                  let maybe_frsp :=
-                                                                                                    fun dst =>
-                                                                                                      match toRep with
-                                                                                                      | CmmType.W32 =>
-                                                                                                          OrdList.unitOL
-                                                                                                          (PPC.Instr.FRSP
-                                                                                                           dst dst)
-                                                                                                      | CmmType.W64 =>
-                                                                                                          OrdList.nilOL
-                                                                                                      | _ =>
-                                                                                                          Panic.panic
-                                                                                                          (GHC.Base.hs_string__
-                                                                                                           "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                                      end in
-                                                                                                  let maybe_exts :=
-                                                                                                    match fromRep with
-                                                                                                    | CmmType.W8 =>
-                                                                                                        OrdList.unitOL
-                                                                                                        (PPC.Instr.EXTS
-                                                                                                         Format.II8 src
-                                                                                                         src)
-                                                                                                    | CmmType.W16 =>
-                                                                                                        OrdList.unitOL
-                                                                                                        (PPC.Instr.EXTS
-                                                                                                         Format.II16 src
-                                                                                                         src)
-                                                                                                    | CmmType.W32 =>
-                                                                                                        OrdList.nilOL
-                                                                                                    | _ =>
-                                                                                                        Panic.panic
-                                                                                                        (GHC.Base.hs_string__
-                                                                                                         "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                                    end in
-                                                                                                  let code' :=
-                                                                                                    fun dst =>
-                                                                                                      OrdList.appOL
-                                                                                                      (OrdList.appOL
-                                                                                                       (OrdList.appOL
-                                                                                                        (OrdList.appOL
-                                                                                                         (OrdList.appOL
-                                                                                                          code
-                                                                                                          maybe_exts)
-                                                                                                         (OrdList.toOL
-                                                                                                          (cons
-                                                                                                           (PPC.Instr.LDATA
-                                                                                                            (Cmm.Mk_Section
-                                                                                                             Cmm.ReadOnlyData
-                                                                                                             lbl)
-                                                                                                            (Cmm.Statics
-                                                                                                             lbl (cons
-                                                                                                              (Cmm.CmmStaticLit
-                                                                                                               (CmmExpr.CmmInt
-                                                                                                                #1127219200
-                                                                                                                CmmType.W32))
-                                                                                                              (cons
-                                                                                                               (Cmm.CmmStaticLit
+                             coerceInt2FP' arch fromRep toRep x)
+with coerceInt2FP' (arg_0__ : Platform.Arch)
+                   (arg_1__ arg_2__ : CmmType.Width)
+                   (arg_3__ : CmmExpr.CmmExpr)
+     : NCGMonad.NatM Register
+     := match arg_0__, arg_1__, arg_2__, arg_3__ with
+        | Platform.ArchPPC, fromRep, toRep, x =>
+          let cont_4__ arg_5__ :=
+              let 'pair src code := arg_5__ in
+              NCGMonad.getNewLabelNat GHC.Base.>>=
+                                      (fun lbl =>
+                                         NCGMonad.getNewRegNat Format.II32
+                                                               GHC.Base.>>=
+                                                               (fun itmp =>
+                                                                  NCGMonad.getNewRegNat Format.FF64
+                                                                                        GHC.Base.>>=
+                                                                                        (fun ftmp =>
+                                                                                           DynFlags.getDynFlags
+                                                                                             GHC.Base.>>=
+                                                                                             (fun dflags =>
+                                                                                                PIC.cmmMakeDynamicReference
+                                                                                                  dflags PIC.DataReference
+                                                                                                  lbl GHC.Base.>>=
+                                                                                                  (fun dynRef =>
+                                                                                                     let cont_6__ arg_7__ :=
+                                                                                                         let 'MkAmode addr
+                                                                                                                      addr_code :=
+                                                                                                             arg_7__ in
+                                                                                                         let maybe_frsp :=
+                                                                                                             fun dst =>
+                                                                                                               match toRep with
+                                                                                                               | CmmType.W32 =>
+                                                                                                                 OrdList.unitOL
+                                                                                                                   (PPC.Instr.FRSP
+                                                                                                                      dst dst)
+                                                                                                               | CmmType.W64 =>
+                                                                                                                 OrdList.nilOL
+                                                                                                               | _ =>
+                                                                                                                 Panic.panic
+                                                                                                                   (GHC.Base.hs_string__
+                                                                                                                      "PPC.CodeGen.coerceInt2FP: no match")
+                                                                                                               end in
+                                                                                                         let maybe_exts :=
+                                                                                                             match fromRep with
+                                                                                                             | CmmType.W8 =>
+                                                                                                               OrdList.unitOL
+                                                                                                                 (PPC.Instr.EXTS
+                                                                                                                    Format.II8 src
+                                                                                                                    src)
+                                                                                                             | CmmType.W16 =>
+                                                                                                               OrdList.unitOL
+                                                                                                                 (PPC.Instr.EXTS
+                                                                                                                    Format.II16 src
+                                                                                                                    src)
+                                                                                                             | CmmType.W32 =>
+                                                                                                               OrdList.nilOL
+                                                                                                             | _ =>
+                                                                                                               Panic.panic
+                                                                                                                 (GHC.Base.hs_string__
+                                                                                                                    "PPC.CodeGen.coerceInt2FP: no match")
+                                                                                                             end in
+                                                                                                         let code' :=
+                                                                                                             fun dst =>
+                                                                                                               OrdList.appOL
+                                                                                                                 (OrdList.appOL
+                                                                                                                    (OrdList.appOL
+                                                                                                                       (OrdList.appOL
+                                                                                                                          (OrdList.appOL
+                                                                                                                             code
+                                                                                                                             maybe_exts)
+                                                                                                                          (OrdList.toOL
+                                                                                                                             (cons
+                                                                                                                                (PPC.Instr.LDATA
+                                                                                                                                   (Cmm.Mk_Section
+                                                                                                                                      Cmm.ReadOnlyData
+                                                                                                                                      lbl)
+                                                                                                                                   (Cmm.Statics
+                                                                                                                                      lbl (cons
+                                                                                                                                             (Cmm.CmmStaticLit
+                                                                                                                                                (CmmExpr.CmmInt
+                                                                                                                                                   #1127219200
+                                                                                                                                                   CmmType.W32))
+                                                                                                                                             (cons
+                                                                                                                                                (Cmm.CmmStaticLit
                                                                                                                 (CmmExpr.CmmInt
                                                                                                                  #2147483648
                                                                                                                  CmmType.W32))
@@ -970,484 +972,478 @@ Definition getAmode : InstrForm -> CmmExpr.CmmExpr -> NCGMonad.NatM Amode :=
                                                                            | _, _, _, _ =>
                                                                                Panic.panic (GHC.Base.hs_string__
                                                                                             "PPC.CodeGen.coerceInt2FP: unknown arch")
-                                                                           end with getAmode (arg_0__ : InstrForm)
-                                                                                             (arg_1__ : CmmExpr.CmmExpr)
-                                                                                      : NCGMonad.NatM Amode
-                                                                                      := let j_35__ :=
-                                                                                           match arg_0__, arg_1__ with
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W32) (cons x (cons
-                                                                                             (CmmExpr.Mk_CmmLit lit)
-                                                                                             nil)) =>
-                                                                                               let isCmmLabelType :=
-                                                                                                 fun arg_2__ =>
-                                                                                                   match arg_2__ with
-                                                                                                   | CmmExpr.CmmLabel
-                                                                                                   _ =>
-                                                                                                       true
-                                                                                                   | CmmExpr.CmmLabelOff
-                                                                                                   _ _ =>
-                                                                                                       true
-                                                                                                   | CmmExpr.CmmLabelDiffOff
-                                                                                                   _ _ _ =>
-                                                                                                       true
-                                                                                                   | _ => false
-                                                                                                   end in
-                                                                                               DynFlags.getDynFlags
-                                                                                               GHC.Base.>>=
-                                                                                               (fun dflags =>
-                                                                                                  let cont_4__ arg_5__ :=
-                                                                                                    let 'pair src
-                                                                                                       srcCode :=
-                                                                                                      arg_5__ in
-                                                                                                    let imm :=
-                                                                                                      PPC.Regs.litToImm
-                                                                                                      lit in
-                                                                                                    let j_8__ :=
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II32
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let code :=
-                                                                                                           OrdList.snocOL
-                                                                                                           srcCode
-                                                                                                           (PPC.Instr.ADDIS
-                                                                                                            tmp src
-                                                                                                            (PPC.Regs.HA
-                                                                                                             imm)) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm))
-                                                                                                          code)) in
-                                                                                                    match Platform.platformOS
-                                                                                                            (DynFlags.targetPlatform
-                                                                                                             dflags) with
-                                                                                                    | Platform.OSAIX =>
-                                                                                                        if isCmmLabelType
-                                                                                                           lit : bool
-                                                                                                        then GHC.Base.return_
-                                                                                                             (MkAmode
-                                                                                                              (PPC.Regs.AddrRegImm
-                                                                                                               src imm)
-                                                                                                              srcCode) else
-                                                                                                        j_8__
-                                                                                                    | _ => j_8__
-                                                                                                    end in
-                                                                                                  getSomeReg x
-                                                                                                  GHC.Base.>>=
-                                                                                                  cont_4__)
-                                                                                           | _, CmmExpr.Mk_CmmLit lit =>
-                                                                                               DynFlags.getDynFlags
-                                                                                               GHC.Base.>>=
-                                                                                               (fun dflags =>
-                                                                                                  match Platform.platformArch
-                                                                                                          (DynFlags.targetPlatform
-                                                                                                           dflags) with
-                                                                                                  | Platform.ArchPPC =>
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II32
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let imm :=
-                                                                                                           PPC.Regs.litToImm
-                                                                                                           lit in
-                                                                                                         let code :=
-                                                                                                           OrdList.unitOL
-                                                                                                           (PPC.Instr.LIS
-                                                                                                            tmp
-                                                                                                            (PPC.Regs.HA
-                                                                                                             imm)) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm)) code))
-                                                                                                  | _ =>
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II64
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let imm :=
-                                                                                                           PPC.Regs.litToImm
-                                                                                                           lit in
-                                                                                                         let code :=
-                                                                                                           OrdList.toOL
-                                                                                                           (cons
-                                                                                                            (PPC.Instr.LIS
-                                                                                                             tmp
-                                                                                                             (PPC.Regs.HIGHESTA
-                                                                                                              imm))
-                                                                                                            (cons
-                                                                                                             (PPC.Instr.OR
-                                                                                                              tmp tmp
-                                                                                                              (PPC.Instr.RIImm
-                                                                                                               (PPC.Regs.HIGHERA
-                                                                                                                imm)))
-                                                                                                             (cons
-                                                                                                              (PPC.Instr.SL
-                                                                                                               Format.II64
-                                                                                                               tmp tmp
-                                                                                                               (PPC.Instr.RIImm
-                                                                                                                (PPC.Regs.ImmInt
-                                                                                                                 #32)))
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ORIS
-                                                                                                                tmp tmp
-                                                                                                                (PPC.Regs.HA
-                                                                                                                 imm))
-                                                                                                               nil)))) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm)) code))
-                                                                                                  end)
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W32) (cons x (cons y
-                                                                                             nil)) =>
-                                                                                               let cont_21__ arg_22__ :=
-                                                                                                 let 'pair regX codeX :=
-                                                                                                   arg_22__ in
-                                                                                                 let cont_23__ arg_24__ :=
-                                                                                                   let 'pair regY
-                                                                                                      codeY :=
-                                                                                                     arg_24__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegReg
-                                                                                                     regX regY)
-                                                                                                    (OrdList.appOL codeX
-                                                                                                                   codeY)) in
-                                                                                                 getSomeReg y
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_23__ in
-                                                                                               getSomeReg x GHC.Base.>>=
-                                                                                               cont_21__
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W64) (cons x (cons y
-                                                                                             nil)) =>
-                                                                                               let cont_26__ arg_27__ :=
-                                                                                                 let 'pair regX codeX :=
-                                                                                                   arg_27__ in
-                                                                                                 let cont_28__ arg_29__ :=
-                                                                                                   let 'pair regY
-                                                                                                      codeY :=
-                                                                                                     arg_29__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegReg
-                                                                                                     regX regY)
-                                                                                                    (OrdList.appOL codeX
-                                                                                                                   codeY)) in
-                                                                                                 getSomeReg y
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_28__ in
-                                                                                               getSomeReg x GHC.Base.>>=
-                                                                                               cont_26__
-                                                                                           | _, other =>
-                                                                                               let cont_31__ arg_32__ :=
-                                                                                                 let 'pair reg code :=
-                                                                                                   arg_32__ in
-                                                                                                 let off :=
-                                                                                                   PPC.Regs.ImmInt #0 in
-                                                                                                 GHC.Base.return_
-                                                                                                 (MkAmode
-                                                                                                  (PPC.Regs.AddrRegImm
-                                                                                                   reg off) code) in
-                                                                                               getSomeReg other
-                                                                                               GHC.Base.>>=
-                                                                                               cont_31__
-                                                                                           end in
-                                                                                         match arg_0__, arg_1__ with
-                                                                                         | inf
-                                                                                         , (CmmExpr.CmmRegOff _
-                                                                                          _ as tree) =>
-                                                                                             DynFlags.getDynFlags
-                                                                                             GHC.Base.>>=
-                                                                                             (fun dflags =>
-                                                                                                getAmode inf
-                                                                                                (mangleIndexTree dflags
-                                                                                                 tree))
-                                                                                         | _
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W32)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W32 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_37__ arg_38__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_38__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_37__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | _
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W32)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W32 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_40__ arg_41__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_41__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_40__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | D
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_43__ arg_44__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_44__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_43__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | D
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_46__ arg_47__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_47__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_46__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | DS
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_49__ arg_50__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_50__ in
-                                                                                                   let cont_51__ arg_52__ :=
-                                                                                                     let 'pair (pair
-                                                                                                         reg' off')
-                                                                                                        code' :=
-                                                                                                       arg_52__ in
-                                                                                                     GHC.Base.return_
-                                                                                                     (MkAmode
-                                                                                                      (PPC.Regs.AddrRegImm
-                                                                                                       reg' off')
-                                                                                                      code') in
-                                                                                                   (if GHC.Real.mod_ i
-                                                                                                                     #4
-                                                                                                       GHC.Base.==
-                                                                                                       #0 : bool
-                                                                                                    then GHC.Base.return_
-                                                                                                         (pair (pair reg
-                                                                                                                     off)
-                                                                                                               code)
-                                                                                                    else NCGMonad.getNewRegNat
-                                                                                                         Format.II64
-                                                                                                         GHC.Base.>>=
-                                                                                                         (fun tmp =>
-                                                                                                            GHC.Base.return_
-                                                                                                            (pair (pair
-                                                                                                                   tmp
-                                                                                                                   (PPC.Regs.ImmInt
-                                                                                                                    #0))
-                                                                                                                  (OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   (PPC.Instr.ADD
-                                                                                                                    tmp
-                                                                                                                    reg
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     off))))))
-                                                                                                   GHC.Base.>>=
-                                                                                                   cont_51__ in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_49__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | DS
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_54__ arg_55__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_55__ in
-                                                                                                   let cont_56__ arg_57__ :=
-                                                                                                     let 'pair (pair
-                                                                                                         reg' off')
-                                                                                                        code' :=
-                                                                                                       arg_57__ in
-                                                                                                     GHC.Base.return_
-                                                                                                     (MkAmode
-                                                                                                      (PPC.Regs.AddrRegImm
-                                                                                                       reg' off')
-                                                                                                      code') in
-                                                                                                   (if GHC.Real.mod_ i
-                                                                                                                     #4
-                                                                                                       GHC.Base.==
-                                                                                                       #0 : bool
-                                                                                                    then GHC.Base.return_
-                                                                                                         (pair (pair reg
-                                                                                                                     off)
-                                                                                                               code)
-                                                                                                    else NCGMonad.getNewRegNat
-                                                                                                         Format.II64
-                                                                                                         GHC.Base.>>=
-                                                                                                         (fun tmp =>
-                                                                                                            GHC.Base.return_
-                                                                                                            (pair (pair
-                                                                                                                   tmp
-                                                                                                                   (PPC.Regs.ImmInt
-                                                                                                                    #0))
-                                                                                                                  (OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   (PPC.Instr.ADD
-                                                                                                                    tmp
-                                                                                                                    reg
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     off))))))
-                                                                                                   GHC.Base.>>=
-                                                                                                   cont_56__ in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_54__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | _, _ => j_35__
-                                                                                         end with condFltReg (cond
-                                                                                                              
-                                                                                                              : PPC.Cond.Cond)
-                                                                                                             (x y
-                                                                                                              
-                                                                                                              : CmmExpr.CmmExpr)
-                                                                                                    : NCGMonad.NatM
-                                                                                                      Register
-                                                                                                    := condReg
-                                                                                                       (condFltCode cond
-                                                                                                        x y)
-  with condFltCode (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) : NCGMonad.NatM
+        end
+with getAmode (arg_0__ : InstrForm)
+              (arg_1__ : CmmExpr.CmmExpr)
+     : NCGMonad.NatM Amode
+     := let j_35__ :=
+            match arg_0__, arg_1__ with
+            | _
+              , CmmExpr.CmmMachOp
+                  (CmmMachOp.MO_Add
+                     CmmType.W32) (cons x (cons
+                                             (CmmExpr.Mk_CmmLit lit)
+                                             nil)) =>
+              let isCmmLabelType :=
+                  fun arg_2__ =>
+                    match arg_2__ with
+                    | CmmExpr.CmmLabel
+                        _ =>
+                      true
+                    | CmmExpr.CmmLabelOff
+                        _ _ =>
+                      true
+                    | CmmExpr.CmmLabelDiffOff
+                        _ _ _ =>
+                      true
+                    | _ => false
+                    end in
+              DynFlags.getDynFlags
+                GHC.Base.>>=
+                (fun dflags =>
+                   let cont_4__ arg_5__ :=
+                       let 'pair src
+                                 srcCode :=
+                           arg_5__ in
+                       let imm :=
+                           PPC.Regs.litToImm
+                             lit in
+                       let j_8__ :=
+                           NCGMonad.getNewRegNat
+                             Format.II32
+                             GHC.Base.>>=
+                             (fun tmp =>
+                                let code :=
+                                    OrdList.snocOL
+                                      srcCode
+                                      (PPC.Instr.ADDIS
+                                         tmp src
+                                         (PPC.Regs.HA
+                                            imm)) in
+                                GHC.Base.return_
+                                  (MkAmode
+                                     (PPC.Regs.AddrRegImm
+                                        tmp
+                                        (PPC.Regs.LO
+                                           imm))
+                                     code)) in
+                       match Platform.platformOS
+                               (DynFlags.targetPlatform
+                                  dflags) with
+                       | Platform.OSAIX =>
+                         if isCmmLabelType
+                              lit : bool
+                         then GHC.Base.return_
+                                (MkAmode
+                                   (PPC.Regs.AddrRegImm
+                                      src imm)
+                                   srcCode) else
+                           j_8__
+                       | _ => j_8__
+                       end in
+                   getSomeReg x
+                              GHC.Base.>>=
+                              cont_4__)
+            | _, CmmExpr.Mk_CmmLit lit =>
+              DynFlags.getDynFlags
+                GHC.Base.>>=
+                (fun dflags =>
+                   match Platform.platformArch
+                           (DynFlags.targetPlatform
+                              dflags) with
+                   | Platform.ArchPPC =>
+                     NCGMonad.getNewRegNat
+                       Format.II32
+                       GHC.Base.>>=
+                       (fun tmp =>
+                          let imm :=
+                              PPC.Regs.litToImm
+                                lit in
+                          let code :=
+                              OrdList.unitOL
+                                (PPC.Instr.LIS
+                                   tmp
+                                   (PPC.Regs.HA
+                                      imm)) in
+                          GHC.Base.return_
+                            (MkAmode
+                               (PPC.Regs.AddrRegImm
+                                  tmp
+                                  (PPC.Regs.LO
+                                     imm)) code))
+                   | _ =>
+                     NCGMonad.getNewRegNat
+                       Format.II64
+                       GHC.Base.>>=
+                       (fun tmp =>
+                          let imm :=
+                              PPC.Regs.litToImm
+                                lit in
+                          let code :=
+                              OrdList.toOL
+                                (cons
+                                   (PPC.Instr.LIS
+                                      tmp
+                                      (PPC.Regs.HIGHESTA
+                                         imm))
+                                   (cons
+                                      (PPC.Instr.OR
+                                         tmp tmp
+                                         (PPC.Instr.RIImm
+                                            (PPC.Regs.HIGHERA
+                                               imm)))
+                                      (cons
+                                         (PPC.Instr.SL
+                                            Format.II64
+                                            tmp tmp
+                                            (PPC.Instr.RIImm
+                                               (PPC.Regs.ImmInt
+                                                  #32)))
+                                         (cons
+                                            (PPC.Instr.ORIS
+                                               tmp tmp
+                                               (PPC.Regs.HA
+                                                  imm))
+                                            nil)))) in
+                          GHC.Base.return_
+                            (MkAmode
+                               (PPC.Regs.AddrRegImm
+                                  tmp
+                                  (PPC.Regs.LO
+                                     imm)) code))
+                   end)
+            | _
+              , CmmExpr.CmmMachOp
+                  (CmmMachOp.MO_Add
+                     CmmType.W32) (cons x (cons y
+                                                nil)) =>
+              let cont_21__ arg_22__ :=
+                  let 'pair regX codeX :=
+                      arg_22__ in
+                  let cont_23__ arg_24__ :=
+                      let 'pair regY
+                                codeY :=
+                          arg_24__ in
+                      GHC.Base.return_
+                        (MkAmode
+                           (PPC.Regs.AddrRegReg
+                              regX regY)
+                           (OrdList.appOL codeX
+                                          codeY)) in
+                  getSomeReg y
+                             GHC.Base.>>=
+                             cont_23__ in
+              getSomeReg x GHC.Base.>>=
+                         cont_21__
+            | _
+              , CmmExpr.CmmMachOp
+                  (CmmMachOp.MO_Add
+                     CmmType.W64) (cons x (cons y
+                                                nil)) =>
+              let cont_26__ arg_27__ :=
+                  let 'pair regX codeX :=
+                      arg_27__ in
+                  let cont_28__ arg_29__ :=
+                      let 'pair regY
+                                codeY :=
+                          arg_29__ in
+                      GHC.Base.return_
+                        (MkAmode
+                           (PPC.Regs.AddrRegReg
+                              regX regY)
+                           (OrdList.appOL codeX
+                                          codeY)) in
+                  getSomeReg y
+                             GHC.Base.>>=
+                             cont_28__ in
+              getSomeReg x GHC.Base.>>=
+                         cont_26__
+            | _, other =>
+              let cont_31__ arg_32__ :=
+                  let 'pair reg code :=
+                      arg_32__ in
+                  let off :=
+                      PPC.Regs.ImmInt #0 in
+                  GHC.Base.return_
+                    (MkAmode
+                       (PPC.Regs.AddrRegImm
+                          reg off) code) in
+              getSomeReg other
+                         GHC.Base.>>=
+                         cont_31__
+            end in
+        match arg_0__, arg_1__ with
+        | inf
+          , (CmmExpr.CmmRegOff _
+                               _ as tree) =>
+          DynFlags.getDynFlags
+            GHC.Base.>>=
+            (fun dflags =>
+               getAmode inf
+                        (mangleIndexTree dflags
+                                         tree))
+        | _
+          , CmmExpr.CmmMachOp
+              (CmmMachOp.MO_Sub CmmType.W32)
+              (cons x (cons
+                         (CmmExpr.Mk_CmmLit
+                            (CmmExpr.CmmInt i _))
+                         nil)) =>
+          match PPC.Regs.makeImmediate
+                  CmmType.W32 true
+                  (GHC.Num.negate
+                     i) with
+          | Some off =>
+            let cont_37__ arg_38__ :=
+                let 'pair reg code :=
+                    arg_38__ in
+                GHC.Base.return_
+                  (MkAmode
+                     (PPC.Regs.AddrRegImm
+                        reg off) code) in
+            getSomeReg x
+                       GHC.Base.>>=
+                       cont_37__
+          | _ => j_35__
+          end
+        | _
+          , CmmExpr.CmmMachOp
+              (CmmMachOp.MO_Add CmmType.W32)
+              (cons x (cons
+                         (CmmExpr.Mk_CmmLit
+                            (CmmExpr.CmmInt i _))
+                         nil)) =>
+          match PPC.Regs.makeImmediate
+                  CmmType.W32 true
+                  i with
+          | Some off =>
+            let cont_40__ arg_41__ :=
+                let 'pair reg code :=
+                    arg_41__ in
+                GHC.Base.return_
+                  (MkAmode
+                     (PPC.Regs.AddrRegImm
+                        reg off) code) in
+            getSomeReg x
+                       GHC.Base.>>=
+                       cont_40__
+          | _ => j_35__
+          end
+        | D
+          , CmmExpr.CmmMachOp
+              (CmmMachOp.MO_Sub CmmType.W64)
+              (cons x (cons
+                         (CmmExpr.Mk_CmmLit
+                            (CmmExpr.CmmInt i _))
+                         nil)) =>
+          match PPC.Regs.makeImmediate
+                  CmmType.W64 true
+                  (GHC.Num.negate
+                     i) with
+          | Some off =>
+            let cont_43__ arg_44__ :=
+                let 'pair reg code :=
+                    arg_44__ in
+                GHC.Base.return_
+                  (MkAmode
+                     (PPC.Regs.AddrRegImm
+                        reg off) code) in
+            getSomeReg x
+                       GHC.Base.>>=
+                       cont_43__
+          | _ => j_35__
+          end
+        | D
+          , CmmExpr.CmmMachOp
+              (CmmMachOp.MO_Add CmmType.W64)
+              (cons x (cons
+                         (CmmExpr.Mk_CmmLit
+                            (CmmExpr.CmmInt i _))
+                         nil)) =>
+          match PPC.Regs.makeImmediate
+                  CmmType.W64 true
+                  i with
+          | Some off =>
+            let cont_46__ arg_47__ :=
+                let 'pair reg code :=
+                    arg_47__ in
+                GHC.Base.return_
+                  (MkAmode
+                     (PPC.Regs.AddrRegImm
+                        reg off) code) in
+            getSomeReg x
+                       GHC.Base.>>=
+                       cont_46__
+          | _ => j_35__
+          end
+        | DS
+          , CmmExpr.CmmMachOp
+              (CmmMachOp.MO_Sub CmmType.W64)
+              (cons x (cons
+                         (CmmExpr.Mk_CmmLit
+                            (CmmExpr.CmmInt i _))
+                         nil)) =>
+          match PPC.Regs.makeImmediate
+                  CmmType.W64 true
+                  (GHC.Num.negate
+                     i) with
+          | Some off =>
+            let cont_49__ arg_50__ :=
+                let 'pair reg code :=
+                    arg_50__ in
+                let cont_51__ arg_52__ :=
+                    let 'pair (pair
+                                 reg' off')
+                              code' :=
+                        arg_52__ in
+                    GHC.Base.return_
+                      (MkAmode
+                         (PPC.Regs.AddrRegImm
+                            reg' off')
+                         code') in
+                (if GHC.Real.mod_ i
+                                  #4
+                                  GHC.Base.==
+                                  #0 : bool
+                 then GHC.Base.return_
+                        (pair (pair reg
+                                    off)
+                              code)
+                 else NCGMonad.getNewRegNat
+                        Format.II64
+                        GHC.Base.>>=
+                        (fun tmp =>
+                           GHC.Base.return_
+                             (pair (pair
+                                      tmp
+                                      (PPC.Regs.ImmInt
+                                         #0))
+                                   (OrdList.snocOL
+                                      code
+                                      (PPC.Instr.ADD
+                                         tmp
+                                         reg
+                                         (PPC.Instr.RIImm
+                                            off))))))
+                  GHC.Base.>>=
+                  cont_51__ in
+            getSomeReg x
+                       GHC.Base.>>=
+                       cont_49__
+          | _ => j_35__
+          end
+        | DS
+          , CmmExpr.CmmMachOp
+              (CmmMachOp.MO_Add CmmType.W64)
+              (cons x (cons
+                         (CmmExpr.Mk_CmmLit
+                            (CmmExpr.CmmInt i _))
+                         nil)) =>
+          match PPC.Regs.makeImmediate
+                  CmmType.W64 true
+                  i with
+          | Some off =>
+            let cont_54__ arg_55__ :=
+                let 'pair reg code :=
+                    arg_55__ in
+                let cont_56__ arg_57__ :=
+                    let 'pair (pair
+                                 reg' off')
+                              code' :=
+                        arg_57__ in
+                    GHC.Base.return_
+                      (MkAmode
+                         (PPC.Regs.AddrRegImm
+                            reg' off')
+                         code') in
+                (if GHC.Real.mod_ i
+                                  #4
+                                  GHC.Base.==
+                                  #0 : bool
+                 then GHC.Base.return_
+                        (pair (pair reg
+                                    off)
+                              code)
+                 else NCGMonad.getNewRegNat
+                        Format.II64
+                        GHC.Base.>>=
+                        (fun tmp =>
+                           GHC.Base.return_
+                             (pair (pair
+                                      tmp
+                                      (PPC.Regs.ImmInt
+                                         #0))
+                                   (OrdList.snocOL
+                                      code
+                                      (PPC.Instr.ADD
+                                         tmp
+                                         reg
+                                         (PPC.Instr.RIImm
+                                            off))))))
+                  GHC.Base.>>=
+                  cont_56__ in
+            getSomeReg x
+                       GHC.Base.>>=
+                       cont_54__
+          | _ => j_35__
+          end
+        | _, _ => j_35__
+        end
+with condFltReg (cond : PPC.Cond.Cond)
+                (x y : CmmExpr.CmmExpr)
+     : NCGMonad.NatM
+         Register
+     := condReg
+          (condFltCode cond
+                       x y)
+with condFltCode (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) : NCGMonad.NatM
                                                                     CondCode
-         := let cont_0__ arg_1__ :=
-              let 'pair src1 code1 := arg_1__ in
-              let cont_2__ arg_3__ :=
+     := let cont_0__ arg_1__ :=
+            let 'pair src1 code1 := arg_1__ in
+            let cont_2__ arg_3__ :=
                 let 'pair src2 code2 := arg_3__ in
                 let code' :=
-                  OrdList.snocOL (OrdList.appOL code1 code2) (PPC.Instr.FCMP src1 src2) in
+                    OrdList.snocOL (OrdList.appOL code1 code2) (PPC.Instr.FCMP src1 src2) in
                 let code'' :=
-                  let gtbit := #1 in
-                  let eqbit := #2 in
-                  let ltbit := #0 in
-                  match cond with
-                  | PPC.Cond.GE => OrdList.snocOL code' (PPC.Instr.CRNOR ltbit eqbit gtbit)
-                  | PPC.Cond.LE => OrdList.snocOL code' (PPC.Instr.CRNOR gtbit eqbit ltbit)
-                  | _ => code'
-                  end in
+                    let gtbit := #1 in
+                    let eqbit := #2 in
+                    let ltbit := #0 in
+                    match cond with
+                    | PPC.Cond.GE => OrdList.snocOL code' (PPC.Instr.CRNOR ltbit eqbit gtbit)
+                    | PPC.Cond.LE => OrdList.snocOL code' (PPC.Instr.CRNOR gtbit eqbit ltbit)
+                    | _ => code'
+                    end in
                 GHC.Base.return_ (MkCondCode true cond code'') in
-              getSomeReg y GHC.Base.>>= cont_2__ in
-            getSomeReg x GHC.Base.>>= cont_0__ with condIntReg (cond : PPC.Cond.Cond) (x y
-                                                                 : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                                      := condReg (condIntCode cond x y) with condIntCode (arg_0__
-                                                                                                          
-                                                                                                          : PPC.Cond.Cond)
-                                                                                                         (arg_1__
-                                                                                                          arg_2__
-                                                                                                          
-                                                                                                          : CmmExpr.CmmExpr)
-                                                                                               : NCGMonad.NatM CondCode
-                                                                                               := let j_11__ :=
-                                                                                                    match arg_0__
-                                                                                                        , arg_1__
-                                                                                                        , arg_2__ with
-                                                                                                    | cond, x, y =>
-                                                                                                        let cont_4__ arg_5__ :=
-                                                                                                          let 'pair src1
-                                                                                                             code1 :=
-                                                                                                            arg_5__ in
-                                                                                                          let cont_6__ arg_7__ :=
-                                                                                                            let 'pair
-                                                                                                               src2
-                                                                                                               code2 :=
-                                                                                                              arg_7__ in
-                                                                                                            DynFlags.getDynFlags
-                                                                                                            GHC.Base.>>=
-                                                                                                            (fun dflags =>
-                                                                                                               let format :=
-                                                                                                                 PPC.Instr.archWordFormat
-                                                                                                                 (Platform.target32Bit
-                                                                                                                  (DynFlags.targetPlatform
-                                                                                                                   dflags)) in
-                                                                                                               let code' :=
+            getSomeReg y GHC.Base.>>= cont_2__ in
+        getSomeReg x GHC.Base.>>= cont_0__
+with condIntReg (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) : NCGMonad.NatM Register
+     := condReg (condIntCode cond x y)
+with condIntCode (arg_0__ : PPC.Cond.Cond)
+                 (arg_1__ arg_2__ : CmmExpr.CmmExpr)
+     : NCGMonad.NatM CondCode
+     := let j_11__ :=
+            match arg_0__
+                  , arg_1__
+                  , arg_2__ with
+            | cond, x, y =>
+              let cont_4__ arg_5__ :=
+                  let 'pair src1
+                            code1 :=
+                      arg_5__ in
+                  let cont_6__ arg_7__ :=
+                      let 'pair
+                            src2
+                            code2 :=
+                          arg_7__ in
+                      DynFlags.getDynFlags
+                        GHC.Base.>>=
+                        (fun dflags =>
+                           let format :=
+                               PPC.Instr.archWordFormat
+                                 (Platform.target32Bit
+                                    (DynFlags.targetPlatform
+                                       dflags)) in
+                           let code' :=
                                                                                                                  OrdList.snocOL
                                                                                                                  (OrdList.appOL
                                                                                                                   code1
@@ -1577,71 +1573,65 @@ Definition getAmode : InstrForm -> CmmExpr.CmmExpr -> NCGMonad.NatM Amode :=
                                                                                                            j_17__ else
                                                                                                       j_17__
                                                                                                   | _, _, _ => j_17__
-                                                                                                  end with remainderCode
-                                                                                                             (rep
-                                                                                                              
-                                                                                                              : CmmType.Width)
-                                                                                                             (sgn
-                                                                                                               : bool)
-                                                                                                             (x y
-                                                                                                              
-                                                                                                              : CmmExpr.CmmExpr)
-                                                                                                             : NCGMonad.NatM
-                                                                                                               Register
-                                                                                                             := let fmt :=
-                                                                                                                  Format.intFormat
-                                                                                                                  rep in
-                                                                                                                let cont_1__ arg_2__ :=
-                                                                                                                  let 'pair
-                                                                                                                     src1
-                                                                                                                     code1 :=
-                                                                                                                    arg_2__ in
-                                                                                                                  let cont_3__ arg_4__ :=
-                                                                                                                    let 'pair
-                                                                                                                       src2
-                                                                                                                       code2 :=
-                                                                                                                      arg_4__ in
-                                                                                                                    let code :=
-                                                                                                                      fun dst =>
-                                                                                                                        OrdList.appOL
-                                                                                                                        (OrdList.appOL
-                                                                                                                         code1
-                                                                                                                         code2)
-                                                                                                                        (OrdList.toOL
-                                                                                                                         (cons
-                                                                                                                          (PPC.Instr.DIV
-                                                                                                                           fmt
-                                                                                                                           sgn
-                                                                                                                           dst
-                                                                                                                           src1
-                                                                                                                           src2)
-                                                                                                                          (cons
-                                                                                                                           (PPC.Instr.MULL
-                                                                                                                            fmt
-                                                                                                                            dst
-                                                                                                                            dst
-                                                                                                                            (PPC.Instr.RIReg
-                                                                                                                             src2))
-                                                                                                                           (cons
-                                                                                                                            (PPC.Instr.SUBF
-                                                                                                                             dst
-                                                                                                                             dst
-                                                                                                                             src1)
-                                                                                                                            nil)))) in
-                                                                                                                    GHC.Base.return_
-                                                                                                                    (Any
-                                                                                                                     (Format.intFormat
-                                                                                                                      rep)
-                                                                                                                     code) in
-                                                                                                                  getSomeReg
-                                                                                                                  y
-                                                                                                                  GHC.Base.>>=
-                                                                                                                  cont_3__ in
-                                                                                                                getSomeReg
-                                                                                                                x
-                                                                                                                GHC.Base.>>=
-                                                                                                                cont_1__
-  with shiftMulCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
+                                                                                                  end
+with remainderCode (rep : CmmType.Width)
+                   (sgn : bool)
+                   (x y : CmmExpr.CmmExpr)
+     : NCGMonad.NatM Register
+     := let fmt :=
+            Format.intFormat
+              rep in
+        let cont_1__ arg_2__ :=
+            let 'pair
+                  src1
+                  code1 :=
+                arg_2__ in
+            let cont_3__ arg_4__ :=
+                let 'pair
+                      src2
+                      code2 :=
+                    arg_4__ in
+                let code :=
+                    fun dst =>
+                      OrdList.appOL
+                        (OrdList.appOL
+                           code1
+                           code2)
+                        (OrdList.toOL
+                           (cons
+                              (PPC.Instr.DIV
+                                 fmt
+                                 sgn
+                                 dst
+                                 src1
+                                 src2)
+                              (cons
+                                 (PPC.Instr.MULL
+                                    fmt
+                                    dst
+                                    dst
+                                    (PPC.Instr.RIReg
+                                       src2))
+                                 (cons
+                                    (PPC.Instr.SUBF
+                                       dst
+                                       dst
+                                       src1)
+                                    nil)))) in
+                GHC.Base.return_
+                  (Any
+                     (Format.intFormat
+                        rep)
+                     code) in
+            getSomeReg
+              y
+              GHC.Base.>>=
+              cont_3__ in
+        getSomeReg
+          x
+          GHC.Base.>>=
+          cont_1__
+with shiftMulCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
                       : (Format.Format -> Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr))
                     (arg_3__ arg_4__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register
          := let j_12__ :=
@@ -1674,7 +1664,8 @@ Definition getAmode : InstrForm -> CmmExpr.CmmExpr -> NCGMonad.NatM Amode :=
                 | _ => j_12__
                 end
             | _, _, _, _, _ => j_12__
-            end with trivialCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
+            end
+with trivialCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
                                    : (Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr)) (arg_3__ arg_4__
                                    : CmmExpr.CmmExpr) : NCGMonad.NatM Register
                        := let j_11__ :=
@@ -1705,4753 +1696,55 @@ Definition getAmode : InstrForm -> CmmExpr.CmmExpr -> NCGMonad.NatM Amode :=
                               | _ => j_11__
                               end
                           | _, _, _, _, _ => j_11__
-                          end with trivialCodeNoImm (format : Format.Format) (instr
-                                                      : (Format.Format ->
-                                                         Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr)) (x y
-                                                      : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                     := trivialCodeNoImm' format (instr format) x y with trivialCodeNoImm' (format
-                                                                                                            
-                                                                                                            : Format.Format)
-                                                                                                           (instr
-                                                                                                            
-                                                                                                            : (Reg.Reg ->
+                          end
+with trivialCodeNoImm (format : Format.Format)
+                      (instr : (Format.Format -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
+                      (x y : CmmExpr.CmmExpr) : NCGMonad.NatM Register
+     := trivialCodeNoImm' format (instr format) x y
+with trivialCodeNoImm' (format : Format.Format)
+                       (instr : (Reg.Reg ->
                                                                                                                Reg.Reg ->
                                                                                                                Reg.Reg ->
                                                                                                                PPC.Instr.Instr))
-                                                                                                           (x y
-                                                                                                            
-                                                                                                            : CmmExpr.CmmExpr)
-                                                                                           : NCGMonad.NatM Register
-                                                                                           := let cont_0__ arg_1__ :=
-                                                                                                let 'pair src1 code1 :=
-                                                                                                  arg_1__ in
-                                                                                                let cont_2__ arg_3__ :=
-                                                                                                  let 'pair src2
-                                                                                                     code2 := arg_3__ in
-                                                                                                  let code :=
-                                                                                                    fun dst =>
-                                                                                                      OrdList.snocOL
-                                                                                                      (OrdList.appOL
-                                                                                                       code1 code2)
-                                                                                                      (instr dst src1
-                                                                                                       src2) in
-                                                                                                  GHC.Base.return_ (Any
-                                                                                                                    format
-                                                                                                                    code) in
-                                                                                                getSomeReg y
-                                                                                                GHC.Base.>>=
-                                                                                                cont_2__ in
-                                                                                              getSomeReg x GHC.Base.>>=
-                                                                                              cont_0__
-  with trivialCodeNoImmSign (format : Format.Format) (sgn : bool) (instr
-                              : (Format.Format -> bool -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
-                            (x y : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-         := trivialCodeNoImm' format (instr format sgn) x y with trivialUCode (rep
-                                                                                : Format.Format) (instr
-                                                                                : (Reg.Reg ->
-                                                                                   Reg.Reg -> PPC.Instr.Instr)) (x
-                                                                                : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                                                     Register
-                                                                   := let cont_0__ arg_1__ :=
-                                                                        let 'pair src code := arg_1__ in
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.snocOL code (instr dst src) in
-                                                                        GHC.Base.return_ (Any rep code') in
-                                                                      getSomeReg x GHC.Base.>>= cont_0__ for getAmode.
+                       (x y : CmmExpr.CmmExpr)
+     : NCGMonad.NatM Register
+     := let cont_0__ arg_1__ :=
+            let 'pair src1 code1 :=
+                arg_1__ in
+            let cont_2__ arg_3__ :=
+                let 'pair src2
+                          code2 := arg_3__ in
+                let code :=
+                    fun dst =>
+                      OrdList.snocOL
+                        (OrdList.appOL
+                           code1 code2)
+                        (instr dst src1
+                               src2) in
+                GHC.Base.return_ (Any
+                                    format
+                                    code) in
+            getSomeReg y
+                       GHC.Base.>>=
+                       cont_2__ in
+        getSomeReg x GHC.Base.>>=
+                   cont_0__
+with trivialCodeNoImmSign (format : Format.Format) (sgn : bool)
+                          (instr : (Format.Format -> bool -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
+                          (x y : CmmExpr.CmmExpr) : NCGMonad.NatM Register
+     := trivialCodeNoImm' format (instr format sgn) x y
+with trivialUCode (rep : Format.Format) (instr : (Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
+                  (x : CmmExpr.CmmExpr)
+     : NCGMonad.NatM Register
+     := let cont_0__ arg_1__ :=
+            let 'pair src code := arg_1__ in
+            let code' :=
+                fun dst =>
+                  OrdList.snocOL code (instr dst src) in
+            GHC.Base.return_ (Any rep code') in
+        getSomeReg x GHC.Base.>>= cont_0__
+.
 
-Definition getRegister : CmmExpr.CmmExpr -> NCGMonad.NatM Register :=
-  fix coerceFP2Int (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
-        : NCGMonad.NatM Register
-        := DynFlags.getDynFlags GHC.Base.>>=
-           (fun dflags =>
-              let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
-              coerceFP2Int' arch fromRep toRep x) with coerceFP2Int' (arg_0__ : Platform.Arch)
-                                                                     (arg_1__ arg_2__ : CmmType.Width) (arg_3__
-                                                                       : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                                         := match arg_0__, arg_1__, arg_2__, arg_3__ with
-                                                            | Platform.ArchPPC, _, toRep, x =>
-                                                                DynFlags.getDynFlags GHC.Base.>>=
-                                                                (fun dflags =>
-                                                                   let cont_4__ arg_5__ :=
-                                                                     let 'pair src code := arg_5__ in
-                                                                     NCGMonad.getNewRegNat Format.FF64 GHC.Base.>>=
-                                                                     (fun tmp =>
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.appOL code (OrdList.toOL (cons
-                                                                                                              (PPC.Instr.FCTIWZ
-                                                                                                               tmp src)
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.FF64
-                                                                                                                tmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #2))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.II32
-                                                                                                                 dst
-                                                                                                                 (PPC.Regs.spRel
-                                                                                                                  dflags
-                                                                                                                  #3))
-                                                                                                                nil)))) in
-                                                                        GHC.Base.return_ (Any (Format.intFormat toRep)
-                                                                                          code')) in
-                                                                   getSomeReg x GHC.Base.>>= cont_4__)
-                                                            | Platform.ArchPPC_64 _, _, toRep, x =>
-                                                                DynFlags.getDynFlags GHC.Base.>>=
-                                                                (fun dflags =>
-                                                                   let cont_8__ arg_9__ :=
-                                                                     let 'pair src code := arg_9__ in
-                                                                     NCGMonad.getNewRegNat Format.FF64 GHC.Base.>>=
-                                                                     (fun tmp =>
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.appOL code (OrdList.toOL (cons
-                                                                                                              (PPC.Instr.FCTIDZ
-                                                                                                               tmp src)
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.FF64
-                                                                                                                tmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #3))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.II64
-                                                                                                                 dst
-                                                                                                                 (PPC.Regs.spRel
-                                                                                                                  dflags
-                                                                                                                  #3))
-                                                                                                                nil)))) in
-                                                                        GHC.Base.return_ (Any (Format.intFormat toRep)
-                                                                                          code')) in
-                                                                   getSomeReg x GHC.Base.>>= cont_8__)
-                                                            | _, _, _, _ =>
-                                                                Panic.panic (GHC.Base.hs_string__
-                                                                             "PPC.CodeGen.coerceFP2Int: unknown arch")
-                                                            end with getSomeReg (expr : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                                                           (Reg.Reg *
-                                                                                                            InstrBlock)%type
-                                                                       := getRegister expr GHC.Base.>>=
-                                                                          (fun r =>
-                                                                             match r with
-                                                                             | Any rep code =>
-                                                                                 NCGMonad.getNewRegNat rep GHC.Base.>>=
-                                                                                 (fun tmp =>
-                                                                                    GHC.Base.return_ (pair tmp (code
-                                                                                                            tmp)))
-                                                                             | Fixed _ reg code =>
-                                                                                 GHC.Base.return_ (pair reg code)
-                                                                             end) with getRegister (e : CmmExpr.CmmExpr)
-                                                                                         : NCGMonad.NatM Register
-                                                                                         := DynFlags.getDynFlags
-                                                                                            GHC.Base.>>=
-                                                                                            (fun dflags =>
-                                                                                               getRegister' dflags e)
-  with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr)
-         : NCGMonad.NatM Register
-         := match arg_0__, arg_1__ with
-            | dflags, CmmExpr.Mk_CmmReg (CmmExpr.CmmGlobal CmmExpr.PicBaseReg) =>
-                match Platform.platformOS (DynFlags.targetPlatform dflags) with
-                | Platform.OSAIX =>
-                    let tocAddr :=
-                      PPC.Regs.AddrRegImm PPC.Regs.toc (PPC.Regs.ImmLit (Datatypes.id
-                                                                         (GHC.Base.hs_string__ "ghc_toc_table[TC]"))) in
-                    let code :=
-                      fun dst => OrdList.toOL (cons (PPC.Instr.LD Format.II32 dst tocAddr) nil) in
-                    GHC.Base.return_ (Any Format.II32 code)
-                | _ =>
-                    if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                    then NCGMonad.getPicBaseNat (PPC.Instr.archWordFormat (Platform.target32Bit
-                                                                           (DynFlags.targetPlatform dflags)))
-                         GHC.Base.>>=
-                         (fun reg =>
-                            GHC.Base.return_ (Fixed (PPC.Instr.archWordFormat (Platform.target32Bit
-                                                                               (DynFlags.targetPlatform dflags))) reg
-                                              OrdList.nilOL)) else
-                    GHC.Base.return_ (Fixed Format.II64 PPC.Regs.toc OrdList.nilOL)
-                end
-            | _, _ =>
-                let j_5__ :=
-                  match arg_0__, arg_1__ with
-                  | _, other =>
-                      Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
-                                                                                other)
-                  end in
-                let j_21__ :=
-                  match arg_0__, arg_1__ with
-                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
-                      NCGMonad.getNewLabelNat GHC.Base.>>=
-                      (fun lbl =>
-                         DynFlags.getDynFlags GHC.Base.>>=
-                         (fun dflags =>
-                            PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
-                            (fun dynRef =>
-                               let cont_6__ arg_7__ :=
-                                 let 'MkAmode addr addr_code := arg_7__ in
-                                 let format := Format.floatFormat frep in
-                                 let code :=
-                                   fun dst =>
-                                     OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
-                                                     (Cmm.Statics lbl (cons (Cmm.CmmStaticLit (CmmExpr.CmmFloat f frep))
-                                                                            nil))) (OrdList.snocOL addr_code
-                                                                                                   (PPC.Instr.LD format
-                                                                                                    dst addr)) in
-                                 GHC.Base.return_ (Any format code) in
-                               getAmode D dynRef GHC.Base.>>= cont_6__)))
-                  | dflags, CmmExpr.Mk_CmmLit lit =>
-                      if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                      then let imm := PPC.Regs.litToImm lit in
-                           let code :=
-                             fun dst =>
-                               OrdList.toOL (cons (PPC.Instr.LIS dst (PPC.Regs.HA imm)) (cons (PPC.Instr.ADD
-                                                                                               dst dst (PPC.Instr.RIImm
-                                                                                                        (PPC.Regs.LO
-                                                                                                         imm))) nil)) in
-                           let rep := CmmExpr.cmmLitType dflags lit in
-                           GHC.Base.return_ (Any (Format.cmmTypeFormat rep) code) else
-                      NCGMonad.getNewLabelNat GHC.Base.>>=
-                      (fun lbl =>
-                         DynFlags.getDynFlags GHC.Base.>>=
-                         (fun dflags =>
-                            PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
-                            (fun dynRef =>
-                               let cont_14__ arg_15__ :=
-                                 let 'MkAmode addr addr_code := arg_15__ in
-                                 let rep := CmmExpr.cmmLitType dflags lit in
-                                 let format := Format.cmmTypeFormat rep in
-                                 let code :=
-                                   fun dst =>
-                                     OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
-                                                     (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil)))
-                                                    (OrdList.snocOL addr_code (PPC.Instr.LD format dst addr)) in
-                                 GHC.Base.return_ (Any format code) in
-                               getAmode D dynRef GHC.Base.>>= cont_14__)))
-                  | _, _ => j_5__
-                  end in
-                let j_180__ :=
-                  match arg_0__, arg_1__ with
-                  | dflags, CmmExpr.CmmLoad mem pk =>
-                      let format := Format.cmmTypeFormat pk in
-                      if negb (CmmType.isWord64 pk) : bool
-                      then let platform := DynFlags.targetPlatform dflags in
-                           let cont_24__ arg_25__ :=
-                             let 'MkAmode addr addr_code := arg_25__ in
-                             let code :=
-                               fun dst =>
-                                 if andb Util.debugIsOn (negb ((TargetReg.targetClassOfReg platform dst
-                                                                GHC.Base.==
-                                                                RegClass.RcDouble) GHC.Base.==
-                                                               CmmType.isFloatType pk)) : bool
-                                 then (Panic.assertPanic (GHC.Base.hs_string__
-                                                          "ext/hs-to-coq/examples/ghc/ghc/compiler/nativeGen/PPC/CodeGen.hs")
-                                       #443)
-                                 else OrdList.snocOL addr_code (PPC.Instr.LD format dst addr) in
-                             GHC.Base.return_ (Any format code) in
-                           getAmode D mem GHC.Base.>>= cont_24__ else
-                      if negb (Platform.target32Bit (DynFlags.targetPlatform dflags)) : bool
-                      then let cont_27__ arg_28__ :=
-                             let 'MkAmode addr addr_code := arg_28__ in
-                             let code :=
-                               fun dst => OrdList.snocOL addr_code (PPC.Instr.LD Format.II64 dst addr) in
-                             GHC.Base.return_ (Any Format.II64 code) in
-                           getAmode DS mem GHC.Base.>>= cont_27__ else
-                      j_21__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_32__ arg_33__ :=
-                        let 'MkAmode addr addr_code := arg_33__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_32__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_36__ arg_37__ :=
-                        let 'MkAmode addr addr_code := arg_37__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_36__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_40__ arg_41__ :=
-                        let 'MkAmode addr addr_code := arg_41__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_40__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_44__ arg_45__ :=
-                        let 'MkAmode addr addr_code := arg_45__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_44__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_48__ arg_49__ :=
-                        let 'MkAmode addr addr_code := arg_49__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_48__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_52__ arg_53__ :=
-                        let 'MkAmode addr addr_code := arg_53__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_52__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W32 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_56__ arg_57__ :=
-                        let 'MkAmode addr addr_code := arg_57__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II32 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_56__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W32 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_60__ arg_61__ :=
-                        let 'MkAmode addr addr_code := arg_61__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II32 dst
-                                                                             addr))) in
-                      getAmode DS mem GHC.Base.>>= cont_60__
-                  | dflags, CmmExpr.CmmMachOp mop (cons x nil) =>
-                      let arch32 := Platform.target32Bit (DynFlags.targetPlatform dflags) in
-                      let conversionNop :=
-                        fun new_format expr =>
-                          getRegister' dflags expr GHC.Base.>>=
-                          (fun e_code => GHC.Base.return_ (swizzleRegisterRep e_code new_format)) in
-                      let triv_ucode_float :=
-                        fun width instr => trivialUCode (Format.floatFormat width) instr x in
-                      let triv_ucode_int :=
-                        fun width instr => trivialUCode (Format.intFormat width) instr x in
-                      let j_72__ :=
-                        match mop with
-                        | CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W8 => conversionNop Format.II8 x
-                        | CmmMachOp.MO_UU_Conv CmmType.W8 to =>
-                            trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt #255
-                                                                                     CmmType.W32))
-                        | CmmMachOp.MO_UU_Conv CmmType.W16 to =>
-                            trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt #65535
-                                                                                     CmmType.W32))
-                        | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                        end in
-                      let j_82__ :=
-                        match mop with
-                        | CmmMachOp.MO_UU_Conv CmmType.W64 to =>
-                            if arch32 : bool
-                            then Panic.panic (GHC.Base.hs_string__
-                                              "PPC.CodeGen.getRegister no 64 bit target") else
-                            conversionNop (Format.intFormat to) x
-                        | CmmMachOp.MO_UU_Conv CmmType.W32 to =>
-                            if arch32 : bool then conversionNop (Format.intFormat to) x else
-                            match to with
-                            | CmmType.W64 =>
-                                trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt
-                                                                                         #4294967295 CmmType.W64))
-                            | CmmType.W16 => conversionNop Format.II16 x
-                            | CmmType.W8 => conversionNop Format.II8 x
-                            | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                            end
-                        | _ => j_72__
-                        end in
-                      let j_96__ :=
-                        match mop with
-                        | CmmMachOp.MO_SS_Conv CmmType.W64 to =>
-                            if arch32 : bool
-                            then Panic.panic (GHC.Base.hs_string__
-                                              "PPC.CodeGen.getRegister no 64 bit int register") else
-                            conversionNop (Format.intFormat to) x
-                        | CmmMachOp.MO_SS_Conv CmmType.W32 to =>
-                            if arch32 : bool then conversionNop (Format.intFormat to) x else
-                            match to with
-                            | CmmType.W64 => triv_ucode_int to (PPC.Instr.EXTS Format.II32)
-                            | CmmType.W16 => conversionNop Format.II16 x
-                            | CmmType.W8 => conversionNop Format.II8 x
-                            | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                            end
-                        | CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W8 => conversionNop Format.II8 x
-                        | CmmMachOp.MO_SS_Conv CmmType.W8 to =>
-                            triv_ucode_int to (PPC.Instr.EXTS Format.II8)
-                        | CmmMachOp.MO_SS_Conv CmmType.W16 to =>
-                            triv_ucode_int to (PPC.Instr.EXTS Format.II16)
-                        | CmmMachOp.MO_UU_Conv from to =>
-                            if from GHC.Base.== to : bool then conversionNop (Format.intFormat to) x else
-                            j_82__
-                        | _ => j_82__
-                        end in
-                      match mop with
-                      | CmmMachOp.MO_Not rep => triv_ucode_int rep PPC.Instr.NOT
-                      | CmmMachOp.MO_F_Neg w => triv_ucode_float w PPC.Instr.FNEG
-                      | CmmMachOp.MO_S_Neg w => triv_ucode_int w PPC.Instr.NEG
-                      | CmmMachOp.MO_FF_Conv CmmType.W64 CmmType.W32 =>
-                          trivialUCode Format.FF32 PPC.Instr.FRSP x
-                      | CmmMachOp.MO_FF_Conv CmmType.W32 CmmType.W64 => conversionNop Format.FF64 x
-                      | CmmMachOp.MO_FS_Conv from to => coerceFP2Int from to x
-                      | CmmMachOp.MO_SF_Conv from to => coerceInt2FP from to x
-                      | CmmMachOp.MO_SS_Conv from to =>
-                          if from GHC.Base.== to : bool then conversionNop (Format.intFormat to) x else
-                          j_96__
-                      | _ => j_96__
-                      end
-                  | dflags, CmmExpr.CmmMachOp mop (cons x (cons y nil)) =>
-                      let triv_float
-                       : CmmType.Width ->
-                         (Format.Format -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr) ->
-                         NCGMonad.NatM Register :=
-                        fun width instr => trivialCodeNoImm (Format.floatFormat width) instr x y in
-                      match mop with
-                      | CmmMachOp.MO_F_Eq _ => condFltReg PPC.Cond.EQQ x y
-                      | CmmMachOp.MO_F_Ne _ => condFltReg PPC.Cond.NE x y
-                      | CmmMachOp.MO_F_Gt _ => condFltReg PPC.Cond.GTT x y
-                      | CmmMachOp.MO_F_Ge _ => condFltReg PPC.Cond.GE x y
-                      | CmmMachOp.MO_F_Lt _ => condFltReg PPC.Cond.LTT x y
-                      | CmmMachOp.MO_F_Le _ => condFltReg PPC.Cond.LE x y
-                      | CmmMachOp.MO_Eq rep =>
-                          condIntReg PPC.Cond.EQQ (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_Ne rep =>
-                          condIntReg PPC.Cond.NE (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_S_Gt rep =>
-                          condIntReg PPC.Cond.GTT (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_S_Ge rep =>
-                          condIntReg PPC.Cond.GE (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_S_Lt rep =>
-                          condIntReg PPC.Cond.LTT (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_S_Le rep =>
-                          condIntReg PPC.Cond.LE (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_U_Gt rep =>
-                          condIntReg PPC.Cond.GU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_U_Ge rep =>
-                          condIntReg PPC.Cond.GEU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_U_Lt rep =>
-                          condIntReg PPC.Cond.LU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_U_Le rep =>
-                          condIntReg PPC.Cond.LEU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_F_Add w => triv_float w PPC.Instr.FADD
-                      | CmmMachOp.MO_F_Sub w => triv_float w PPC.Instr.FSUB
-                      | CmmMachOp.MO_F_Mul w => triv_float w PPC.Instr.FMUL
-                      | CmmMachOp.MO_F_Quot w => triv_float w PPC.Instr.FDIV
-                      | CmmMachOp.MO_Add CmmType.W32 =>
-                          let j_134__ :=
-                            match y with
-                            | CmmExpr.Mk_CmmLit lit =>
-                                let cont_128__ arg_129__ :=
-                                  let 'pair src srcCode := arg_129__ in
-                                  let imm := PPC.Regs.litToImm lit in
-                                  let code :=
-                                    fun dst =>
-                                      OrdList.appOL srcCode (OrdList.toOL (cons (PPC.Instr.ADDIS dst src (PPC.Regs.HA
-                                                                                                          imm)) (cons
-                                                                                 (PPC.Instr.ADD dst dst (PPC.Instr.RIImm
-                                                                                                         (PPC.Regs.LO
-                                                                                                          imm)))
-                                                                                 nil))) in
-                                  GHC.Base.return_ (Any Format.II32 code) in
-                                getSomeReg x GHC.Base.>>= cont_128__
-                            | _ => trivialCode CmmType.W32 true PPC.Instr.ADD x y
-                            end in
-                          match y with
-                          | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm immrep) =>
-                              match PPC.Regs.makeImmediate CmmType.W32 true imm with
-                              | Some _ =>
-                                  trivialCode CmmType.W32 true PPC.Instr.ADD x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt
-                                                                                                   imm immrep))
-                              | _ => j_134__
-                              end
-                          | _ => j_134__
-                          end
-                      | CmmMachOp.MO_Add rep => trivialCode rep true PPC.Instr.ADD x y
-                      | CmmMachOp.MO_Sub rep =>
-                          let j_144__ :=
-                            let j_140__ := trivialCodeNoImm' (Format.intFormat rep) PPC.Instr.SUBF y x in
-                            match x with
-                            | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm _) =>
-                                match PPC.Regs.makeImmediate rep true imm with
-                                | Some _ => trivialCode rep true PPC.Instr.SUBFC y x
-                                | _ => j_140__
-                                end
-                            | _ => j_140__
-                            end in
-                          match y with
-                          | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm immrep) =>
-                              match PPC.Regs.makeImmediate rep true (GHC.Num.negate imm) with
-                              | Some _ =>
-                                  trivialCode rep true PPC.Instr.ADD x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt
-                                                                                           (GHC.Num.negate imm) immrep))
-                              | _ => j_144__
-                              end
-                          | _ => j_144__
-                          end
-                      | CmmMachOp.MO_Mul rep => shiftMulCode rep true PPC.Instr.MULL x y
-                      | CmmMachOp.MO_S_MulMayOflo rep =>
-                          let cont_149__ arg_150__ :=
-                            let 'pair src1 code1 := arg_150__ in
-                            let cont_151__ arg_152__ :=
-                              let 'pair src2 code2 := arg_152__ in
-                              let format := Format.intFormat rep in
-                              let code :=
-                                fun dst =>
-                                  OrdList.appOL (OrdList.appOL code1 code2) (OrdList.toOL (cons (PPC.Instr.MULLO
-                                                                                                 format dst src1 src2)
-                                                                                                (cons (PPC.Instr.MFOV
-                                                                                                       format dst)
-                                                                                                      nil))) in
-                              GHC.Base.return_ (Any format code) in
-                            getSomeReg y GHC.Base.>>= cont_151__ in
-                          getSomeReg x GHC.Base.>>= cont_149__
-                      | CmmMachOp.MO_S_Quot rep =>
-                          trivialCodeNoImmSign (Format.intFormat rep) true PPC.Instr.DIV (extendSExpr
-                                                                                          dflags rep x) (extendSExpr
-                                                                                                         dflags rep y)
-                      | CmmMachOp.MO_U_Quot rep =>
-                          trivialCodeNoImmSign (Format.intFormat rep) false PPC.Instr.DIV (extendUExpr
-                                                                                           dflags rep x) (extendUExpr
-                                                                                                          dflags rep y)
-                      | CmmMachOp.MO_S_Rem rep =>
-                          remainderCode rep true (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_U_Rem rep =>
-                          remainderCode rep false (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_And rep =>
-                          let j_161__ := trivialCode rep false PPC.Instr.AND x y in
-                          match y with
-                          | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm _) =>
-                              if orb (imm GHC.Base.== GHC.Num.negate #8) (imm GHC.Base.==
-                                      GHC.Num.negate #4) : bool
-                              then let cont_162__ arg_163__ :=
-                                     let 'pair src srcCode := arg_163__ in
-                                     let fmt := Format.intFormat rep in
-                                     let clear_mask := if imm GHC.Base.== GHC.Num.negate #4 : bool then #2 else #3 in
-                                     let code :=
-                                       fun dst =>
-                                         OrdList.appOL srcCode (OrdList.unitOL (PPC.Instr.CLRRI fmt dst src
-                                                                                clear_mask)) in
-                                     GHC.Base.return_ (Any fmt code) in
-                                   getSomeReg x GHC.Base.>>= cont_162__ else
-                              j_161__
-                          | _ => j_161__
-                          end
-                      | CmmMachOp.MO_Or rep => trivialCode rep false PPC.Instr.OR x y
-                      | CmmMachOp.MO_Xor rep => trivialCode rep false PPC.Instr.XOR x y
-                      | CmmMachOp.MO_Shl rep => shiftMulCode rep false PPC.Instr.SL x y
-                      | CmmMachOp.MO_S_Shr rep =>
-                          shiftMulCode rep false PPC.Instr.SRA (extendSExpr dflags rep x) y
-                      | CmmMachOp.MO_U_Shr rep =>
-                          shiftMulCode rep false PPC.Instr.SR (extendUExpr dflags rep x) y
-                      | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                      end
-                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt i rep) =>
-                      match PPC.Regs.makeImmediate rep true i with
-                      | Some imm =>
-                          let code := fun dst => OrdList.unitOL (PPC.Instr.LI dst imm) in
-                          GHC.Base.return_ (Any (Format.intFormat rep) code)
-                      | _ => j_21__
-                      end
-                  | _, _ => j_21__
-                  end in
-                let j_187__ :=
-                  match arg_0__, arg_1__ with
-                  | dflags
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons x
-                   nil) =>
-                      if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                      then let cont_181__ arg_182__ :=
-                             let 'MkChildCode64 code rlo := arg_182__ in
-                             GHC.Base.return_ (Fixed Format.II32 rlo code) in
-                           iselExpr64 x GHC.Base.>>= cont_181__ else
-                      j_180__
-                  | dflags
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons x
-                   nil) =>
-                      if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                      then let cont_184__ arg_185__ :=
-                             let 'MkChildCode64 code rlo := arg_185__ in
-                             GHC.Base.return_ (Fixed Format.II32 rlo code) in
-                           iselExpr64 x GHC.Base.>>= cont_184__ else
-                      j_180__
-                  | _, _ => j_180__
-                  end in
-                match arg_0__, arg_1__ with
-                | dflags, CmmExpr.Mk_CmmReg reg =>
-                    GHC.Base.return_ (Fixed (Format.cmmTypeFormat (CmmExpr.cmmRegType dflags reg))
-                                      (getRegisterReg (DynFlags.targetPlatform dflags) reg) OrdList.nilOL)
-                | dflags, (CmmExpr.CmmRegOff _ _ as tree) =>
-                    getRegister' dflags (mangleIndexTree dflags tree)
-                | dflags
-                , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
-                 (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
-                    (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil) =>
-                    if num_2__ GHC.Base.== #32 : bool
-                    then if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                         then let cont_190__ arg_191__ :=
-                                let 'MkChildCode64 code rlo := arg_191__ in
-                                GHC.Base.return_ (Fixed Format.II32 (Reg.getHiVRegFromLo rlo) code) in
-                              iselExpr64 x GHC.Base.>>= cont_190__ else
-                         j_187__ else
-                    j_187__
-                | dflags
-                , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
-                 (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
-                    (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil) =>
-                    if num_3__ GHC.Base.== #32 : bool
-                    then if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                         then let cont_193__ arg_194__ :=
-                                let 'MkChildCode64 code rlo := arg_194__ in
-                                GHC.Base.return_ (Fixed Format.II32 (Reg.getHiVRegFromLo rlo) code) in
-                              iselExpr64 x GHC.Base.>>= cont_193__ else
-                         j_187__ else
-                    j_187__
-                | _, _ => j_187__
-                end
-            end with coerceInt2FP (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
-                       : NCGMonad.NatM Register
-                       := DynFlags.getDynFlags GHC.Base.>>=
-                          (fun dflags =>
-                             let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
-                             coerceInt2FP' arch fromRep toRep x) with coerceInt2FP' (arg_0__ : Platform.Arch)
-                                                                                    (arg_1__ arg_2__ : CmmType.Width)
-                                                                                    (arg_3__ : CmmExpr.CmmExpr)
-                                                                        : NCGMonad.NatM Register
-                                                                        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-                                                                           | Platform.ArchPPC, fromRep, toRep, x =>
-                                                                               let cont_4__ arg_5__ :=
-                                                                                 let 'pair src code := arg_5__ in
-                                                                                 NCGMonad.getNewLabelNat GHC.Base.>>=
-                                                                                 (fun lbl =>
-                                                                                    NCGMonad.getNewRegNat Format.II32
-                                                                                    GHC.Base.>>=
-                                                                                    (fun itmp =>
-                                                                                       NCGMonad.getNewRegNat Format.FF64
-                                                                                       GHC.Base.>>=
-                                                                                       (fun ftmp =>
-                                                                                          DynFlags.getDynFlags
-                                                                                          GHC.Base.>>=
-                                                                                          (fun dflags =>
-                                                                                             PIC.cmmMakeDynamicReference
-                                                                                             dflags PIC.DataReference
-                                                                                             lbl GHC.Base.>>=
-                                                                                             (fun dynRef =>
-                                                                                                let cont_6__ arg_7__ :=
-                                                                                                  let 'MkAmode addr
-                                                                                                     addr_code :=
-                                                                                                    arg_7__ in
-                                                                                                  let maybe_frsp :=
-                                                                                                    fun dst =>
-                                                                                                      match toRep with
-                                                                                                      | CmmType.W32 =>
-                                                                                                          OrdList.unitOL
-                                                                                                          (PPC.Instr.FRSP
-                                                                                                           dst dst)
-                                                                                                      | CmmType.W64 =>
-                                                                                                          OrdList.nilOL
-                                                                                                      | _ =>
-                                                                                                          Panic.panic
-                                                                                                          (GHC.Base.hs_string__
-                                                                                                           "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                                      end in
-                                                                                                  let maybe_exts :=
-                                                                                                    match fromRep with
-                                                                                                    | CmmType.W8 =>
-                                                                                                        OrdList.unitOL
-                                                                                                        (PPC.Instr.EXTS
-                                                                                                         Format.II8 src
-                                                                                                         src)
-                                                                                                    | CmmType.W16 =>
-                                                                                                        OrdList.unitOL
-                                                                                                        (PPC.Instr.EXTS
-                                                                                                         Format.II16 src
-                                                                                                         src)
-                                                                                                    | CmmType.W32 =>
-                                                                                                        OrdList.nilOL
-                                                                                                    | _ =>
-                                                                                                        Panic.panic
-                                                                                                        (GHC.Base.hs_string__
-                                                                                                         "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                                    end in
-                                                                                                  let code' :=
-                                                                                                    fun dst =>
-                                                                                                      OrdList.appOL
-                                                                                                      (OrdList.appOL
-                                                                                                       (OrdList.appOL
-                                                                                                        (OrdList.appOL
-                                                                                                         (OrdList.appOL
-                                                                                                          code
-                                                                                                          maybe_exts)
-                                                                                                         (OrdList.toOL
-                                                                                                          (cons
-                                                                                                           (PPC.Instr.LDATA
-                                                                                                            (Cmm.Mk_Section
-                                                                                                             Cmm.ReadOnlyData
-                                                                                                             lbl)
-                                                                                                            (Cmm.Statics
-                                                                                                             lbl (cons
-                                                                                                              (Cmm.CmmStaticLit
-                                                                                                               (CmmExpr.CmmInt
-                                                                                                                #1127219200
-                                                                                                                CmmType.W32))
-                                                                                                              (cons
-                                                                                                               (Cmm.CmmStaticLit
-                                                                                                                (CmmExpr.CmmInt
-                                                                                                                 #2147483648
-                                                                                                                 CmmType.W32))
-                                                                                                               nil))))
-                                                                                                           (cons
-                                                                                                            (PPC.Instr.XORIS
-                                                                                                             itmp src
-                                                                                                             (PPC.Regs.ImmInt
-                                                                                                              #32768))
-                                                                                                            (cons
-                                                                                                             (PPC.Instr.ST
-                                                                                                              Format.II32
-                                                                                                              itmp
-                                                                                                              (PPC.Regs.spRel
-                                                                                                               dflags
-                                                                                                               #3))
-                                                                                                             (cons
-                                                                                                              (PPC.Instr.LIS
-                                                                                                               itmp
-                                                                                                               (PPC.Regs.ImmInt
-                                                                                                                #17200))
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.II32
-                                                                                                                itmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #2))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.FF64
-                                                                                                                 ftmp
-                                                                                                                 (PPC.Regs.spRel
-                                                                                                                  dflags
-                                                                                                                  #2))
-                                                                                                                nil))))))))
-                                                                                                        addr_code)
-                                                                                                       (OrdList.toOL
-                                                                                                        (cons
-                                                                                                         (PPC.Instr.LD
-                                                                                                          Format.FF64
-                                                                                                          dst addr)
-                                                                                                         (cons
-                                                                                                          (PPC.Instr.FSUB
-                                                                                                           Format.FF64
-                                                                                                           dst ftmp dst)
-                                                                                                          nil))))
-                                                                                                      (maybe_frsp
-                                                                                                       dst) in
-                                                                                                  GHC.Base.return_ (Any
-                                                                                                                    (Format.floatFormat
-                                                                                                                     toRep)
-                                                                                                                    code') in
-                                                                                                getAmode D dynRef
-                                                                                                GHC.Base.>>=
-                                                                                                cont_6__))))) in
-                                                                               getSomeReg x GHC.Base.>>= cont_4__
-                                                                           | Platform.ArchPPC_64 _, fromRep, toRep, x =>
-                                                                               let cont_19__ arg_20__ :=
-                                                                                 let 'pair src code := arg_20__ in
-                                                                                 DynFlags.getDynFlags GHC.Base.>>=
-                                                                                 (fun dflags =>
-                                                                                    let maybe_frsp :=
-                                                                                      fun dst =>
-                                                                                        match toRep with
-                                                                                        | CmmType.W32 =>
-                                                                                            OrdList.unitOL
-                                                                                            (PPC.Instr.FRSP dst dst)
-                                                                                        | CmmType.W64 => OrdList.nilOL
-                                                                                        | _ =>
-                                                                                            Panic.panic
-                                                                                            (GHC.Base.hs_string__
-                                                                                             "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                        end in
-                                                                                    let maybe_exts :=
-                                                                                      match fromRep with
-                                                                                      | CmmType.W8 =>
-                                                                                          OrdList.unitOL (PPC.Instr.EXTS
-                                                                                                          Format.II8 src
-                                                                                                          src)
-                                                                                      | CmmType.W16 =>
-                                                                                          OrdList.unitOL (PPC.Instr.EXTS
-                                                                                                          Format.II16
-                                                                                                          src src)
-                                                                                      | CmmType.W32 =>
-                                                                                          OrdList.unitOL (PPC.Instr.EXTS
-                                                                                                          Format.II32
-                                                                                                          src src)
-                                                                                      | CmmType.W64 => OrdList.nilOL
-                                                                                      | _ =>
-                                                                                          Panic.panic
-                                                                                          (GHC.Base.hs_string__
-                                                                                           "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                      end in
-                                                                                    let code' :=
-                                                                                      fun dst =>
-                                                                                        OrdList.appOL (OrdList.appOL
-                                                                                                       (OrdList.appOL
-                                                                                                        code maybe_exts)
-                                                                                                       (OrdList.toOL
-                                                                                                        (cons
-                                                                                                         (PPC.Instr.ST
-                                                                                                          Format.II64
-                                                                                                          src
-                                                                                                          (PPC.Regs.spRel
-                                                                                                           dflags #3))
-                                                                                                         (cons
-                                                                                                          (PPC.Instr.LD
-                                                                                                           Format.FF64
-                                                                                                           dst
-                                                                                                           (PPC.Regs.spRel
-                                                                                                            dflags #3))
-                                                                                                          (cons
-                                                                                                           (PPC.Instr.FCFID
-                                                                                                            dst dst)
-                                                                                                           nil)))))
-                                                                                                      (maybe_frsp
-                                                                                                       dst) in
-                                                                                    GHC.Base.return_ (Any
-                                                                                                      (Format.floatFormat
-                                                                                                       toRep) code')) in
-                                                                               getSomeReg x GHC.Base.>>= cont_19__
-                                                                           | _, _, _, _ =>
-                                                                               Panic.panic (GHC.Base.hs_string__
-                                                                                            "PPC.CodeGen.coerceInt2FP: unknown arch")
-                                                                           end with getAmode (arg_0__ : InstrForm)
-                                                                                             (arg_1__ : CmmExpr.CmmExpr)
-                                                                                      : NCGMonad.NatM Amode
-                                                                                      := let j_35__ :=
-                                                                                           match arg_0__, arg_1__ with
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W32) (cons x (cons
-                                                                                             (CmmExpr.Mk_CmmLit lit)
-                                                                                             nil)) =>
-                                                                                               let isCmmLabelType :=
-                                                                                                 fun arg_2__ =>
-                                                                                                   match arg_2__ with
-                                                                                                   | CmmExpr.CmmLabel
-                                                                                                   _ =>
-                                                                                                       true
-                                                                                                   | CmmExpr.CmmLabelOff
-                                                                                                   _ _ =>
-                                                                                                       true
-                                                                                                   | CmmExpr.CmmLabelDiffOff
-                                                                                                   _ _ _ =>
-                                                                                                       true
-                                                                                                   | _ => false
-                                                                                                   end in
-                                                                                               DynFlags.getDynFlags
-                                                                                               GHC.Base.>>=
-                                                                                               (fun dflags =>
-                                                                                                  let cont_4__ arg_5__ :=
-                                                                                                    let 'pair src
-                                                                                                       srcCode :=
-                                                                                                      arg_5__ in
-                                                                                                    let imm :=
-                                                                                                      PPC.Regs.litToImm
-                                                                                                      lit in
-                                                                                                    let j_8__ :=
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II32
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let code :=
-                                                                                                           OrdList.snocOL
-                                                                                                           srcCode
-                                                                                                           (PPC.Instr.ADDIS
-                                                                                                            tmp src
-                                                                                                            (PPC.Regs.HA
-                                                                                                             imm)) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm))
-                                                                                                          code)) in
-                                                                                                    match Platform.platformOS
-                                                                                                            (DynFlags.targetPlatform
-                                                                                                             dflags) with
-                                                                                                    | Platform.OSAIX =>
-                                                                                                        if isCmmLabelType
-                                                                                                           lit : bool
-                                                                                                        then GHC.Base.return_
-                                                                                                             (MkAmode
-                                                                                                              (PPC.Regs.AddrRegImm
-                                                                                                               src imm)
-                                                                                                              srcCode) else
-                                                                                                        j_8__
-                                                                                                    | _ => j_8__
-                                                                                                    end in
-                                                                                                  getSomeReg x
-                                                                                                  GHC.Base.>>=
-                                                                                                  cont_4__)
-                                                                                           | _, CmmExpr.Mk_CmmLit lit =>
-                                                                                               DynFlags.getDynFlags
-                                                                                               GHC.Base.>>=
-                                                                                               (fun dflags =>
-                                                                                                  match Platform.platformArch
-                                                                                                          (DynFlags.targetPlatform
-                                                                                                           dflags) with
-                                                                                                  | Platform.ArchPPC =>
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II32
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let imm :=
-                                                                                                           PPC.Regs.litToImm
-                                                                                                           lit in
-                                                                                                         let code :=
-                                                                                                           OrdList.unitOL
-                                                                                                           (PPC.Instr.LIS
-                                                                                                            tmp
-                                                                                                            (PPC.Regs.HA
-                                                                                                             imm)) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm)) code))
-                                                                                                  | _ =>
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II64
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let imm :=
-                                                                                                           PPC.Regs.litToImm
-                                                                                                           lit in
-                                                                                                         let code :=
-                                                                                                           OrdList.toOL
-                                                                                                           (cons
-                                                                                                            (PPC.Instr.LIS
-                                                                                                             tmp
-                                                                                                             (PPC.Regs.HIGHESTA
-                                                                                                              imm))
-                                                                                                            (cons
-                                                                                                             (PPC.Instr.OR
-                                                                                                              tmp tmp
-                                                                                                              (PPC.Instr.RIImm
-                                                                                                               (PPC.Regs.HIGHERA
-                                                                                                                imm)))
-                                                                                                             (cons
-                                                                                                              (PPC.Instr.SL
-                                                                                                               Format.II64
-                                                                                                               tmp tmp
-                                                                                                               (PPC.Instr.RIImm
-                                                                                                                (PPC.Regs.ImmInt
-                                                                                                                 #32)))
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ORIS
-                                                                                                                tmp tmp
-                                                                                                                (PPC.Regs.HA
-                                                                                                                 imm))
-                                                                                                               nil)))) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm)) code))
-                                                                                                  end)
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W32) (cons x (cons y
-                                                                                             nil)) =>
-                                                                                               let cont_21__ arg_22__ :=
-                                                                                                 let 'pair regX codeX :=
-                                                                                                   arg_22__ in
-                                                                                                 let cont_23__ arg_24__ :=
-                                                                                                   let 'pair regY
-                                                                                                      codeY :=
-                                                                                                     arg_24__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegReg
-                                                                                                     regX regY)
-                                                                                                    (OrdList.appOL codeX
-                                                                                                                   codeY)) in
-                                                                                                 getSomeReg y
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_23__ in
-                                                                                               getSomeReg x GHC.Base.>>=
-                                                                                               cont_21__
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W64) (cons x (cons y
-                                                                                             nil)) =>
-                                                                                               let cont_26__ arg_27__ :=
-                                                                                                 let 'pair regX codeX :=
-                                                                                                   arg_27__ in
-                                                                                                 let cont_28__ arg_29__ :=
-                                                                                                   let 'pair regY
-                                                                                                      codeY :=
-                                                                                                     arg_29__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegReg
-                                                                                                     regX regY)
-                                                                                                    (OrdList.appOL codeX
-                                                                                                                   codeY)) in
-                                                                                                 getSomeReg y
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_28__ in
-                                                                                               getSomeReg x GHC.Base.>>=
-                                                                                               cont_26__
-                                                                                           | _, other =>
-                                                                                               let cont_31__ arg_32__ :=
-                                                                                                 let 'pair reg code :=
-                                                                                                   arg_32__ in
-                                                                                                 let off :=
-                                                                                                   PPC.Regs.ImmInt #0 in
-                                                                                                 GHC.Base.return_
-                                                                                                 (MkAmode
-                                                                                                  (PPC.Regs.AddrRegImm
-                                                                                                   reg off) code) in
-                                                                                               getSomeReg other
-                                                                                               GHC.Base.>>=
-                                                                                               cont_31__
-                                                                                           end in
-                                                                                         match arg_0__, arg_1__ with
-                                                                                         | inf
-                                                                                         , (CmmExpr.CmmRegOff _
-                                                                                          _ as tree) =>
-                                                                                             DynFlags.getDynFlags
-                                                                                             GHC.Base.>>=
-                                                                                             (fun dflags =>
-                                                                                                getAmode inf
-                                                                                                (mangleIndexTree dflags
-                                                                                                 tree))
-                                                                                         | _
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W32)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W32 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_37__ arg_38__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_38__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_37__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | _
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W32)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W32 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_40__ arg_41__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_41__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_40__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | D
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_43__ arg_44__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_44__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_43__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | D
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_46__ arg_47__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_47__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_46__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | DS
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_49__ arg_50__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_50__ in
-                                                                                                   let cont_51__ arg_52__ :=
-                                                                                                     let 'pair (pair
-                                                                                                         reg' off')
-                                                                                                        code' :=
-                                                                                                       arg_52__ in
-                                                                                                     GHC.Base.return_
-                                                                                                     (MkAmode
-                                                                                                      (PPC.Regs.AddrRegImm
-                                                                                                       reg' off')
-                                                                                                      code') in
-                                                                                                   (if GHC.Real.mod_ i
-                                                                                                                     #4
-                                                                                                       GHC.Base.==
-                                                                                                       #0 : bool
-                                                                                                    then GHC.Base.return_
-                                                                                                         (pair (pair reg
-                                                                                                                     off)
-                                                                                                               code)
-                                                                                                    else NCGMonad.getNewRegNat
-                                                                                                         Format.II64
-                                                                                                         GHC.Base.>>=
-                                                                                                         (fun tmp =>
-                                                                                                            GHC.Base.return_
-                                                                                                            (pair (pair
-                                                                                                                   tmp
-                                                                                                                   (PPC.Regs.ImmInt
-                                                                                                                    #0))
-                                                                                                                  (OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   (PPC.Instr.ADD
-                                                                                                                    tmp
-                                                                                                                    reg
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     off))))))
-                                                                                                   GHC.Base.>>=
-                                                                                                   cont_51__ in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_49__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | DS
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_54__ arg_55__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_55__ in
-                                                                                                   let cont_56__ arg_57__ :=
-                                                                                                     let 'pair (pair
-                                                                                                         reg' off')
-                                                                                                        code' :=
-                                                                                                       arg_57__ in
-                                                                                                     GHC.Base.return_
-                                                                                                     (MkAmode
-                                                                                                      (PPC.Regs.AddrRegImm
-                                                                                                       reg' off')
-                                                                                                      code') in
-                                                                                                   (if GHC.Real.mod_ i
-                                                                                                                     #4
-                                                                                                       GHC.Base.==
-                                                                                                       #0 : bool
-                                                                                                    then GHC.Base.return_
-                                                                                                         (pair (pair reg
-                                                                                                                     off)
-                                                                                                               code)
-                                                                                                    else NCGMonad.getNewRegNat
-                                                                                                         Format.II64
-                                                                                                         GHC.Base.>>=
-                                                                                                         (fun tmp =>
-                                                                                                            GHC.Base.return_
-                                                                                                            (pair (pair
-                                                                                                                   tmp
-                                                                                                                   (PPC.Regs.ImmInt
-                                                                                                                    #0))
-                                                                                                                  (OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   (PPC.Instr.ADD
-                                                                                                                    tmp
-                                                                                                                    reg
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     off))))))
-                                                                                                   GHC.Base.>>=
-                                                                                                   cont_56__ in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_54__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | _, _ => j_35__
-                                                                                         end with condFltReg (cond
-                                                                                                              
-                                                                                                              : PPC.Cond.Cond)
-                                                                                                             (x y
-                                                                                                              
-                                                                                                              : CmmExpr.CmmExpr)
-                                                                                                    : NCGMonad.NatM
-                                                                                                      Register
-                                                                                                    := condReg
-                                                                                                       (condFltCode cond
-                                                                                                        x y)
-  with condFltCode (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                    CondCode
-         := let cont_0__ arg_1__ :=
-              let 'pair src1 code1 := arg_1__ in
-              let cont_2__ arg_3__ :=
-                let 'pair src2 code2 := arg_3__ in
-                let code' :=
-                  OrdList.snocOL (OrdList.appOL code1 code2) (PPC.Instr.FCMP src1 src2) in
-                let code'' :=
-                  let gtbit := #1 in
-                  let eqbit := #2 in
-                  let ltbit := #0 in
-                  match cond with
-                  | PPC.Cond.GE => OrdList.snocOL code' (PPC.Instr.CRNOR ltbit eqbit gtbit)
-                  | PPC.Cond.LE => OrdList.snocOL code' (PPC.Instr.CRNOR gtbit eqbit ltbit)
-                  | _ => code'
-                  end in
-                GHC.Base.return_ (MkCondCode true cond code'') in
-              getSomeReg y GHC.Base.>>= cont_2__ in
-            getSomeReg x GHC.Base.>>= cont_0__ with condIntReg (cond : PPC.Cond.Cond) (x y
-                                                                 : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                                      := condReg (condIntCode cond x y) with condIntCode (arg_0__
-                                                                                                          
-                                                                                                          : PPC.Cond.Cond)
-                                                                                                         (arg_1__
-                                                                                                          arg_2__
-                                                                                                          
-                                                                                                          : CmmExpr.CmmExpr)
-                                                                                               : NCGMonad.NatM CondCode
-                                                                                               := let j_11__ :=
-                                                                                                    match arg_0__
-                                                                                                        , arg_1__
-                                                                                                        , arg_2__ with
-                                                                                                    | cond, x, y =>
-                                                                                                        let cont_4__ arg_5__ :=
-                                                                                                          let 'pair src1
-                                                                                                             code1 :=
-                                                                                                            arg_5__ in
-                                                                                                          let cont_6__ arg_7__ :=
-                                                                                                            let 'pair
-                                                                                                               src2
-                                                                                                               code2 :=
-                                                                                                              arg_7__ in
-                                                                                                            DynFlags.getDynFlags
-                                                                                                            GHC.Base.>>=
-                                                                                                            (fun dflags =>
-                                                                                                               let format :=
-                                                                                                                 PPC.Instr.archWordFormat
-                                                                                                                 (Platform.target32Bit
-                                                                                                                  (DynFlags.targetPlatform
-                                                                                                                   dflags)) in
-                                                                                                               let code' :=
-                                                                                                                 OrdList.snocOL
-                                                                                                                 (OrdList.appOL
-                                                                                                                  code1
-                                                                                                                  code2)
-                                                                                                                 ((if PPC.Cond.condUnsigned
-                                                                                                                      cond : bool
-                                                                                                                   then PPC.Instr.CMPL
-                                                                                                                   else PPC.Instr.CMP)
-                                                                                                                  format
-                                                                                                                  src1
-                                                                                                                  (PPC.Instr.RIReg
-                                                                                                                   src2)) in
-                                                                                                               GHC.Base.return_
-                                                                                                               (MkCondCode
-                                                                                                                false
-                                                                                                                cond
-                                                                                                                code')) in
-                                                                                                          getSomeReg y
-                                                                                                          GHC.Base.>>=
-                                                                                                          cont_6__ in
-                                                                                                        getSomeReg x
-                                                                                                        GHC.Base.>>=
-                                                                                                        cont_4__
-                                                                                                    end in
-                                                                                                  let j_17__ :=
-                                                                                                    match arg_0__
-                                                                                                        , arg_1__
-                                                                                                        , arg_2__ with
-                                                                                                    | cond
-                                                                                                    , x
-                                                                                                    , CmmExpr.Mk_CmmLit
-                                                                                                    (CmmExpr.CmmInt y
-                                                                                                     rep) =>
-                                                                                                        match PPC.Regs.makeImmediate
-                                                                                                                rep
-                                                                                                                (negb
-                                                                                                                 (PPC.Cond.condUnsigned
-                                                                                                                  cond))
-                                                                                                                y with
-                                                                                                        | Some src2 =>
-                                                                                                            let cont_12__ arg_13__ :=
-                                                                                                              let 'pair
-                                                                                                                 src1
-                                                                                                                 code :=
-                                                                                                                arg_13__ in
-                                                                                                              DynFlags.getDynFlags
-                                                                                                              GHC.Base.>>=
-                                                                                                              (fun dflags =>
-                                                                                                                 let format :=
-                                                                                                                   PPC.Instr.archWordFormat
-                                                                                                                   (Platform.target32Bit
-                                                                                                                    (DynFlags.targetPlatform
-                                                                                                                     dflags)) in
-                                                                                                                 let code' :=
-                                                                                                                   OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   ((if PPC.Cond.condUnsigned
-                                                                                                                        cond : bool
-                                                                                                                     then PPC.Instr.CMPL
-                                                                                                                     else PPC.Instr.CMP)
-                                                                                                                    format
-                                                                                                                    src1
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     src2)) in
-                                                                                                                 GHC.Base.return_
-                                                                                                                 (MkCondCode
-                                                                                                                  false
-                                                                                                                  cond
-                                                                                                                  code')) in
-                                                                                                            getSomeReg x
-                                                                                                            GHC.Base.>>=
-                                                                                                            cont_12__
-                                                                                                        | _ => j_11__
-                                                                                                        end
-                                                                                                    | _, _, _ => j_11__
-                                                                                                    end in
-                                                                                                  match arg_0__
-                                                                                                      , arg_1__
-                                                                                                      , arg_2__ with
-                                                                                                  | cond
-                                                                                                  , CmmExpr.CmmMachOp
-                                                                                                  (CmmMachOp.MO_And _)
-                                                                                                  (cons x (cons
-                                                                                                    (CmmExpr.Mk_CmmLit
-                                                                                                     (CmmExpr.CmmInt imm
-                                                                                                      rep)) nil))
-                                                                                                  , CmmExpr.Mk_CmmLit
-                                                                                                  (CmmExpr.CmmInt
-                                                                                                   num_3__ _) =>
-                                                                                                      if num_3__
-                                                                                                         GHC.Base.==
-                                                                                                         #0 : bool
-                                                                                                      then if negb
-                                                                                                              (PPC.Cond.condUnsigned
-                                                                                                               cond) : bool
-                                                                                                           then match PPC.Regs.makeImmediate
-                                                                                                                        rep
-                                                                                                                        false
-                                                                                                                        imm with
-                                                                                                                | Some
-                                                                                                                src2 =>
-                                                                                                                    let cont_18__ arg_19__ :=
-                                                                                                                      let 'pair
-                                                                                                                         src1
-                                                                                                                         code :=
-                                                                                                                        arg_19__ in
-                                                                                                                      let code' :=
-                                                                                                                        OrdList.snocOL
-                                                                                                                        code
-                                                                                                                        (PPC.Instr.AND
-                                                                                                                         PPC.Regs.r0
-                                                                                                                         src1
-                                                                                                                         (PPC.Instr.RIImm
-                                                                                                                          src2)) in
-                                                                                                                      GHC.Base.return_
-                                                                                                                      (MkCondCode
-                                                                                                                       false
-                                                                                                                       cond
-                                                                                                                       code') in
-                                                                                                                    getSomeReg
-                                                                                                                    x
-                                                                                                                    GHC.Base.>>=
-                                                                                                                    cont_18__
-                                                                                                                | _ =>
-                                                                                                                    j_17__
-                                                                                                                end else
-                                                                                                           j_17__ else
-                                                                                                      j_17__
-                                                                                                  | _, _, _ => j_17__
-                                                                                                  end with remainderCode
-                                                                                                             (rep
-                                                                                                              
-                                                                                                              : CmmType.Width)
-                                                                                                             (sgn
-                                                                                                               : bool)
-                                                                                                             (x y
-                                                                                                              
-                                                                                                              : CmmExpr.CmmExpr)
-                                                                                                             : NCGMonad.NatM
-                                                                                                               Register
-                                                                                                             := let fmt :=
-                                                                                                                  Format.intFormat
-                                                                                                                  rep in
-                                                                                                                let cont_1__ arg_2__ :=
-                                                                                                                  let 'pair
-                                                                                                                     src1
-                                                                                                                     code1 :=
-                                                                                                                    arg_2__ in
-                                                                                                                  let cont_3__ arg_4__ :=
-                                                                                                                    let 'pair
-                                                                                                                       src2
-                                                                                                                       code2 :=
-                                                                                                                      arg_4__ in
-                                                                                                                    let code :=
-                                                                                                                      fun dst =>
-                                                                                                                        OrdList.appOL
-                                                                                                                        (OrdList.appOL
-                                                                                                                         code1
-                                                                                                                         code2)
-                                                                                                                        (OrdList.toOL
-                                                                                                                         (cons
-                                                                                                                          (PPC.Instr.DIV
-                                                                                                                           fmt
-                                                                                                                           sgn
-                                                                                                                           dst
-                                                                                                                           src1
-                                                                                                                           src2)
-                                                                                                                          (cons
-                                                                                                                           (PPC.Instr.MULL
-                                                                                                                            fmt
-                                                                                                                            dst
-                                                                                                                            dst
-                                                                                                                            (PPC.Instr.RIReg
-                                                                                                                             src2))
-                                                                                                                           (cons
-                                                                                                                            (PPC.Instr.SUBF
-                                                                                                                             dst
-                                                                                                                             dst
-                                                                                                                             src1)
-                                                                                                                            nil)))) in
-                                                                                                                    GHC.Base.return_
-                                                                                                                    (Any
-                                                                                                                     (Format.intFormat
-                                                                                                                      rep)
-                                                                                                                     code) in
-                                                                                                                  getSomeReg
-                                                                                                                  y
-                                                                                                                  GHC.Base.>>=
-                                                                                                                  cont_3__ in
-                                                                                                                getSomeReg
-                                                                                                                x
-                                                                                                                GHC.Base.>>=
-                                                                                                                cont_1__
-  with shiftMulCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
-                      : (Format.Format -> Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr))
-                    (arg_3__ arg_4__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-         := let j_12__ :=
-              match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-              | width, _, instr, x, y =>
-                  let cont_5__ arg_6__ :=
-                    let 'pair src1 code1 := arg_6__ in
-                    let cont_7__ arg_8__ :=
-                      let 'pair src2 code2 := arg_8__ in
-                      let format := Format.intFormat width in
-                      let code :=
-                        fun dst =>
-                          OrdList.snocOL (OrdList.appOL code1 code2) (instr format dst src1
-                                          (PPC.Instr.RIReg src2)) in
-                      GHC.Base.return_ (Any format code) in
-                    getSomeReg y GHC.Base.>>= cont_7__ in
-                  getSomeReg x GHC.Base.>>= cont_5__
-              end in
-            match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-            | width, sign, instr, x, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt y _) =>
-                match PPC.Regs.makeImmediate width sign y with
-                | Some imm =>
-                    let cont_13__ arg_14__ :=
-                      let 'pair src1 code1 := arg_14__ in
-                      let format := Format.intFormat width in
-                      let code :=
-                        fun dst => OrdList.snocOL code1 (instr format dst src1 (PPC.Instr.RIImm imm)) in
-                      GHC.Base.return_ (Any format code) in
-                    getSomeReg x GHC.Base.>>= cont_13__
-                | _ => j_12__
-                end
-            | _, _, _, _, _ => j_12__
-            end with trivialCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
-                                   : (Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr)) (arg_3__ arg_4__
-                                   : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                       := let j_11__ :=
-                            match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-                            | rep, _, instr, x, y =>
-                                let cont_5__ arg_6__ :=
-                                  let 'pair src1 code1 := arg_6__ in
-                                  let cont_7__ arg_8__ :=
-                                    let 'pair src2 code2 := arg_8__ in
-                                    let code :=
-                                      fun dst =>
-                                        OrdList.snocOL (OrdList.appOL code1 code2) (instr dst src1 (PPC.Instr.RIReg
-                                                                                                    src2)) in
-                                    GHC.Base.return_ (Any (Format.intFormat rep) code) in
-                                  getSomeReg y GHC.Base.>>= cont_7__ in
-                                getSomeReg x GHC.Base.>>= cont_5__
-                            end in
-                          match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-                          | rep, signed, instr, x, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt y _) =>
-                              match PPC.Regs.makeImmediate rep signed y with
-                              | Some imm =>
-                                  let cont_12__ arg_13__ :=
-                                    let 'pair src1 code1 := arg_13__ in
-                                    let code :=
-                                      fun dst => OrdList.snocOL code1 (instr dst src1 (PPC.Instr.RIImm imm)) in
-                                    GHC.Base.return_ (Any (Format.intFormat rep) code) in
-                                  getSomeReg x GHC.Base.>>= cont_12__
-                              | _ => j_11__
-                              end
-                          | _, _, _, _, _ => j_11__
-                          end with trivialCodeNoImm (format : Format.Format) (instr
-                                                      : (Format.Format ->
-                                                         Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr)) (x y
-                                                      : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                     := trivialCodeNoImm' format (instr format) x y with trivialCodeNoImm' (format
-                                                                                                            
-                                                                                                            : Format.Format)
-                                                                                                           (instr
-                                                                                                            
-                                                                                                            : (Reg.Reg ->
-                                                                                                               Reg.Reg ->
-                                                                                                               Reg.Reg ->
-                                                                                                               PPC.Instr.Instr))
-                                                                                                           (x y
-                                                                                                            
-                                                                                                            : CmmExpr.CmmExpr)
-                                                                                           : NCGMonad.NatM Register
-                                                                                           := let cont_0__ arg_1__ :=
-                                                                                                let 'pair src1 code1 :=
-                                                                                                  arg_1__ in
-                                                                                                let cont_2__ arg_3__ :=
-                                                                                                  let 'pair src2
-                                                                                                     code2 := arg_3__ in
-                                                                                                  let code :=
-                                                                                                    fun dst =>
-                                                                                                      OrdList.snocOL
-                                                                                                      (OrdList.appOL
-                                                                                                       code1 code2)
-                                                                                                      (instr dst src1
-                                                                                                       src2) in
-                                                                                                  GHC.Base.return_ (Any
-                                                                                                                    format
-                                                                                                                    code) in
-                                                                                                getSomeReg y
-                                                                                                GHC.Base.>>=
-                                                                                                cont_2__ in
-                                                                                              getSomeReg x GHC.Base.>>=
-                                                                                              cont_0__
-  with trivialCodeNoImmSign (format : Format.Format) (sgn : bool) (instr
-                              : (Format.Format -> bool -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
-                            (x y : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-         := trivialCodeNoImm' format (instr format sgn) x y with trivialUCode (rep
-                                                                                : Format.Format) (instr
-                                                                                : (Reg.Reg ->
-                                                                                   Reg.Reg -> PPC.Instr.Instr)) (x
-                                                                                : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                                                     Register
-                                                                   := let cont_0__ arg_1__ :=
-                                                                        let 'pair src code := arg_1__ in
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.snocOL code (instr dst src) in
-                                                                        GHC.Base.return_ (Any rep code') in
-                                                                      getSomeReg x GHC.Base.>>= cont_0__
-  for getRegister.
-
-Definition getRegister'
-   : DynFlags.DynFlags -> CmmExpr.CmmExpr -> NCGMonad.NatM Register :=
-  fix coerceFP2Int (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
-        : NCGMonad.NatM Register
-        := DynFlags.getDynFlags GHC.Base.>>=
-           (fun dflags =>
-              let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
-              coerceFP2Int' arch fromRep toRep x) with coerceFP2Int' (arg_0__ : Platform.Arch)
-                                                                     (arg_1__ arg_2__ : CmmType.Width) (arg_3__
-                                                                       : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                                         := match arg_0__, arg_1__, arg_2__, arg_3__ with
-                                                            | Platform.ArchPPC, _, toRep, x =>
-                                                                DynFlags.getDynFlags GHC.Base.>>=
-                                                                (fun dflags =>
-                                                                   let cont_4__ arg_5__ :=
-                                                                     let 'pair src code := arg_5__ in
-                                                                     NCGMonad.getNewRegNat Format.FF64 GHC.Base.>>=
-                                                                     (fun tmp =>
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.appOL code (OrdList.toOL (cons
-                                                                                                              (PPC.Instr.FCTIWZ
-                                                                                                               tmp src)
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.FF64
-                                                                                                                tmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #2))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.II32
-                                                                                                                 dst
-                                                                                                                 (PPC.Regs.spRel
-                                                                                                                  dflags
-                                                                                                                  #3))
-                                                                                                                nil)))) in
-                                                                        GHC.Base.return_ (Any (Format.intFormat toRep)
-                                                                                          code')) in
-                                                                   getSomeReg x GHC.Base.>>= cont_4__)
-                                                            | Platform.ArchPPC_64 _, _, toRep, x =>
-                                                                DynFlags.getDynFlags GHC.Base.>>=
-                                                                (fun dflags =>
-                                                                   let cont_8__ arg_9__ :=
-                                                                     let 'pair src code := arg_9__ in
-                                                                     NCGMonad.getNewRegNat Format.FF64 GHC.Base.>>=
-                                                                     (fun tmp =>
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.appOL code (OrdList.toOL (cons
-                                                                                                              (PPC.Instr.FCTIDZ
-                                                                                                               tmp src)
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.FF64
-                                                                                                                tmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #3))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.II64
-                                                                                                                 dst
-                                                                                                                 (PPC.Regs.spRel
-                                                                                                                  dflags
-                                                                                                                  #3))
-                                                                                                                nil)))) in
-                                                                        GHC.Base.return_ (Any (Format.intFormat toRep)
-                                                                                          code')) in
-                                                                   getSomeReg x GHC.Base.>>= cont_8__)
-                                                            | _, _, _, _ =>
-                                                                Panic.panic (GHC.Base.hs_string__
-                                                                             "PPC.CodeGen.coerceFP2Int: unknown arch")
-                                                            end with getSomeReg (expr : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                                                           (Reg.Reg *
-                                                                                                            InstrBlock)%type
-                                                                       := getRegister expr GHC.Base.>>=
-                                                                          (fun r =>
-                                                                             match r with
-                                                                             | Any rep code =>
-                                                                                 NCGMonad.getNewRegNat rep GHC.Base.>>=
-                                                                                 (fun tmp =>
-                                                                                    GHC.Base.return_ (pair tmp (code
-                                                                                                            tmp)))
-                                                                             | Fixed _ reg code =>
-                                                                                 GHC.Base.return_ (pair reg code)
-                                                                             end) with getRegister (e : CmmExpr.CmmExpr)
-                                                                                         : NCGMonad.NatM Register
-                                                                                         := DynFlags.getDynFlags
-                                                                                            GHC.Base.>>=
-                                                                                            (fun dflags =>
-                                                                                               getRegister' dflags e)
-  with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr)
-         : NCGMonad.NatM Register
-         := match arg_0__, arg_1__ with
-            | dflags, CmmExpr.Mk_CmmReg (CmmExpr.CmmGlobal CmmExpr.PicBaseReg) =>
-                match Platform.platformOS (DynFlags.targetPlatform dflags) with
-                | Platform.OSAIX =>
-                    let tocAddr :=
-                      PPC.Regs.AddrRegImm PPC.Regs.toc (PPC.Regs.ImmLit (Datatypes.id
-                                                                         (GHC.Base.hs_string__ "ghc_toc_table[TC]"))) in
-                    let code :=
-                      fun dst => OrdList.toOL (cons (PPC.Instr.LD Format.II32 dst tocAddr) nil) in
-                    GHC.Base.return_ (Any Format.II32 code)
-                | _ =>
-                    if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                    then NCGMonad.getPicBaseNat (PPC.Instr.archWordFormat (Platform.target32Bit
-                                                                           (DynFlags.targetPlatform dflags)))
-                         GHC.Base.>>=
-                         (fun reg =>
-                            GHC.Base.return_ (Fixed (PPC.Instr.archWordFormat (Platform.target32Bit
-                                                                               (DynFlags.targetPlatform dflags))) reg
-                                              OrdList.nilOL)) else
-                    GHC.Base.return_ (Fixed Format.II64 PPC.Regs.toc OrdList.nilOL)
-                end
-            | _, _ =>
-                let j_5__ :=
-                  match arg_0__, arg_1__ with
-                  | _, other =>
-                      Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
-                                                                                other)
-                  end in
-                let j_21__ :=
-                  match arg_0__, arg_1__ with
-                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
-                      NCGMonad.getNewLabelNat GHC.Base.>>=
-                      (fun lbl =>
-                         DynFlags.getDynFlags GHC.Base.>>=
-                         (fun dflags =>
-                            PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
-                            (fun dynRef =>
-                               let cont_6__ arg_7__ :=
-                                 let 'MkAmode addr addr_code := arg_7__ in
-                                 let format := Format.floatFormat frep in
-                                 let code :=
-                                   fun dst =>
-                                     OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
-                                                     (Cmm.Statics lbl (cons (Cmm.CmmStaticLit (CmmExpr.CmmFloat f frep))
-                                                                            nil))) (OrdList.snocOL addr_code
-                                                                                                   (PPC.Instr.LD format
-                                                                                                    dst addr)) in
-                                 GHC.Base.return_ (Any format code) in
-                               getAmode D dynRef GHC.Base.>>= cont_6__)))
-                  | dflags, CmmExpr.Mk_CmmLit lit =>
-                      if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                      then let imm := PPC.Regs.litToImm lit in
-                           let code :=
-                             fun dst =>
-                               OrdList.toOL (cons (PPC.Instr.LIS dst (PPC.Regs.HA imm)) (cons (PPC.Instr.ADD
-                                                                                               dst dst (PPC.Instr.RIImm
-                                                                                                        (PPC.Regs.LO
-                                                                                                         imm))) nil)) in
-                           let rep := CmmExpr.cmmLitType dflags lit in
-                           GHC.Base.return_ (Any (Format.cmmTypeFormat rep) code) else
-                      NCGMonad.getNewLabelNat GHC.Base.>>=
-                      (fun lbl =>
-                         DynFlags.getDynFlags GHC.Base.>>=
-                         (fun dflags =>
-                            PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
-                            (fun dynRef =>
-                               let cont_14__ arg_15__ :=
-                                 let 'MkAmode addr addr_code := arg_15__ in
-                                 let rep := CmmExpr.cmmLitType dflags lit in
-                                 let format := Format.cmmTypeFormat rep in
-                                 let code :=
-                                   fun dst =>
-                                     OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
-                                                     (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil)))
-                                                    (OrdList.snocOL addr_code (PPC.Instr.LD format dst addr)) in
-                                 GHC.Base.return_ (Any format code) in
-                               getAmode D dynRef GHC.Base.>>= cont_14__)))
-                  | _, _ => j_5__
-                  end in
-                let j_180__ :=
-                  match arg_0__, arg_1__ with
-                  | dflags, CmmExpr.CmmLoad mem pk =>
-                      let format := Format.cmmTypeFormat pk in
-                      if negb (CmmType.isWord64 pk) : bool
-                      then let platform := DynFlags.targetPlatform dflags in
-                           let cont_24__ arg_25__ :=
-                             let 'MkAmode addr addr_code := arg_25__ in
-                             let code :=
-                               fun dst =>
-                                 if andb Util.debugIsOn (negb ((TargetReg.targetClassOfReg platform dst
-                                                                GHC.Base.==
-                                                                RegClass.RcDouble) GHC.Base.==
-                                                               CmmType.isFloatType pk)) : bool
-                                 then (Panic.assertPanic (GHC.Base.hs_string__
-                                                          "ext/hs-to-coq/examples/ghc/ghc/compiler/nativeGen/PPC/CodeGen.hs")
-                                       #443)
-                                 else OrdList.snocOL addr_code (PPC.Instr.LD format dst addr) in
-                             GHC.Base.return_ (Any format code) in
-                           getAmode D mem GHC.Base.>>= cont_24__ else
-                      if negb (Platform.target32Bit (DynFlags.targetPlatform dflags)) : bool
-                      then let cont_27__ arg_28__ :=
-                             let 'MkAmode addr addr_code := arg_28__ in
-                             let code :=
-                               fun dst => OrdList.snocOL addr_code (PPC.Instr.LD Format.II64 dst addr) in
-                             GHC.Base.return_ (Any Format.II64 code) in
-                           getAmode DS mem GHC.Base.>>= cont_27__ else
-                      j_21__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_32__ arg_33__ :=
-                        let 'MkAmode addr addr_code := arg_33__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_32__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_36__ arg_37__ :=
-                        let 'MkAmode addr addr_code := arg_37__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_36__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_40__ arg_41__ :=
-                        let 'MkAmode addr addr_code := arg_41__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_40__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_44__ arg_45__ :=
-                        let 'MkAmode addr addr_code := arg_45__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_44__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_48__ arg_49__ :=
-                        let 'MkAmode addr addr_code := arg_49__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_48__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_52__ arg_53__ :=
-                        let 'MkAmode addr addr_code := arg_53__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_52__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W32 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_56__ arg_57__ :=
-                        let 'MkAmode addr addr_code := arg_57__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II32 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_56__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W32 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_60__ arg_61__ :=
-                        let 'MkAmode addr addr_code := arg_61__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II32 dst
-                                                                             addr))) in
-                      getAmode DS mem GHC.Base.>>= cont_60__
-                  | dflags, CmmExpr.CmmMachOp mop (cons x nil) =>
-                      let arch32 := Platform.target32Bit (DynFlags.targetPlatform dflags) in
-                      let conversionNop :=
-                        fun new_format expr =>
-                          getRegister' dflags expr GHC.Base.>>=
-                          (fun e_code => GHC.Base.return_ (swizzleRegisterRep e_code new_format)) in
-                      let triv_ucode_float :=
-                        fun width instr => trivialUCode (Format.floatFormat width) instr x in
-                      let triv_ucode_int :=
-                        fun width instr => trivialUCode (Format.intFormat width) instr x in
-                      let j_72__ :=
-                        match mop with
-                        | CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W8 => conversionNop Format.II8 x
-                        | CmmMachOp.MO_UU_Conv CmmType.W8 to =>
-                            trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt #255
-                                                                                     CmmType.W32))
-                        | CmmMachOp.MO_UU_Conv CmmType.W16 to =>
-                            trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt #65535
-                                                                                     CmmType.W32))
-                        | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                        end in
-                      let j_82__ :=
-                        match mop with
-                        | CmmMachOp.MO_UU_Conv CmmType.W64 to =>
-                            if arch32 : bool
-                            then Panic.panic (GHC.Base.hs_string__
-                                              "PPC.CodeGen.getRegister no 64 bit target") else
-                            conversionNop (Format.intFormat to) x
-                        | CmmMachOp.MO_UU_Conv CmmType.W32 to =>
-                            if arch32 : bool then conversionNop (Format.intFormat to) x else
-                            match to with
-                            | CmmType.W64 =>
-                                trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt
-                                                                                         #4294967295 CmmType.W64))
-                            | CmmType.W16 => conversionNop Format.II16 x
-                            | CmmType.W8 => conversionNop Format.II8 x
-                            | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                            end
-                        | _ => j_72__
-                        end in
-                      let j_96__ :=
-                        match mop with
-                        | CmmMachOp.MO_SS_Conv CmmType.W64 to =>
-                            if arch32 : bool
-                            then Panic.panic (GHC.Base.hs_string__
-                                              "PPC.CodeGen.getRegister no 64 bit int register") else
-                            conversionNop (Format.intFormat to) x
-                        | CmmMachOp.MO_SS_Conv CmmType.W32 to =>
-                            if arch32 : bool then conversionNop (Format.intFormat to) x else
-                            match to with
-                            | CmmType.W64 => triv_ucode_int to (PPC.Instr.EXTS Format.II32)
-                            | CmmType.W16 => conversionNop Format.II16 x
-                            | CmmType.W8 => conversionNop Format.II8 x
-                            | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                            end
-                        | CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W8 => conversionNop Format.II8 x
-                        | CmmMachOp.MO_SS_Conv CmmType.W8 to =>
-                            triv_ucode_int to (PPC.Instr.EXTS Format.II8)
-                        | CmmMachOp.MO_SS_Conv CmmType.W16 to =>
-                            triv_ucode_int to (PPC.Instr.EXTS Format.II16)
-                        | CmmMachOp.MO_UU_Conv from to =>
-                            if from GHC.Base.== to : bool then conversionNop (Format.intFormat to) x else
-                            j_82__
-                        | _ => j_82__
-                        end in
-                      match mop with
-                      | CmmMachOp.MO_Not rep => triv_ucode_int rep PPC.Instr.NOT
-                      | CmmMachOp.MO_F_Neg w => triv_ucode_float w PPC.Instr.FNEG
-                      | CmmMachOp.MO_S_Neg w => triv_ucode_int w PPC.Instr.NEG
-                      | CmmMachOp.MO_FF_Conv CmmType.W64 CmmType.W32 =>
-                          trivialUCode Format.FF32 PPC.Instr.FRSP x
-                      | CmmMachOp.MO_FF_Conv CmmType.W32 CmmType.W64 => conversionNop Format.FF64 x
-                      | CmmMachOp.MO_FS_Conv from to => coerceFP2Int from to x
-                      | CmmMachOp.MO_SF_Conv from to => coerceInt2FP from to x
-                      | CmmMachOp.MO_SS_Conv from to =>
-                          if from GHC.Base.== to : bool then conversionNop (Format.intFormat to) x else
-                          j_96__
-                      | _ => j_96__
-                      end
-                  | dflags, CmmExpr.CmmMachOp mop (cons x (cons y nil)) =>
-                      let triv_float
-                       : CmmType.Width ->
-                         (Format.Format -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr) ->
-                         NCGMonad.NatM Register :=
-                        fun width instr => trivialCodeNoImm (Format.floatFormat width) instr x y in
-                      match mop with
-                      | CmmMachOp.MO_F_Eq _ => condFltReg PPC.Cond.EQQ x y
-                      | CmmMachOp.MO_F_Ne _ => condFltReg PPC.Cond.NE x y
-                      | CmmMachOp.MO_F_Gt _ => condFltReg PPC.Cond.GTT x y
-                      | CmmMachOp.MO_F_Ge _ => condFltReg PPC.Cond.GE x y
-                      | CmmMachOp.MO_F_Lt _ => condFltReg PPC.Cond.LTT x y
-                      | CmmMachOp.MO_F_Le _ => condFltReg PPC.Cond.LE x y
-                      | CmmMachOp.MO_Eq rep =>
-                          condIntReg PPC.Cond.EQQ (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_Ne rep =>
-                          condIntReg PPC.Cond.NE (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_S_Gt rep =>
-                          condIntReg PPC.Cond.GTT (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_S_Ge rep =>
-                          condIntReg PPC.Cond.GE (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_S_Lt rep =>
-                          condIntReg PPC.Cond.LTT (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_S_Le rep =>
-                          condIntReg PPC.Cond.LE (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_U_Gt rep =>
-                          condIntReg PPC.Cond.GU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_U_Ge rep =>
-                          condIntReg PPC.Cond.GEU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_U_Lt rep =>
-                          condIntReg PPC.Cond.LU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_U_Le rep =>
-                          condIntReg PPC.Cond.LEU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_F_Add w => triv_float w PPC.Instr.FADD
-                      | CmmMachOp.MO_F_Sub w => triv_float w PPC.Instr.FSUB
-                      | CmmMachOp.MO_F_Mul w => triv_float w PPC.Instr.FMUL
-                      | CmmMachOp.MO_F_Quot w => triv_float w PPC.Instr.FDIV
-                      | CmmMachOp.MO_Add CmmType.W32 =>
-                          let j_134__ :=
-                            match y with
-                            | CmmExpr.Mk_CmmLit lit =>
-                                let cont_128__ arg_129__ :=
-                                  let 'pair src srcCode := arg_129__ in
-                                  let imm := PPC.Regs.litToImm lit in
-                                  let code :=
-                                    fun dst =>
-                                      OrdList.appOL srcCode (OrdList.toOL (cons (PPC.Instr.ADDIS dst src (PPC.Regs.HA
-                                                                                                          imm)) (cons
-                                                                                 (PPC.Instr.ADD dst dst (PPC.Instr.RIImm
-                                                                                                         (PPC.Regs.LO
-                                                                                                          imm)))
-                                                                                 nil))) in
-                                  GHC.Base.return_ (Any Format.II32 code) in
-                                getSomeReg x GHC.Base.>>= cont_128__
-                            | _ => trivialCode CmmType.W32 true PPC.Instr.ADD x y
-                            end in
-                          match y with
-                          | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm immrep) =>
-                              match PPC.Regs.makeImmediate CmmType.W32 true imm with
-                              | Some _ =>
-                                  trivialCode CmmType.W32 true PPC.Instr.ADD x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt
-                                                                                                   imm immrep))
-                              | _ => j_134__
-                              end
-                          | _ => j_134__
-                          end
-                      | CmmMachOp.MO_Add rep => trivialCode rep true PPC.Instr.ADD x y
-                      | CmmMachOp.MO_Sub rep =>
-                          let j_144__ :=
-                            let j_140__ := trivialCodeNoImm' (Format.intFormat rep) PPC.Instr.SUBF y x in
-                            match x with
-                            | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm _) =>
-                                match PPC.Regs.makeImmediate rep true imm with
-                                | Some _ => trivialCode rep true PPC.Instr.SUBFC y x
-                                | _ => j_140__
-                                end
-                            | _ => j_140__
-                            end in
-                          match y with
-                          | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm immrep) =>
-                              match PPC.Regs.makeImmediate rep true (GHC.Num.negate imm) with
-                              | Some _ =>
-                                  trivialCode rep true PPC.Instr.ADD x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt
-                                                                                           (GHC.Num.negate imm) immrep))
-                              | _ => j_144__
-                              end
-                          | _ => j_144__
-                          end
-                      | CmmMachOp.MO_Mul rep => shiftMulCode rep true PPC.Instr.MULL x y
-                      | CmmMachOp.MO_S_MulMayOflo rep =>
-                          let cont_149__ arg_150__ :=
-                            let 'pair src1 code1 := arg_150__ in
-                            let cont_151__ arg_152__ :=
-                              let 'pair src2 code2 := arg_152__ in
-                              let format := Format.intFormat rep in
-                              let code :=
-                                fun dst =>
-                                  OrdList.appOL (OrdList.appOL code1 code2) (OrdList.toOL (cons (PPC.Instr.MULLO
-                                                                                                 format dst src1 src2)
-                                                                                                (cons (PPC.Instr.MFOV
-                                                                                                       format dst)
-                                                                                                      nil))) in
-                              GHC.Base.return_ (Any format code) in
-                            getSomeReg y GHC.Base.>>= cont_151__ in
-                          getSomeReg x GHC.Base.>>= cont_149__
-                      | CmmMachOp.MO_S_Quot rep =>
-                          trivialCodeNoImmSign (Format.intFormat rep) true PPC.Instr.DIV (extendSExpr
-                                                                                          dflags rep x) (extendSExpr
-                                                                                                         dflags rep y)
-                      | CmmMachOp.MO_U_Quot rep =>
-                          trivialCodeNoImmSign (Format.intFormat rep) false PPC.Instr.DIV (extendUExpr
-                                                                                           dflags rep x) (extendUExpr
-                                                                                                          dflags rep y)
-                      | CmmMachOp.MO_S_Rem rep =>
-                          remainderCode rep true (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_U_Rem rep =>
-                          remainderCode rep false (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_And rep =>
-                          let j_161__ := trivialCode rep false PPC.Instr.AND x y in
-                          match y with
-                          | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm _) =>
-                              if orb (imm GHC.Base.== GHC.Num.negate #8) (imm GHC.Base.==
-                                      GHC.Num.negate #4) : bool
-                              then let cont_162__ arg_163__ :=
-                                     let 'pair src srcCode := arg_163__ in
-                                     let fmt := Format.intFormat rep in
-                                     let clear_mask := if imm GHC.Base.== GHC.Num.negate #4 : bool then #2 else #3 in
-                                     let code :=
-                                       fun dst =>
-                                         OrdList.appOL srcCode (OrdList.unitOL (PPC.Instr.CLRRI fmt dst src
-                                                                                clear_mask)) in
-                                     GHC.Base.return_ (Any fmt code) in
-                                   getSomeReg x GHC.Base.>>= cont_162__ else
-                              j_161__
-                          | _ => j_161__
-                          end
-                      | CmmMachOp.MO_Or rep => trivialCode rep false PPC.Instr.OR x y
-                      | CmmMachOp.MO_Xor rep => trivialCode rep false PPC.Instr.XOR x y
-                      | CmmMachOp.MO_Shl rep => shiftMulCode rep false PPC.Instr.SL x y
-                      | CmmMachOp.MO_S_Shr rep =>
-                          shiftMulCode rep false PPC.Instr.SRA (extendSExpr dflags rep x) y
-                      | CmmMachOp.MO_U_Shr rep =>
-                          shiftMulCode rep false PPC.Instr.SR (extendUExpr dflags rep x) y
-                      | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                      end
-                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt i rep) =>
-                      match PPC.Regs.makeImmediate rep true i with
-                      | Some imm =>
-                          let code := fun dst => OrdList.unitOL (PPC.Instr.LI dst imm) in
-                          GHC.Base.return_ (Any (Format.intFormat rep) code)
-                      | _ => j_21__
-                      end
-                  | _, _ => j_21__
-                  end in
-                let j_187__ :=
-                  match arg_0__, arg_1__ with
-                  | dflags
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons x
-                   nil) =>
-                      if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                      then let cont_181__ arg_182__ :=
-                             let 'MkChildCode64 code rlo := arg_182__ in
-                             GHC.Base.return_ (Fixed Format.II32 rlo code) in
-                           iselExpr64 x GHC.Base.>>= cont_181__ else
-                      j_180__
-                  | dflags
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons x
-                   nil) =>
-                      if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                      then let cont_184__ arg_185__ :=
-                             let 'MkChildCode64 code rlo := arg_185__ in
-                             GHC.Base.return_ (Fixed Format.II32 rlo code) in
-                           iselExpr64 x GHC.Base.>>= cont_184__ else
-                      j_180__
-                  | _, _ => j_180__
-                  end in
-                match arg_0__, arg_1__ with
-                | dflags, CmmExpr.Mk_CmmReg reg =>
-                    GHC.Base.return_ (Fixed (Format.cmmTypeFormat (CmmExpr.cmmRegType dflags reg))
-                                      (getRegisterReg (DynFlags.targetPlatform dflags) reg) OrdList.nilOL)
-                | dflags, (CmmExpr.CmmRegOff _ _ as tree) =>
-                    getRegister' dflags (mangleIndexTree dflags tree)
-                | dflags
-                , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
-                 (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
-                    (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil) =>
-                    if num_2__ GHC.Base.== #32 : bool
-                    then if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                         then let cont_190__ arg_191__ :=
-                                let 'MkChildCode64 code rlo := arg_191__ in
-                                GHC.Base.return_ (Fixed Format.II32 (Reg.getHiVRegFromLo rlo) code) in
-                              iselExpr64 x GHC.Base.>>= cont_190__ else
-                         j_187__ else
-                    j_187__
-                | dflags
-                , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
-                 (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
-                    (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil) =>
-                    if num_3__ GHC.Base.== #32 : bool
-                    then if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                         then let cont_193__ arg_194__ :=
-                                let 'MkChildCode64 code rlo := arg_194__ in
-                                GHC.Base.return_ (Fixed Format.II32 (Reg.getHiVRegFromLo rlo) code) in
-                              iselExpr64 x GHC.Base.>>= cont_193__ else
-                         j_187__ else
-                    j_187__
-                | _, _ => j_187__
-                end
-            end with coerceInt2FP (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
-                       : NCGMonad.NatM Register
-                       := DynFlags.getDynFlags GHC.Base.>>=
-                          (fun dflags =>
-                             let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
-                             coerceInt2FP' arch fromRep toRep x) with coerceInt2FP' (arg_0__ : Platform.Arch)
-                                                                                    (arg_1__ arg_2__ : CmmType.Width)
-                                                                                    (arg_3__ : CmmExpr.CmmExpr)
-                                                                        : NCGMonad.NatM Register
-                                                                        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-                                                                           | Platform.ArchPPC, fromRep, toRep, x =>
-                                                                               let cont_4__ arg_5__ :=
-                                                                                 let 'pair src code := arg_5__ in
-                                                                                 NCGMonad.getNewLabelNat GHC.Base.>>=
-                                                                                 (fun lbl =>
-                                                                                    NCGMonad.getNewRegNat Format.II32
-                                                                                    GHC.Base.>>=
-                                                                                    (fun itmp =>
-                                                                                       NCGMonad.getNewRegNat Format.FF64
-                                                                                       GHC.Base.>>=
-                                                                                       (fun ftmp =>
-                                                                                          DynFlags.getDynFlags
-                                                                                          GHC.Base.>>=
-                                                                                          (fun dflags =>
-                                                                                             PIC.cmmMakeDynamicReference
-                                                                                             dflags PIC.DataReference
-                                                                                             lbl GHC.Base.>>=
-                                                                                             (fun dynRef =>
-                                                                                                let cont_6__ arg_7__ :=
-                                                                                                  let 'MkAmode addr
-                                                                                                     addr_code :=
-                                                                                                    arg_7__ in
-                                                                                                  let maybe_frsp :=
-                                                                                                    fun dst =>
-                                                                                                      match toRep with
-                                                                                                      | CmmType.W32 =>
-                                                                                                          OrdList.unitOL
-                                                                                                          (PPC.Instr.FRSP
-                                                                                                           dst dst)
-                                                                                                      | CmmType.W64 =>
-                                                                                                          OrdList.nilOL
-                                                                                                      | _ =>
-                                                                                                          Panic.panic
-                                                                                                          (GHC.Base.hs_string__
-                                                                                                           "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                                      end in
-                                                                                                  let maybe_exts :=
-                                                                                                    match fromRep with
-                                                                                                    | CmmType.W8 =>
-                                                                                                        OrdList.unitOL
-                                                                                                        (PPC.Instr.EXTS
-                                                                                                         Format.II8 src
-                                                                                                         src)
-                                                                                                    | CmmType.W16 =>
-                                                                                                        OrdList.unitOL
-                                                                                                        (PPC.Instr.EXTS
-                                                                                                         Format.II16 src
-                                                                                                         src)
-                                                                                                    | CmmType.W32 =>
-                                                                                                        OrdList.nilOL
-                                                                                                    | _ =>
-                                                                                                        Panic.panic
-                                                                                                        (GHC.Base.hs_string__
-                                                                                                         "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                                    end in
-                                                                                                  let code' :=
-                                                                                                    fun dst =>
-                                                                                                      OrdList.appOL
-                                                                                                      (OrdList.appOL
-                                                                                                       (OrdList.appOL
-                                                                                                        (OrdList.appOL
-                                                                                                         (OrdList.appOL
-                                                                                                          code
-                                                                                                          maybe_exts)
-                                                                                                         (OrdList.toOL
-                                                                                                          (cons
-                                                                                                           (PPC.Instr.LDATA
-                                                                                                            (Cmm.Mk_Section
-                                                                                                             Cmm.ReadOnlyData
-                                                                                                             lbl)
-                                                                                                            (Cmm.Statics
-                                                                                                             lbl (cons
-                                                                                                              (Cmm.CmmStaticLit
-                                                                                                               (CmmExpr.CmmInt
-                                                                                                                #1127219200
-                                                                                                                CmmType.W32))
-                                                                                                              (cons
-                                                                                                               (Cmm.CmmStaticLit
-                                                                                                                (CmmExpr.CmmInt
-                                                                                                                 #2147483648
-                                                                                                                 CmmType.W32))
-                                                                                                               nil))))
-                                                                                                           (cons
-                                                                                                            (PPC.Instr.XORIS
-                                                                                                             itmp src
-                                                                                                             (PPC.Regs.ImmInt
-                                                                                                              #32768))
-                                                                                                            (cons
-                                                                                                             (PPC.Instr.ST
-                                                                                                              Format.II32
-                                                                                                              itmp
-                                                                                                              (PPC.Regs.spRel
-                                                                                                               dflags
-                                                                                                               #3))
-                                                                                                             (cons
-                                                                                                              (PPC.Instr.LIS
-                                                                                                               itmp
-                                                                                                               (PPC.Regs.ImmInt
-                                                                                                                #17200))
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.II32
-                                                                                                                itmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #2))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.FF64
-                                                                                                                 ftmp
-                                                                                                                 (PPC.Regs.spRel
-                                                                                                                  dflags
-                                                                                                                  #2))
-                                                                                                                nil))))))))
-                                                                                                        addr_code)
-                                                                                                       (OrdList.toOL
-                                                                                                        (cons
-                                                                                                         (PPC.Instr.LD
-                                                                                                          Format.FF64
-                                                                                                          dst addr)
-                                                                                                         (cons
-                                                                                                          (PPC.Instr.FSUB
-                                                                                                           Format.FF64
-                                                                                                           dst ftmp dst)
-                                                                                                          nil))))
-                                                                                                      (maybe_frsp
-                                                                                                       dst) in
-                                                                                                  GHC.Base.return_ (Any
-                                                                                                                    (Format.floatFormat
-                                                                                                                     toRep)
-                                                                                                                    code') in
-                                                                                                getAmode D dynRef
-                                                                                                GHC.Base.>>=
-                                                                                                cont_6__))))) in
-                                                                               getSomeReg x GHC.Base.>>= cont_4__
-                                                                           | Platform.ArchPPC_64 _, fromRep, toRep, x =>
-                                                                               let cont_19__ arg_20__ :=
-                                                                                 let 'pair src code := arg_20__ in
-                                                                                 DynFlags.getDynFlags GHC.Base.>>=
-                                                                                 (fun dflags =>
-                                                                                    let maybe_frsp :=
-                                                                                      fun dst =>
-                                                                                        match toRep with
-                                                                                        | CmmType.W32 =>
-                                                                                            OrdList.unitOL
-                                                                                            (PPC.Instr.FRSP dst dst)
-                                                                                        | CmmType.W64 => OrdList.nilOL
-                                                                                        | _ =>
-                                                                                            Panic.panic
-                                                                                            (GHC.Base.hs_string__
-                                                                                             "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                        end in
-                                                                                    let maybe_exts :=
-                                                                                      match fromRep with
-                                                                                      | CmmType.W8 =>
-                                                                                          OrdList.unitOL (PPC.Instr.EXTS
-                                                                                                          Format.II8 src
-                                                                                                          src)
-                                                                                      | CmmType.W16 =>
-                                                                                          OrdList.unitOL (PPC.Instr.EXTS
-                                                                                                          Format.II16
-                                                                                                          src src)
-                                                                                      | CmmType.W32 =>
-                                                                                          OrdList.unitOL (PPC.Instr.EXTS
-                                                                                                          Format.II32
-                                                                                                          src src)
-                                                                                      | CmmType.W64 => OrdList.nilOL
-                                                                                      | _ =>
-                                                                                          Panic.panic
-                                                                                          (GHC.Base.hs_string__
-                                                                                           "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                      end in
-                                                                                    let code' :=
-                                                                                      fun dst =>
-                                                                                        OrdList.appOL (OrdList.appOL
-                                                                                                       (OrdList.appOL
-                                                                                                        code maybe_exts)
-                                                                                                       (OrdList.toOL
-                                                                                                        (cons
-                                                                                                         (PPC.Instr.ST
-                                                                                                          Format.II64
-                                                                                                          src
-                                                                                                          (PPC.Regs.spRel
-                                                                                                           dflags #3))
-                                                                                                         (cons
-                                                                                                          (PPC.Instr.LD
-                                                                                                           Format.FF64
-                                                                                                           dst
-                                                                                                           (PPC.Regs.spRel
-                                                                                                            dflags #3))
-                                                                                                          (cons
-                                                                                                           (PPC.Instr.FCFID
-                                                                                                            dst dst)
-                                                                                                           nil)))))
-                                                                                                      (maybe_frsp
-                                                                                                       dst) in
-                                                                                    GHC.Base.return_ (Any
-                                                                                                      (Format.floatFormat
-                                                                                                       toRep) code')) in
-                                                                               getSomeReg x GHC.Base.>>= cont_19__
-                                                                           | _, _, _, _ =>
-                                                                               Panic.panic (GHC.Base.hs_string__
-                                                                                            "PPC.CodeGen.coerceInt2FP: unknown arch")
-                                                                           end with getAmode (arg_0__ : InstrForm)
-                                                                                             (arg_1__ : CmmExpr.CmmExpr)
-                                                                                      : NCGMonad.NatM Amode
-                                                                                      := let j_35__ :=
-                                                                                           match arg_0__, arg_1__ with
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W32) (cons x (cons
-                                                                                             (CmmExpr.Mk_CmmLit lit)
-                                                                                             nil)) =>
-                                                                                               let isCmmLabelType :=
-                                                                                                 fun arg_2__ =>
-                                                                                                   match arg_2__ with
-                                                                                                   | CmmExpr.CmmLabel
-                                                                                                   _ =>
-                                                                                                       true
-                                                                                                   | CmmExpr.CmmLabelOff
-                                                                                                   _ _ =>
-                                                                                                       true
-                                                                                                   | CmmExpr.CmmLabelDiffOff
-                                                                                                   _ _ _ =>
-                                                                                                       true
-                                                                                                   | _ => false
-                                                                                                   end in
-                                                                                               DynFlags.getDynFlags
-                                                                                               GHC.Base.>>=
-                                                                                               (fun dflags =>
-                                                                                                  let cont_4__ arg_5__ :=
-                                                                                                    let 'pair src
-                                                                                                       srcCode :=
-                                                                                                      arg_5__ in
-                                                                                                    let imm :=
-                                                                                                      PPC.Regs.litToImm
-                                                                                                      lit in
-                                                                                                    let j_8__ :=
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II32
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let code :=
-                                                                                                           OrdList.snocOL
-                                                                                                           srcCode
-                                                                                                           (PPC.Instr.ADDIS
-                                                                                                            tmp src
-                                                                                                            (PPC.Regs.HA
-                                                                                                             imm)) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm))
-                                                                                                          code)) in
-                                                                                                    match Platform.platformOS
-                                                                                                            (DynFlags.targetPlatform
-                                                                                                             dflags) with
-                                                                                                    | Platform.OSAIX =>
-                                                                                                        if isCmmLabelType
-                                                                                                           lit : bool
-                                                                                                        then GHC.Base.return_
-                                                                                                             (MkAmode
-                                                                                                              (PPC.Regs.AddrRegImm
-                                                                                                               src imm)
-                                                                                                              srcCode) else
-                                                                                                        j_8__
-                                                                                                    | _ => j_8__
-                                                                                                    end in
-                                                                                                  getSomeReg x
-                                                                                                  GHC.Base.>>=
-                                                                                                  cont_4__)
-                                                                                           | _, CmmExpr.Mk_CmmLit lit =>
-                                                                                               DynFlags.getDynFlags
-                                                                                               GHC.Base.>>=
-                                                                                               (fun dflags =>
-                                                                                                  match Platform.platformArch
-                                                                                                          (DynFlags.targetPlatform
-                                                                                                           dflags) with
-                                                                                                  | Platform.ArchPPC =>
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II32
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let imm :=
-                                                                                                           PPC.Regs.litToImm
-                                                                                                           lit in
-                                                                                                         let code :=
-                                                                                                           OrdList.unitOL
-                                                                                                           (PPC.Instr.LIS
-                                                                                                            tmp
-                                                                                                            (PPC.Regs.HA
-                                                                                                             imm)) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm)) code))
-                                                                                                  | _ =>
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II64
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let imm :=
-                                                                                                           PPC.Regs.litToImm
-                                                                                                           lit in
-                                                                                                         let code :=
-                                                                                                           OrdList.toOL
-                                                                                                           (cons
-                                                                                                            (PPC.Instr.LIS
-                                                                                                             tmp
-                                                                                                             (PPC.Regs.HIGHESTA
-                                                                                                              imm))
-                                                                                                            (cons
-                                                                                                             (PPC.Instr.OR
-                                                                                                              tmp tmp
-                                                                                                              (PPC.Instr.RIImm
-                                                                                                               (PPC.Regs.HIGHERA
-                                                                                                                imm)))
-                                                                                                             (cons
-                                                                                                              (PPC.Instr.SL
-                                                                                                               Format.II64
-                                                                                                               tmp tmp
-                                                                                                               (PPC.Instr.RIImm
-                                                                                                                (PPC.Regs.ImmInt
-                                                                                                                 #32)))
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ORIS
-                                                                                                                tmp tmp
-                                                                                                                (PPC.Regs.HA
-                                                                                                                 imm))
-                                                                                                               nil)))) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm)) code))
-                                                                                                  end)
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W32) (cons x (cons y
-                                                                                             nil)) =>
-                                                                                               let cont_21__ arg_22__ :=
-                                                                                                 let 'pair regX codeX :=
-                                                                                                   arg_22__ in
-                                                                                                 let cont_23__ arg_24__ :=
-                                                                                                   let 'pair regY
-                                                                                                      codeY :=
-                                                                                                     arg_24__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegReg
-                                                                                                     regX regY)
-                                                                                                    (OrdList.appOL codeX
-                                                                                                                   codeY)) in
-                                                                                                 getSomeReg y
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_23__ in
-                                                                                               getSomeReg x GHC.Base.>>=
-                                                                                               cont_21__
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W64) (cons x (cons y
-                                                                                             nil)) =>
-                                                                                               let cont_26__ arg_27__ :=
-                                                                                                 let 'pair regX codeX :=
-                                                                                                   arg_27__ in
-                                                                                                 let cont_28__ arg_29__ :=
-                                                                                                   let 'pair regY
-                                                                                                      codeY :=
-                                                                                                     arg_29__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegReg
-                                                                                                     regX regY)
-                                                                                                    (OrdList.appOL codeX
-                                                                                                                   codeY)) in
-                                                                                                 getSomeReg y
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_28__ in
-                                                                                               getSomeReg x GHC.Base.>>=
-                                                                                               cont_26__
-                                                                                           | _, other =>
-                                                                                               let cont_31__ arg_32__ :=
-                                                                                                 let 'pair reg code :=
-                                                                                                   arg_32__ in
-                                                                                                 let off :=
-                                                                                                   PPC.Regs.ImmInt #0 in
-                                                                                                 GHC.Base.return_
-                                                                                                 (MkAmode
-                                                                                                  (PPC.Regs.AddrRegImm
-                                                                                                   reg off) code) in
-                                                                                               getSomeReg other
-                                                                                               GHC.Base.>>=
-                                                                                               cont_31__
-                                                                                           end in
-                                                                                         match arg_0__, arg_1__ with
-                                                                                         | inf
-                                                                                         , (CmmExpr.CmmRegOff _
-                                                                                          _ as tree) =>
-                                                                                             DynFlags.getDynFlags
-                                                                                             GHC.Base.>>=
-                                                                                             (fun dflags =>
-                                                                                                getAmode inf
-                                                                                                (mangleIndexTree dflags
-                                                                                                 tree))
-                                                                                         | _
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W32)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W32 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_37__ arg_38__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_38__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_37__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | _
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W32)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W32 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_40__ arg_41__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_41__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_40__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | D
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_43__ arg_44__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_44__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_43__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | D
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_46__ arg_47__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_47__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_46__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | DS
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_49__ arg_50__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_50__ in
-                                                                                                   let cont_51__ arg_52__ :=
-                                                                                                     let 'pair (pair
-                                                                                                         reg' off')
-                                                                                                        code' :=
-                                                                                                       arg_52__ in
-                                                                                                     GHC.Base.return_
-                                                                                                     (MkAmode
-                                                                                                      (PPC.Regs.AddrRegImm
-                                                                                                       reg' off')
-                                                                                                      code') in
-                                                                                                   (if GHC.Real.mod_ i
-                                                                                                                     #4
-                                                                                                       GHC.Base.==
-                                                                                                       #0 : bool
-                                                                                                    then GHC.Base.return_
-                                                                                                         (pair (pair reg
-                                                                                                                     off)
-                                                                                                               code)
-                                                                                                    else NCGMonad.getNewRegNat
-                                                                                                         Format.II64
-                                                                                                         GHC.Base.>>=
-                                                                                                         (fun tmp =>
-                                                                                                            GHC.Base.return_
-                                                                                                            (pair (pair
-                                                                                                                   tmp
-                                                                                                                   (PPC.Regs.ImmInt
-                                                                                                                    #0))
-                                                                                                                  (OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   (PPC.Instr.ADD
-                                                                                                                    tmp
-                                                                                                                    reg
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     off))))))
-                                                                                                   GHC.Base.>>=
-                                                                                                   cont_51__ in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_49__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | DS
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_54__ arg_55__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_55__ in
-                                                                                                   let cont_56__ arg_57__ :=
-                                                                                                     let 'pair (pair
-                                                                                                         reg' off')
-                                                                                                        code' :=
-                                                                                                       arg_57__ in
-                                                                                                     GHC.Base.return_
-                                                                                                     (MkAmode
-                                                                                                      (PPC.Regs.AddrRegImm
-                                                                                                       reg' off')
-                                                                                                      code') in
-                                                                                                   (if GHC.Real.mod_ i
-                                                                                                                     #4
-                                                                                                       GHC.Base.==
-                                                                                                       #0 : bool
-                                                                                                    then GHC.Base.return_
-                                                                                                         (pair (pair reg
-                                                                                                                     off)
-                                                                                                               code)
-                                                                                                    else NCGMonad.getNewRegNat
-                                                                                                         Format.II64
-                                                                                                         GHC.Base.>>=
-                                                                                                         (fun tmp =>
-                                                                                                            GHC.Base.return_
-                                                                                                            (pair (pair
-                                                                                                                   tmp
-                                                                                                                   (PPC.Regs.ImmInt
-                                                                                                                    #0))
-                                                                                                                  (OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   (PPC.Instr.ADD
-                                                                                                                    tmp
-                                                                                                                    reg
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     off))))))
-                                                                                                   GHC.Base.>>=
-                                                                                                   cont_56__ in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_54__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | _, _ => j_35__
-                                                                                         end with condFltReg (cond
-                                                                                                              
-                                                                                                              : PPC.Cond.Cond)
-                                                                                                             (x y
-                                                                                                              
-                                                                                                              : CmmExpr.CmmExpr)
-                                                                                                    : NCGMonad.NatM
-                                                                                                      Register
-                                                                                                    := condReg
-                                                                                                       (condFltCode cond
-                                                                                                        x y)
-  with condFltCode (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                    CondCode
-         := let cont_0__ arg_1__ :=
-              let 'pair src1 code1 := arg_1__ in
-              let cont_2__ arg_3__ :=
-                let 'pair src2 code2 := arg_3__ in
-                let code' :=
-                  OrdList.snocOL (OrdList.appOL code1 code2) (PPC.Instr.FCMP src1 src2) in
-                let code'' :=
-                  let gtbit := #1 in
-                  let eqbit := #2 in
-                  let ltbit := #0 in
-                  match cond with
-                  | PPC.Cond.GE => OrdList.snocOL code' (PPC.Instr.CRNOR ltbit eqbit gtbit)
-                  | PPC.Cond.LE => OrdList.snocOL code' (PPC.Instr.CRNOR gtbit eqbit ltbit)
-                  | _ => code'
-                  end in
-                GHC.Base.return_ (MkCondCode true cond code'') in
-              getSomeReg y GHC.Base.>>= cont_2__ in
-            getSomeReg x GHC.Base.>>= cont_0__ with condIntReg (cond : PPC.Cond.Cond) (x y
-                                                                 : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                                      := condReg (condIntCode cond x y) with condIntCode (arg_0__
-                                                                                                          
-                                                                                                          : PPC.Cond.Cond)
-                                                                                                         (arg_1__
-                                                                                                          arg_2__
-                                                                                                          
-                                                                                                          : CmmExpr.CmmExpr)
-                                                                                               : NCGMonad.NatM CondCode
-                                                                                               := let j_11__ :=
-                                                                                                    match arg_0__
-                                                                                                        , arg_1__
-                                                                                                        , arg_2__ with
-                                                                                                    | cond, x, y =>
-                                                                                                        let cont_4__ arg_5__ :=
-                                                                                                          let 'pair src1
-                                                                                                             code1 :=
-                                                                                                            arg_5__ in
-                                                                                                          let cont_6__ arg_7__ :=
-                                                                                                            let 'pair
-                                                                                                               src2
-                                                                                                               code2 :=
-                                                                                                              arg_7__ in
-                                                                                                            DynFlags.getDynFlags
-                                                                                                            GHC.Base.>>=
-                                                                                                            (fun dflags =>
-                                                                                                               let format :=
-                                                                                                                 PPC.Instr.archWordFormat
-                                                                                                                 (Platform.target32Bit
-                                                                                                                  (DynFlags.targetPlatform
-                                                                                                                   dflags)) in
-                                                                                                               let code' :=
-                                                                                                                 OrdList.snocOL
-                                                                                                                 (OrdList.appOL
-                                                                                                                  code1
-                                                                                                                  code2)
-                                                                                                                 ((if PPC.Cond.condUnsigned
-                                                                                                                      cond : bool
-                                                                                                                   then PPC.Instr.CMPL
-                                                                                                                   else PPC.Instr.CMP)
-                                                                                                                  format
-                                                                                                                  src1
-                                                                                                                  (PPC.Instr.RIReg
-                                                                                                                   src2)) in
-                                                                                                               GHC.Base.return_
-                                                                                                               (MkCondCode
-                                                                                                                false
-                                                                                                                cond
-                                                                                                                code')) in
-                                                                                                          getSomeReg y
-                                                                                                          GHC.Base.>>=
-                                                                                                          cont_6__ in
-                                                                                                        getSomeReg x
-                                                                                                        GHC.Base.>>=
-                                                                                                        cont_4__
-                                                                                                    end in
-                                                                                                  let j_17__ :=
-                                                                                                    match arg_0__
-                                                                                                        , arg_1__
-                                                                                                        , arg_2__ with
-                                                                                                    | cond
-                                                                                                    , x
-                                                                                                    , CmmExpr.Mk_CmmLit
-                                                                                                    (CmmExpr.CmmInt y
-                                                                                                     rep) =>
-                                                                                                        match PPC.Regs.makeImmediate
-                                                                                                                rep
-                                                                                                                (negb
-                                                                                                                 (PPC.Cond.condUnsigned
-                                                                                                                  cond))
-                                                                                                                y with
-                                                                                                        | Some src2 =>
-                                                                                                            let cont_12__ arg_13__ :=
-                                                                                                              let 'pair
-                                                                                                                 src1
-                                                                                                                 code :=
-                                                                                                                arg_13__ in
-                                                                                                              DynFlags.getDynFlags
-                                                                                                              GHC.Base.>>=
-                                                                                                              (fun dflags =>
-                                                                                                                 let format :=
-                                                                                                                   PPC.Instr.archWordFormat
-                                                                                                                   (Platform.target32Bit
-                                                                                                                    (DynFlags.targetPlatform
-                                                                                                                     dflags)) in
-                                                                                                                 let code' :=
-                                                                                                                   OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   ((if PPC.Cond.condUnsigned
-                                                                                                                        cond : bool
-                                                                                                                     then PPC.Instr.CMPL
-                                                                                                                     else PPC.Instr.CMP)
-                                                                                                                    format
-                                                                                                                    src1
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     src2)) in
-                                                                                                                 GHC.Base.return_
-                                                                                                                 (MkCondCode
-                                                                                                                  false
-                                                                                                                  cond
-                                                                                                                  code')) in
-                                                                                                            getSomeReg x
-                                                                                                            GHC.Base.>>=
-                                                                                                            cont_12__
-                                                                                                        | _ => j_11__
-                                                                                                        end
-                                                                                                    | _, _, _ => j_11__
-                                                                                                    end in
-                                                                                                  match arg_0__
-                                                                                                      , arg_1__
-                                                                                                      , arg_2__ with
-                                                                                                  | cond
-                                                                                                  , CmmExpr.CmmMachOp
-                                                                                                  (CmmMachOp.MO_And _)
-                                                                                                  (cons x (cons
-                                                                                                    (CmmExpr.Mk_CmmLit
-                                                                                                     (CmmExpr.CmmInt imm
-                                                                                                      rep)) nil))
-                                                                                                  , CmmExpr.Mk_CmmLit
-                                                                                                  (CmmExpr.CmmInt
-                                                                                                   num_3__ _) =>
-                                                                                                      if num_3__
-                                                                                                         GHC.Base.==
-                                                                                                         #0 : bool
-                                                                                                      then if negb
-                                                                                                              (PPC.Cond.condUnsigned
-                                                                                                               cond) : bool
-                                                                                                           then match PPC.Regs.makeImmediate
-                                                                                                                        rep
-                                                                                                                        false
-                                                                                                                        imm with
-                                                                                                                | Some
-                                                                                                                src2 =>
-                                                                                                                    let cont_18__ arg_19__ :=
-                                                                                                                      let 'pair
-                                                                                                                         src1
-                                                                                                                         code :=
-                                                                                                                        arg_19__ in
-                                                                                                                      let code' :=
-                                                                                                                        OrdList.snocOL
-                                                                                                                        code
-                                                                                                                        (PPC.Instr.AND
-                                                                                                                         PPC.Regs.r0
-                                                                                                                         src1
-                                                                                                                         (PPC.Instr.RIImm
-                                                                                                                          src2)) in
-                                                                                                                      GHC.Base.return_
-                                                                                                                      (MkCondCode
-                                                                                                                       false
-                                                                                                                       cond
-                                                                                                                       code') in
-                                                                                                                    getSomeReg
-                                                                                                                    x
-                                                                                                                    GHC.Base.>>=
-                                                                                                                    cont_18__
-                                                                                                                | _ =>
-                                                                                                                    j_17__
-                                                                                                                end else
-                                                                                                           j_17__ else
-                                                                                                      j_17__
-                                                                                                  | _, _, _ => j_17__
-                                                                                                  end with remainderCode
-                                                                                                             (rep
-                                                                                                              
-                                                                                                              : CmmType.Width)
-                                                                                                             (sgn
-                                                                                                               : bool)
-                                                                                                             (x y
-                                                                                                              
-                                                                                                              : CmmExpr.CmmExpr)
-                                                                                                             : NCGMonad.NatM
-                                                                                                               Register
-                                                                                                             := let fmt :=
-                                                                                                                  Format.intFormat
-                                                                                                                  rep in
-                                                                                                                let cont_1__ arg_2__ :=
-                                                                                                                  let 'pair
-                                                                                                                     src1
-                                                                                                                     code1 :=
-                                                                                                                    arg_2__ in
-                                                                                                                  let cont_3__ arg_4__ :=
-                                                                                                                    let 'pair
-                                                                                                                       src2
-                                                                                                                       code2 :=
-                                                                                                                      arg_4__ in
-                                                                                                                    let code :=
-                                                                                                                      fun dst =>
-                                                                                                                        OrdList.appOL
-                                                                                                                        (OrdList.appOL
-                                                                                                                         code1
-                                                                                                                         code2)
-                                                                                                                        (OrdList.toOL
-                                                                                                                         (cons
-                                                                                                                          (PPC.Instr.DIV
-                                                                                                                           fmt
-                                                                                                                           sgn
-                                                                                                                           dst
-                                                                                                                           src1
-                                                                                                                           src2)
-                                                                                                                          (cons
-                                                                                                                           (PPC.Instr.MULL
-                                                                                                                            fmt
-                                                                                                                            dst
-                                                                                                                            dst
-                                                                                                                            (PPC.Instr.RIReg
-                                                                                                                             src2))
-                                                                                                                           (cons
-                                                                                                                            (PPC.Instr.SUBF
-                                                                                                                             dst
-                                                                                                                             dst
-                                                                                                                             src1)
-                                                                                                                            nil)))) in
-                                                                                                                    GHC.Base.return_
-                                                                                                                    (Any
-                                                                                                                     (Format.intFormat
-                                                                                                                      rep)
-                                                                                                                     code) in
-                                                                                                                  getSomeReg
-                                                                                                                  y
-                                                                                                                  GHC.Base.>>=
-                                                                                                                  cont_3__ in
-                                                                                                                getSomeReg
-                                                                                                                x
-                                                                                                                GHC.Base.>>=
-                                                                                                                cont_1__
-  with shiftMulCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
-                      : (Format.Format -> Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr))
-                    (arg_3__ arg_4__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-         := let j_12__ :=
-              match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-              | width, _, instr, x, y =>
-                  let cont_5__ arg_6__ :=
-                    let 'pair src1 code1 := arg_6__ in
-                    let cont_7__ arg_8__ :=
-                      let 'pair src2 code2 := arg_8__ in
-                      let format := Format.intFormat width in
-                      let code :=
-                        fun dst =>
-                          OrdList.snocOL (OrdList.appOL code1 code2) (instr format dst src1
-                                          (PPC.Instr.RIReg src2)) in
-                      GHC.Base.return_ (Any format code) in
-                    getSomeReg y GHC.Base.>>= cont_7__ in
-                  getSomeReg x GHC.Base.>>= cont_5__
-              end in
-            match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-            | width, sign, instr, x, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt y _) =>
-                match PPC.Regs.makeImmediate width sign y with
-                | Some imm =>
-                    let cont_13__ arg_14__ :=
-                      let 'pair src1 code1 := arg_14__ in
-                      let format := Format.intFormat width in
-                      let code :=
-                        fun dst => OrdList.snocOL code1 (instr format dst src1 (PPC.Instr.RIImm imm)) in
-                      GHC.Base.return_ (Any format code) in
-                    getSomeReg x GHC.Base.>>= cont_13__
-                | _ => j_12__
-                end
-            | _, _, _, _, _ => j_12__
-            end with trivialCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
-                                   : (Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr)) (arg_3__ arg_4__
-                                   : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                       := let j_11__ :=
-                            match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-                            | rep, _, instr, x, y =>
-                                let cont_5__ arg_6__ :=
-                                  let 'pair src1 code1 := arg_6__ in
-                                  let cont_7__ arg_8__ :=
-                                    let 'pair src2 code2 := arg_8__ in
-                                    let code :=
-                                      fun dst =>
-                                        OrdList.snocOL (OrdList.appOL code1 code2) (instr dst src1 (PPC.Instr.RIReg
-                                                                                                    src2)) in
-                                    GHC.Base.return_ (Any (Format.intFormat rep) code) in
-                                  getSomeReg y GHC.Base.>>= cont_7__ in
-                                getSomeReg x GHC.Base.>>= cont_5__
-                            end in
-                          match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-                          | rep, signed, instr, x, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt y _) =>
-                              match PPC.Regs.makeImmediate rep signed y with
-                              | Some imm =>
-                                  let cont_12__ arg_13__ :=
-                                    let 'pair src1 code1 := arg_13__ in
-                                    let code :=
-                                      fun dst => OrdList.snocOL code1 (instr dst src1 (PPC.Instr.RIImm imm)) in
-                                    GHC.Base.return_ (Any (Format.intFormat rep) code) in
-                                  getSomeReg x GHC.Base.>>= cont_12__
-                              | _ => j_11__
-                              end
-                          | _, _, _, _, _ => j_11__
-                          end with trivialCodeNoImm (format : Format.Format) (instr
-                                                      : (Format.Format ->
-                                                         Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr)) (x y
-                                                      : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                     := trivialCodeNoImm' format (instr format) x y with trivialCodeNoImm' (format
-                                                                                                            
-                                                                                                            : Format.Format)
-                                                                                                           (instr
-                                                                                                            
-                                                                                                            : (Reg.Reg ->
-                                                                                                               Reg.Reg ->
-                                                                                                               Reg.Reg ->
-                                                                                                               PPC.Instr.Instr))
-                                                                                                           (x y
-                                                                                                            
-                                                                                                            : CmmExpr.CmmExpr)
-                                                                                           : NCGMonad.NatM Register
-                                                                                           := let cont_0__ arg_1__ :=
-                                                                                                let 'pair src1 code1 :=
-                                                                                                  arg_1__ in
-                                                                                                let cont_2__ arg_3__ :=
-                                                                                                  let 'pair src2
-                                                                                                     code2 := arg_3__ in
-                                                                                                  let code :=
-                                                                                                    fun dst =>
-                                                                                                      OrdList.snocOL
-                                                                                                      (OrdList.appOL
-                                                                                                       code1 code2)
-                                                                                                      (instr dst src1
-                                                                                                       src2) in
-                                                                                                  GHC.Base.return_ (Any
-                                                                                                                    format
-                                                                                                                    code) in
-                                                                                                getSomeReg y
-                                                                                                GHC.Base.>>=
-                                                                                                cont_2__ in
-                                                                                              getSomeReg x GHC.Base.>>=
-                                                                                              cont_0__
-  with trivialCodeNoImmSign (format : Format.Format) (sgn : bool) (instr
-                              : (Format.Format -> bool -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
-                            (x y : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-         := trivialCodeNoImm' format (instr format sgn) x y with trivialUCode (rep
-                                                                                : Format.Format) (instr
-                                                                                : (Reg.Reg ->
-                                                                                   Reg.Reg -> PPC.Instr.Instr)) (x
-                                                                                : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                                                     Register
-                                                                   := let cont_0__ arg_1__ :=
-                                                                        let 'pair src code := arg_1__ in
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.snocOL code (instr dst src) in
-                                                                        GHC.Base.return_ (Any rep code') in
-                                                                      getSomeReg x GHC.Base.>>= cont_0__
-  for getRegister'.
-
-Definition getSomeReg
-   : CmmExpr.CmmExpr -> NCGMonad.NatM (Reg.Reg * InstrBlock)%type :=
-  fix coerceFP2Int (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
-        : NCGMonad.NatM Register
-        := DynFlags.getDynFlags GHC.Base.>>=
-           (fun dflags =>
-              let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
-              coerceFP2Int' arch fromRep toRep x) with coerceFP2Int' (arg_0__ : Platform.Arch)
-                                                                     (arg_1__ arg_2__ : CmmType.Width) (arg_3__
-                                                                       : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                                         := match arg_0__, arg_1__, arg_2__, arg_3__ with
-                                                            | Platform.ArchPPC, _, toRep, x =>
-                                                                DynFlags.getDynFlags GHC.Base.>>=
-                                                                (fun dflags =>
-                                                                   let cont_4__ arg_5__ :=
-                                                                     let 'pair src code := arg_5__ in
-                                                                     NCGMonad.getNewRegNat Format.FF64 GHC.Base.>>=
-                                                                     (fun tmp =>
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.appOL code (OrdList.toOL (cons
-                                                                                                              (PPC.Instr.FCTIWZ
-                                                                                                               tmp src)
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.FF64
-                                                                                                                tmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #2))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.II32
-                                                                                                                 dst
-                                                                                                                 (PPC.Regs.spRel
-                                                                                                                  dflags
-                                                                                                                  #3))
-                                                                                                                nil)))) in
-                                                                        GHC.Base.return_ (Any (Format.intFormat toRep)
-                                                                                          code')) in
-                                                                   getSomeReg x GHC.Base.>>= cont_4__)
-                                                            | Platform.ArchPPC_64 _, _, toRep, x =>
-                                                                DynFlags.getDynFlags GHC.Base.>>=
-                                                                (fun dflags =>
-                                                                   let cont_8__ arg_9__ :=
-                                                                     let 'pair src code := arg_9__ in
-                                                                     NCGMonad.getNewRegNat Format.FF64 GHC.Base.>>=
-                                                                     (fun tmp =>
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.appOL code (OrdList.toOL (cons
-                                                                                                              (PPC.Instr.FCTIDZ
-                                                                                                               tmp src)
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.FF64
-                                                                                                                tmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #3))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.II64
-                                                                                                                 dst
-                                                                                                                 (PPC.Regs.spRel
-                                                                                                                  dflags
-                                                                                                                  #3))
-                                                                                                                nil)))) in
-                                                                        GHC.Base.return_ (Any (Format.intFormat toRep)
-                                                                                          code')) in
-                                                                   getSomeReg x GHC.Base.>>= cont_8__)
-                                                            | _, _, _, _ =>
-                                                                Panic.panic (GHC.Base.hs_string__
-                                                                             "PPC.CodeGen.coerceFP2Int: unknown arch")
-                                                            end with getSomeReg (expr : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                                                           (Reg.Reg *
-                                                                                                            InstrBlock)%type
-                                                                       := getRegister expr GHC.Base.>>=
-                                                                          (fun r =>
-                                                                             match r with
-                                                                             | Any rep code =>
-                                                                                 NCGMonad.getNewRegNat rep GHC.Base.>>=
-                                                                                 (fun tmp =>
-                                                                                    GHC.Base.return_ (pair tmp (code
-                                                                                                            tmp)))
-                                                                             | Fixed _ reg code =>
-                                                                                 GHC.Base.return_ (pair reg code)
-                                                                             end) with getRegister (e : CmmExpr.CmmExpr)
-                                                                                         : NCGMonad.NatM Register
-                                                                                         := DynFlags.getDynFlags
-                                                                                            GHC.Base.>>=
-                                                                                            (fun dflags =>
-                                                                                               getRegister' dflags e)
-  with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr)
-         : NCGMonad.NatM Register
-         := match arg_0__, arg_1__ with
-            | dflags, CmmExpr.Mk_CmmReg (CmmExpr.CmmGlobal CmmExpr.PicBaseReg) =>
-                match Platform.platformOS (DynFlags.targetPlatform dflags) with
-                | Platform.OSAIX =>
-                    let tocAddr :=
-                      PPC.Regs.AddrRegImm PPC.Regs.toc (PPC.Regs.ImmLit (Datatypes.id
-                                                                         (GHC.Base.hs_string__ "ghc_toc_table[TC]"))) in
-                    let code :=
-                      fun dst => OrdList.toOL (cons (PPC.Instr.LD Format.II32 dst tocAddr) nil) in
-                    GHC.Base.return_ (Any Format.II32 code)
-                | _ =>
-                    if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                    then NCGMonad.getPicBaseNat (PPC.Instr.archWordFormat (Platform.target32Bit
-                                                                           (DynFlags.targetPlatform dflags)))
-                         GHC.Base.>>=
-                         (fun reg =>
-                            GHC.Base.return_ (Fixed (PPC.Instr.archWordFormat (Platform.target32Bit
-                                                                               (DynFlags.targetPlatform dflags))) reg
-                                              OrdList.nilOL)) else
-                    GHC.Base.return_ (Fixed Format.II64 PPC.Regs.toc OrdList.nilOL)
-                end
-            | _, _ =>
-                let j_5__ :=
-                  match arg_0__, arg_1__ with
-                  | _, other =>
-                      Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
-                                                                                other)
-                  end in
-                let j_21__ :=
-                  match arg_0__, arg_1__ with
-                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
-                      NCGMonad.getNewLabelNat GHC.Base.>>=
-                      (fun lbl =>
-                         DynFlags.getDynFlags GHC.Base.>>=
-                         (fun dflags =>
-                            PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
-                            (fun dynRef =>
-                               let cont_6__ arg_7__ :=
-                                 let 'MkAmode addr addr_code := arg_7__ in
-                                 let format := Format.floatFormat frep in
-                                 let code :=
-                                   fun dst =>
-                                     OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
-                                                     (Cmm.Statics lbl (cons (Cmm.CmmStaticLit (CmmExpr.CmmFloat f frep))
-                                                                            nil))) (OrdList.snocOL addr_code
-                                                                                                   (PPC.Instr.LD format
-                                                                                                    dst addr)) in
-                                 GHC.Base.return_ (Any format code) in
-                               getAmode D dynRef GHC.Base.>>= cont_6__)))
-                  | dflags, CmmExpr.Mk_CmmLit lit =>
-                      if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                      then let imm := PPC.Regs.litToImm lit in
-                           let code :=
-                             fun dst =>
-                               OrdList.toOL (cons (PPC.Instr.LIS dst (PPC.Regs.HA imm)) (cons (PPC.Instr.ADD
-                                                                                               dst dst (PPC.Instr.RIImm
-                                                                                                        (PPC.Regs.LO
-                                                                                                         imm))) nil)) in
-                           let rep := CmmExpr.cmmLitType dflags lit in
-                           GHC.Base.return_ (Any (Format.cmmTypeFormat rep) code) else
-                      NCGMonad.getNewLabelNat GHC.Base.>>=
-                      (fun lbl =>
-                         DynFlags.getDynFlags GHC.Base.>>=
-                         (fun dflags =>
-                            PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
-                            (fun dynRef =>
-                               let cont_14__ arg_15__ :=
-                                 let 'MkAmode addr addr_code := arg_15__ in
-                                 let rep := CmmExpr.cmmLitType dflags lit in
-                                 let format := Format.cmmTypeFormat rep in
-                                 let code :=
-                                   fun dst =>
-                                     OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
-                                                     (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil)))
-                                                    (OrdList.snocOL addr_code (PPC.Instr.LD format dst addr)) in
-                                 GHC.Base.return_ (Any format code) in
-                               getAmode D dynRef GHC.Base.>>= cont_14__)))
-                  | _, _ => j_5__
-                  end in
-                let j_180__ :=
-                  match arg_0__, arg_1__ with
-                  | dflags, CmmExpr.CmmLoad mem pk =>
-                      let format := Format.cmmTypeFormat pk in
-                      if negb (CmmType.isWord64 pk) : bool
-                      then let platform := DynFlags.targetPlatform dflags in
-                           let cont_24__ arg_25__ :=
-                             let 'MkAmode addr addr_code := arg_25__ in
-                             let code :=
-                               fun dst =>
-                                 if andb Util.debugIsOn (negb ((TargetReg.targetClassOfReg platform dst
-                                                                GHC.Base.==
-                                                                RegClass.RcDouble) GHC.Base.==
-                                                               CmmType.isFloatType pk)) : bool
-                                 then (Panic.assertPanic (GHC.Base.hs_string__
-                                                          "ext/hs-to-coq/examples/ghc/ghc/compiler/nativeGen/PPC/CodeGen.hs")
-                                       #443)
-                                 else OrdList.snocOL addr_code (PPC.Instr.LD format dst addr) in
-                             GHC.Base.return_ (Any format code) in
-                           getAmode D mem GHC.Base.>>= cont_24__ else
-                      if negb (Platform.target32Bit (DynFlags.targetPlatform dflags)) : bool
-                      then let cont_27__ arg_28__ :=
-                             let 'MkAmode addr addr_code := arg_28__ in
-                             let code :=
-                               fun dst => OrdList.snocOL addr_code (PPC.Instr.LD Format.II64 dst addr) in
-                             GHC.Base.return_ (Any Format.II64 code) in
-                           getAmode DS mem GHC.Base.>>= cont_27__ else
-                      j_21__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_32__ arg_33__ :=
-                        let 'MkAmode addr addr_code := arg_33__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_32__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_36__ arg_37__ :=
-                        let 'MkAmode addr addr_code := arg_37__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_36__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_40__ arg_41__ :=
-                        let 'MkAmode addr addr_code := arg_41__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_40__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W32) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_44__ arg_45__ :=
-                        let 'MkAmode addr addr_code := arg_45__ in
-                        GHC.Base.return_ (Any Format.II32 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_44__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_48__ arg_49__ :=
-                        let 'MkAmode addr addr_code := arg_49__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_48__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_52__ arg_53__ :=
-                        let 'MkAmode addr addr_code := arg_53__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_52__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W32 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_56__ arg_57__ :=
-                        let 'MkAmode addr addr_code := arg_57__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LD Format.II32 dst
-                                                                             addr))) in
-                      getAmode D mem GHC.Base.>>= cont_56__
-                  | _
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W32 CmmType.W64) (cons
-                   (CmmExpr.CmmLoad mem _) nil) =>
-                      let cont_60__ arg_61__ :=
-                        let 'MkAmode addr addr_code := arg_61__ in
-                        GHC.Base.return_ (Any Format.II64 (fun dst =>
-                                                             OrdList.snocOL addr_code (PPC.Instr.LA Format.II32 dst
-                                                                             addr))) in
-                      getAmode DS mem GHC.Base.>>= cont_60__
-                  | dflags, CmmExpr.CmmMachOp mop (cons x nil) =>
-                      let arch32 := Platform.target32Bit (DynFlags.targetPlatform dflags) in
-                      let conversionNop :=
-                        fun new_format expr =>
-                          getRegister' dflags expr GHC.Base.>>=
-                          (fun e_code => GHC.Base.return_ (swizzleRegisterRep e_code new_format)) in
-                      let triv_ucode_float :=
-                        fun width instr => trivialUCode (Format.floatFormat width) instr x in
-                      let triv_ucode_int :=
-                        fun width instr => trivialUCode (Format.intFormat width) instr x in
-                      let j_72__ :=
-                        match mop with
-                        | CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W8 => conversionNop Format.II8 x
-                        | CmmMachOp.MO_UU_Conv CmmType.W8 to =>
-                            trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt #255
-                                                                                     CmmType.W32))
-                        | CmmMachOp.MO_UU_Conv CmmType.W16 to =>
-                            trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt #65535
-                                                                                     CmmType.W32))
-                        | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                        end in
-                      let j_82__ :=
-                        match mop with
-                        | CmmMachOp.MO_UU_Conv CmmType.W64 to =>
-                            if arch32 : bool
-                            then Panic.panic (GHC.Base.hs_string__
-                                              "PPC.CodeGen.getRegister no 64 bit target") else
-                            conversionNop (Format.intFormat to) x
-                        | CmmMachOp.MO_UU_Conv CmmType.W32 to =>
-                            if arch32 : bool then conversionNop (Format.intFormat to) x else
-                            match to with
-                            | CmmType.W64 =>
-                                trivialCode to false PPC.Instr.AND x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt
-                                                                                         #4294967295 CmmType.W64))
-                            | CmmType.W16 => conversionNop Format.II16 x
-                            | CmmType.W8 => conversionNop Format.II8 x
-                            | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                            end
-                        | _ => j_72__
-                        end in
-                      let j_96__ :=
-                        match mop with
-                        | CmmMachOp.MO_SS_Conv CmmType.W64 to =>
-                            if arch32 : bool
-                            then Panic.panic (GHC.Base.hs_string__
-                                              "PPC.CodeGen.getRegister no 64 bit int register") else
-                            conversionNop (Format.intFormat to) x
-                        | CmmMachOp.MO_SS_Conv CmmType.W32 to =>
-                            if arch32 : bool then conversionNop (Format.intFormat to) x else
-                            match to with
-                            | CmmType.W64 => triv_ucode_int to (PPC.Instr.EXTS Format.II32)
-                            | CmmType.W16 => conversionNop Format.II16 x
-                            | CmmType.W8 => conversionNop Format.II8 x
-                            | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                            end
-                        | CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W8 => conversionNop Format.II8 x
-                        | CmmMachOp.MO_SS_Conv CmmType.W8 to =>
-                            triv_ucode_int to (PPC.Instr.EXTS Format.II8)
-                        | CmmMachOp.MO_SS_Conv CmmType.W16 to =>
-                            triv_ucode_int to (PPC.Instr.EXTS Format.II16)
-                        | CmmMachOp.MO_UU_Conv from to =>
-                            if from GHC.Base.== to : bool then conversionNop (Format.intFormat to) x else
-                            j_82__
-                        | _ => j_82__
-                        end in
-                      match mop with
-                      | CmmMachOp.MO_Not rep => triv_ucode_int rep PPC.Instr.NOT
-                      | CmmMachOp.MO_F_Neg w => triv_ucode_float w PPC.Instr.FNEG
-                      | CmmMachOp.MO_S_Neg w => triv_ucode_int w PPC.Instr.NEG
-                      | CmmMachOp.MO_FF_Conv CmmType.W64 CmmType.W32 =>
-                          trivialUCode Format.FF32 PPC.Instr.FRSP x
-                      | CmmMachOp.MO_FF_Conv CmmType.W32 CmmType.W64 => conversionNop Format.FF64 x
-                      | CmmMachOp.MO_FS_Conv from to => coerceFP2Int from to x
-                      | CmmMachOp.MO_SF_Conv from to => coerceInt2FP from to x
-                      | CmmMachOp.MO_SS_Conv from to =>
-                          if from GHC.Base.== to : bool then conversionNop (Format.intFormat to) x else
-                          j_96__
-                      | _ => j_96__
-                      end
-                  | dflags, CmmExpr.CmmMachOp mop (cons x (cons y nil)) =>
-                      let triv_float
-                       : CmmType.Width ->
-                         (Format.Format -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr) ->
-                         NCGMonad.NatM Register :=
-                        fun width instr => trivialCodeNoImm (Format.floatFormat width) instr x y in
-                      match mop with
-                      | CmmMachOp.MO_F_Eq _ => condFltReg PPC.Cond.EQQ x y
-                      | CmmMachOp.MO_F_Ne _ => condFltReg PPC.Cond.NE x y
-                      | CmmMachOp.MO_F_Gt _ => condFltReg PPC.Cond.GTT x y
-                      | CmmMachOp.MO_F_Ge _ => condFltReg PPC.Cond.GE x y
-                      | CmmMachOp.MO_F_Lt _ => condFltReg PPC.Cond.LTT x y
-                      | CmmMachOp.MO_F_Le _ => condFltReg PPC.Cond.LE x y
-                      | CmmMachOp.MO_Eq rep =>
-                          condIntReg PPC.Cond.EQQ (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_Ne rep =>
-                          condIntReg PPC.Cond.NE (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_S_Gt rep =>
-                          condIntReg PPC.Cond.GTT (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_S_Ge rep =>
-                          condIntReg PPC.Cond.GE (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_S_Lt rep =>
-                          condIntReg PPC.Cond.LTT (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_S_Le rep =>
-                          condIntReg PPC.Cond.LE (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_U_Gt rep =>
-                          condIntReg PPC.Cond.GU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_U_Ge rep =>
-                          condIntReg PPC.Cond.GEU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_U_Lt rep =>
-                          condIntReg PPC.Cond.LU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_U_Le rep =>
-                          condIntReg PPC.Cond.LEU (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_F_Add w => triv_float w PPC.Instr.FADD
-                      | CmmMachOp.MO_F_Sub w => triv_float w PPC.Instr.FSUB
-                      | CmmMachOp.MO_F_Mul w => triv_float w PPC.Instr.FMUL
-                      | CmmMachOp.MO_F_Quot w => triv_float w PPC.Instr.FDIV
-                      | CmmMachOp.MO_Add CmmType.W32 =>
-                          let j_134__ :=
-                            match y with
-                            | CmmExpr.Mk_CmmLit lit =>
-                                let cont_128__ arg_129__ :=
-                                  let 'pair src srcCode := arg_129__ in
-                                  let imm := PPC.Regs.litToImm lit in
-                                  let code :=
-                                    fun dst =>
-                                      OrdList.appOL srcCode (OrdList.toOL (cons (PPC.Instr.ADDIS dst src (PPC.Regs.HA
-                                                                                                          imm)) (cons
-                                                                                 (PPC.Instr.ADD dst dst (PPC.Instr.RIImm
-                                                                                                         (PPC.Regs.LO
-                                                                                                          imm)))
-                                                                                 nil))) in
-                                  GHC.Base.return_ (Any Format.II32 code) in
-                                getSomeReg x GHC.Base.>>= cont_128__
-                            | _ => trivialCode CmmType.W32 true PPC.Instr.ADD x y
-                            end in
-                          match y with
-                          | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm immrep) =>
-                              match PPC.Regs.makeImmediate CmmType.W32 true imm with
-                              | Some _ =>
-                                  trivialCode CmmType.W32 true PPC.Instr.ADD x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt
-                                                                                                   imm immrep))
-                              | _ => j_134__
-                              end
-                          | _ => j_134__
-                          end
-                      | CmmMachOp.MO_Add rep => trivialCode rep true PPC.Instr.ADD x y
-                      | CmmMachOp.MO_Sub rep =>
-                          let j_144__ :=
-                            let j_140__ := trivialCodeNoImm' (Format.intFormat rep) PPC.Instr.SUBF y x in
-                            match x with
-                            | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm _) =>
-                                match PPC.Regs.makeImmediate rep true imm with
-                                | Some _ => trivialCode rep true PPC.Instr.SUBFC y x
-                                | _ => j_140__
-                                end
-                            | _ => j_140__
-                            end in
-                          match y with
-                          | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm immrep) =>
-                              match PPC.Regs.makeImmediate rep true (GHC.Num.negate imm) with
-                              | Some _ =>
-                                  trivialCode rep true PPC.Instr.ADD x (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt
-                                                                                           (GHC.Num.negate imm) immrep))
-                              | _ => j_144__
-                              end
-                          | _ => j_144__
-                          end
-                      | CmmMachOp.MO_Mul rep => shiftMulCode rep true PPC.Instr.MULL x y
-                      | CmmMachOp.MO_S_MulMayOflo rep =>
-                          let cont_149__ arg_150__ :=
-                            let 'pair src1 code1 := arg_150__ in
-                            let cont_151__ arg_152__ :=
-                              let 'pair src2 code2 := arg_152__ in
-                              let format := Format.intFormat rep in
-                              let code :=
-                                fun dst =>
-                                  OrdList.appOL (OrdList.appOL code1 code2) (OrdList.toOL (cons (PPC.Instr.MULLO
-                                                                                                 format dst src1 src2)
-                                                                                                (cons (PPC.Instr.MFOV
-                                                                                                       format dst)
-                                                                                                      nil))) in
-                              GHC.Base.return_ (Any format code) in
-                            getSomeReg y GHC.Base.>>= cont_151__ in
-                          getSomeReg x GHC.Base.>>= cont_149__
-                      | CmmMachOp.MO_S_Quot rep =>
-                          trivialCodeNoImmSign (Format.intFormat rep) true PPC.Instr.DIV (extendSExpr
-                                                                                          dflags rep x) (extendSExpr
-                                                                                                         dflags rep y)
-                      | CmmMachOp.MO_U_Quot rep =>
-                          trivialCodeNoImmSign (Format.intFormat rep) false PPC.Instr.DIV (extendUExpr
-                                                                                           dflags rep x) (extendUExpr
-                                                                                                          dflags rep y)
-                      | CmmMachOp.MO_S_Rem rep =>
-                          remainderCode rep true (extendSExpr dflags rep x) (extendSExpr dflags rep y)
-                      | CmmMachOp.MO_U_Rem rep =>
-                          remainderCode rep false (extendUExpr dflags rep x) (extendUExpr dflags rep y)
-                      | CmmMachOp.MO_And rep =>
-                          let j_161__ := trivialCode rep false PPC.Instr.AND x y in
-                          match y with
-                          | CmmExpr.Mk_CmmLit (CmmExpr.CmmInt imm _) =>
-                              if orb (imm GHC.Base.== GHC.Num.negate #8) (imm GHC.Base.==
-                                      GHC.Num.negate #4) : bool
-                              then let cont_162__ arg_163__ :=
-                                     let 'pair src srcCode := arg_163__ in
-                                     let fmt := Format.intFormat rep in
-                                     let clear_mask := if imm GHC.Base.== GHC.Num.negate #4 : bool then #2 else #3 in
-                                     let code :=
-                                       fun dst =>
-                                         OrdList.appOL srcCode (OrdList.unitOL (PPC.Instr.CLRRI fmt dst src
-                                                                                clear_mask)) in
-                                     GHC.Base.return_ (Any fmt code) in
-                                   getSomeReg x GHC.Base.>>= cont_162__ else
-                              j_161__
-                          | _ => j_161__
-                          end
-                      | CmmMachOp.MO_Or rep => trivialCode rep false PPC.Instr.OR x y
-                      | CmmMachOp.MO_Xor rep => trivialCode rep false PPC.Instr.XOR x y
-                      | CmmMachOp.MO_Shl rep => shiftMulCode rep false PPC.Instr.SL x y
-                      | CmmMachOp.MO_S_Shr rep =>
-                          shiftMulCode rep false PPC.Instr.SRA (extendSExpr dflags rep x) y
-                      | CmmMachOp.MO_U_Shr rep =>
-                          shiftMulCode rep false PPC.Instr.SR (extendUExpr dflags rep x) y
-                      | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                      end
-                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt i rep) =>
-                      match PPC.Regs.makeImmediate rep true i with
-                      | Some imm =>
-                          let code := fun dst => OrdList.unitOL (PPC.Instr.LI dst imm) in
-                          GHC.Base.return_ (Any (Format.intFormat rep) code)
-                      | _ => j_21__
-                      end
-                  | _, _ => j_21__
-                  end in
-                let j_187__ :=
-                  match arg_0__, arg_1__ with
-                  | dflags
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons x
-                   nil) =>
-                      if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                      then let cont_181__ arg_182__ :=
-                             let 'MkChildCode64 code rlo := arg_182__ in
-                             GHC.Base.return_ (Fixed Format.II32 rlo code) in
-                           iselExpr64 x GHC.Base.>>= cont_181__ else
-                      j_180__
-                  | dflags
-                  , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons x
-                   nil) =>
-                      if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                      then let cont_184__ arg_185__ :=
-                             let 'MkChildCode64 code rlo := arg_185__ in
-                             GHC.Base.return_ (Fixed Format.II32 rlo code) in
-                           iselExpr64 x GHC.Base.>>= cont_184__ else
-                      j_180__
-                  | _, _ => j_180__
-                  end in
-                match arg_0__, arg_1__ with
-                | dflags, CmmExpr.Mk_CmmReg reg =>
-                    GHC.Base.return_ (Fixed (Format.cmmTypeFormat (CmmExpr.cmmRegType dflags reg))
-                                      (getRegisterReg (DynFlags.targetPlatform dflags) reg) OrdList.nilOL)
-                | dflags, (CmmExpr.CmmRegOff _ _ as tree) =>
-                    getRegister' dflags (mangleIndexTree dflags tree)
-                | dflags
-                , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
-                 (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
-                    (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil) =>
-                    if num_2__ GHC.Base.== #32 : bool
-                    then if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                         then let cont_190__ arg_191__ :=
-                                let 'MkChildCode64 code rlo := arg_191__ in
-                                GHC.Base.return_ (Fixed Format.II32 (Reg.getHiVRegFromLo rlo) code) in
-                              iselExpr64 x GHC.Base.>>= cont_190__ else
-                         j_187__ else
-                    j_187__
-                | dflags
-                , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
-                 (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
-                    (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil) =>
-                    if num_3__ GHC.Base.== #32 : bool
-                    then if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                         then let cont_193__ arg_194__ :=
-                                let 'MkChildCode64 code rlo := arg_194__ in
-                                GHC.Base.return_ (Fixed Format.II32 (Reg.getHiVRegFromLo rlo) code) in
-                              iselExpr64 x GHC.Base.>>= cont_193__ else
-                         j_187__ else
-                    j_187__
-                | _, _ => j_187__
-                end
-            end with coerceInt2FP (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
-                       : NCGMonad.NatM Register
-                       := DynFlags.getDynFlags GHC.Base.>>=
-                          (fun dflags =>
-                             let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
-                             coerceInt2FP' arch fromRep toRep x) with coerceInt2FP' (arg_0__ : Platform.Arch)
-                                                                                    (arg_1__ arg_2__ : CmmType.Width)
-                                                                                    (arg_3__ : CmmExpr.CmmExpr)
-                                                                        : NCGMonad.NatM Register
-                                                                        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-                                                                           | Platform.ArchPPC, fromRep, toRep, x =>
-                                                                               let cont_4__ arg_5__ :=
-                                                                                 let 'pair src code := arg_5__ in
-                                                                                 NCGMonad.getNewLabelNat GHC.Base.>>=
-                                                                                 (fun lbl =>
-                                                                                    NCGMonad.getNewRegNat Format.II32
-                                                                                    GHC.Base.>>=
-                                                                                    (fun itmp =>
-                                                                                       NCGMonad.getNewRegNat Format.FF64
-                                                                                       GHC.Base.>>=
-                                                                                       (fun ftmp =>
-                                                                                          DynFlags.getDynFlags
-                                                                                          GHC.Base.>>=
-                                                                                          (fun dflags =>
-                                                                                             PIC.cmmMakeDynamicReference
-                                                                                             dflags PIC.DataReference
-                                                                                             lbl GHC.Base.>>=
-                                                                                             (fun dynRef =>
-                                                                                                let cont_6__ arg_7__ :=
-                                                                                                  let 'MkAmode addr
-                                                                                                     addr_code :=
-                                                                                                    arg_7__ in
-                                                                                                  let maybe_frsp :=
-                                                                                                    fun dst =>
-                                                                                                      match toRep with
-                                                                                                      | CmmType.W32 =>
-                                                                                                          OrdList.unitOL
-                                                                                                          (PPC.Instr.FRSP
-                                                                                                           dst dst)
-                                                                                                      | CmmType.W64 =>
-                                                                                                          OrdList.nilOL
-                                                                                                      | _ =>
-                                                                                                          Panic.panic
-                                                                                                          (GHC.Base.hs_string__
-                                                                                                           "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                                      end in
-                                                                                                  let maybe_exts :=
-                                                                                                    match fromRep with
-                                                                                                    | CmmType.W8 =>
-                                                                                                        OrdList.unitOL
-                                                                                                        (PPC.Instr.EXTS
-                                                                                                         Format.II8 src
-                                                                                                         src)
-                                                                                                    | CmmType.W16 =>
-                                                                                                        OrdList.unitOL
-                                                                                                        (PPC.Instr.EXTS
-                                                                                                         Format.II16 src
-                                                                                                         src)
-                                                                                                    | CmmType.W32 =>
-                                                                                                        OrdList.nilOL
-                                                                                                    | _ =>
-                                                                                                        Panic.panic
-                                                                                                        (GHC.Base.hs_string__
-                                                                                                         "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                                    end in
-                                                                                                  let code' :=
-                                                                                                    fun dst =>
-                                                                                                      OrdList.appOL
-                                                                                                      (OrdList.appOL
-                                                                                                       (OrdList.appOL
-                                                                                                        (OrdList.appOL
-                                                                                                         (OrdList.appOL
-                                                                                                          code
-                                                                                                          maybe_exts)
-                                                                                                         (OrdList.toOL
-                                                                                                          (cons
-                                                                                                           (PPC.Instr.LDATA
-                                                                                                            (Cmm.Mk_Section
-                                                                                                             Cmm.ReadOnlyData
-                                                                                                             lbl)
-                                                                                                            (Cmm.Statics
-                                                                                                             lbl (cons
-                                                                                                              (Cmm.CmmStaticLit
-                                                                                                               (CmmExpr.CmmInt
-                                                                                                                #1127219200
-                                                                                                                CmmType.W32))
-                                                                                                              (cons
-                                                                                                               (Cmm.CmmStaticLit
-                                                                                                                (CmmExpr.CmmInt
-                                                                                                                 #2147483648
-                                                                                                                 CmmType.W32))
-                                                                                                               nil))))
-                                                                                                           (cons
-                                                                                                            (PPC.Instr.XORIS
-                                                                                                             itmp src
-                                                                                                             (PPC.Regs.ImmInt
-                                                                                                              #32768))
-                                                                                                            (cons
-                                                                                                             (PPC.Instr.ST
-                                                                                                              Format.II32
-                                                                                                              itmp
-                                                                                                              (PPC.Regs.spRel
-                                                                                                               dflags
-                                                                                                               #3))
-                                                                                                             (cons
-                                                                                                              (PPC.Instr.LIS
-                                                                                                               itmp
-                                                                                                               (PPC.Regs.ImmInt
-                                                                                                                #17200))
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ST
-                                                                                                                Format.II32
-                                                                                                                itmp
-                                                                                                                (PPC.Regs.spRel
-                                                                                                                 dflags
-                                                                                                                 #2))
-                                                                                                               (cons
-                                                                                                                (PPC.Instr.LD
-                                                                                                                 Format.FF64
-                                                                                                                 ftmp
-                                                                                                                 (PPC.Regs.spRel
-                                                                                                                  dflags
-                                                                                                                  #2))
-                                                                                                                nil))))))))
-                                                                                                        addr_code)
-                                                                                                       (OrdList.toOL
-                                                                                                        (cons
-                                                                                                         (PPC.Instr.LD
-                                                                                                          Format.FF64
-                                                                                                          dst addr)
-                                                                                                         (cons
-                                                                                                          (PPC.Instr.FSUB
-                                                                                                           Format.FF64
-                                                                                                           dst ftmp dst)
-                                                                                                          nil))))
-                                                                                                      (maybe_frsp
-                                                                                                       dst) in
-                                                                                                  GHC.Base.return_ (Any
-                                                                                                                    (Format.floatFormat
-                                                                                                                     toRep)
-                                                                                                                    code') in
-                                                                                                getAmode D dynRef
-                                                                                                GHC.Base.>>=
-                                                                                                cont_6__))))) in
-                                                                               getSomeReg x GHC.Base.>>= cont_4__
-                                                                           | Platform.ArchPPC_64 _, fromRep, toRep, x =>
-                                                                               let cont_19__ arg_20__ :=
-                                                                                 let 'pair src code := arg_20__ in
-                                                                                 DynFlags.getDynFlags GHC.Base.>>=
-                                                                                 (fun dflags =>
-                                                                                    let maybe_frsp :=
-                                                                                      fun dst =>
-                                                                                        match toRep with
-                                                                                        | CmmType.W32 =>
-                                                                                            OrdList.unitOL
-                                                                                            (PPC.Instr.FRSP dst dst)
-                                                                                        | CmmType.W64 => OrdList.nilOL
-                                                                                        | _ =>
-                                                                                            Panic.panic
-                                                                                            (GHC.Base.hs_string__
-                                                                                             "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                        end in
-                                                                                    let maybe_exts :=
-                                                                                      match fromRep with
-                                                                                      | CmmType.W8 =>
-                                                                                          OrdList.unitOL (PPC.Instr.EXTS
-                                                                                                          Format.II8 src
-                                                                                                          src)
-                                                                                      | CmmType.W16 =>
-                                                                                          OrdList.unitOL (PPC.Instr.EXTS
-                                                                                                          Format.II16
-                                                                                                          src src)
-                                                                                      | CmmType.W32 =>
-                                                                                          OrdList.unitOL (PPC.Instr.EXTS
-                                                                                                          Format.II32
-                                                                                                          src src)
-                                                                                      | CmmType.W64 => OrdList.nilOL
-                                                                                      | _ =>
-                                                                                          Panic.panic
-                                                                                          (GHC.Base.hs_string__
-                                                                                           "PPC.CodeGen.coerceInt2FP: no match")
-                                                                                      end in
-                                                                                    let code' :=
-                                                                                      fun dst =>
-                                                                                        OrdList.appOL (OrdList.appOL
-                                                                                                       (OrdList.appOL
-                                                                                                        code maybe_exts)
-                                                                                                       (OrdList.toOL
-                                                                                                        (cons
-                                                                                                         (PPC.Instr.ST
-                                                                                                          Format.II64
-                                                                                                          src
-                                                                                                          (PPC.Regs.spRel
-                                                                                                           dflags #3))
-                                                                                                         (cons
-                                                                                                          (PPC.Instr.LD
-                                                                                                           Format.FF64
-                                                                                                           dst
-                                                                                                           (PPC.Regs.spRel
-                                                                                                            dflags #3))
-                                                                                                          (cons
-                                                                                                           (PPC.Instr.FCFID
-                                                                                                            dst dst)
-                                                                                                           nil)))))
-                                                                                                      (maybe_frsp
-                                                                                                       dst) in
-                                                                                    GHC.Base.return_ (Any
-                                                                                                      (Format.floatFormat
-                                                                                                       toRep) code')) in
-                                                                               getSomeReg x GHC.Base.>>= cont_19__
-                                                                           | _, _, _, _ =>
-                                                                               Panic.panic (GHC.Base.hs_string__
-                                                                                            "PPC.CodeGen.coerceInt2FP: unknown arch")
-                                                                           end with getAmode (arg_0__ : InstrForm)
-                                                                                             (arg_1__ : CmmExpr.CmmExpr)
-                                                                                      : NCGMonad.NatM Amode
-                                                                                      := let j_35__ :=
-                                                                                           match arg_0__, arg_1__ with
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W32) (cons x (cons
-                                                                                             (CmmExpr.Mk_CmmLit lit)
-                                                                                             nil)) =>
-                                                                                               let isCmmLabelType :=
-                                                                                                 fun arg_2__ =>
-                                                                                                   match arg_2__ with
-                                                                                                   | CmmExpr.CmmLabel
-                                                                                                   _ =>
-                                                                                                       true
-                                                                                                   | CmmExpr.CmmLabelOff
-                                                                                                   _ _ =>
-                                                                                                       true
-                                                                                                   | CmmExpr.CmmLabelDiffOff
-                                                                                                   _ _ _ =>
-                                                                                                       true
-                                                                                                   | _ => false
-                                                                                                   end in
-                                                                                               DynFlags.getDynFlags
-                                                                                               GHC.Base.>>=
-                                                                                               (fun dflags =>
-                                                                                                  let cont_4__ arg_5__ :=
-                                                                                                    let 'pair src
-                                                                                                       srcCode :=
-                                                                                                      arg_5__ in
-                                                                                                    let imm :=
-                                                                                                      PPC.Regs.litToImm
-                                                                                                      lit in
-                                                                                                    let j_8__ :=
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II32
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let code :=
-                                                                                                           OrdList.snocOL
-                                                                                                           srcCode
-                                                                                                           (PPC.Instr.ADDIS
-                                                                                                            tmp src
-                                                                                                            (PPC.Regs.HA
-                                                                                                             imm)) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm))
-                                                                                                          code)) in
-                                                                                                    match Platform.platformOS
-                                                                                                            (DynFlags.targetPlatform
-                                                                                                             dflags) with
-                                                                                                    | Platform.OSAIX =>
-                                                                                                        if isCmmLabelType
-                                                                                                           lit : bool
-                                                                                                        then GHC.Base.return_
-                                                                                                             (MkAmode
-                                                                                                              (PPC.Regs.AddrRegImm
-                                                                                                               src imm)
-                                                                                                              srcCode) else
-                                                                                                        j_8__
-                                                                                                    | _ => j_8__
-                                                                                                    end in
-                                                                                                  getSomeReg x
-                                                                                                  GHC.Base.>>=
-                                                                                                  cont_4__)
-                                                                                           | _, CmmExpr.Mk_CmmLit lit =>
-                                                                                               DynFlags.getDynFlags
-                                                                                               GHC.Base.>>=
-                                                                                               (fun dflags =>
-                                                                                                  match Platform.platformArch
-                                                                                                          (DynFlags.targetPlatform
-                                                                                                           dflags) with
-                                                                                                  | Platform.ArchPPC =>
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II32
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let imm :=
-                                                                                                           PPC.Regs.litToImm
-                                                                                                           lit in
-                                                                                                         let code :=
-                                                                                                           OrdList.unitOL
-                                                                                                           (PPC.Instr.LIS
-                                                                                                            tmp
-                                                                                                            (PPC.Regs.HA
-                                                                                                             imm)) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm)) code))
-                                                                                                  | _ =>
-                                                                                                      NCGMonad.getNewRegNat
-                                                                                                      Format.II64
-                                                                                                      GHC.Base.>>=
-                                                                                                      (fun tmp =>
-                                                                                                         let imm :=
-                                                                                                           PPC.Regs.litToImm
-                                                                                                           lit in
-                                                                                                         let code :=
-                                                                                                           OrdList.toOL
-                                                                                                           (cons
-                                                                                                            (PPC.Instr.LIS
-                                                                                                             tmp
-                                                                                                             (PPC.Regs.HIGHESTA
-                                                                                                              imm))
-                                                                                                            (cons
-                                                                                                             (PPC.Instr.OR
-                                                                                                              tmp tmp
-                                                                                                              (PPC.Instr.RIImm
-                                                                                                               (PPC.Regs.HIGHERA
-                                                                                                                imm)))
-                                                                                                             (cons
-                                                                                                              (PPC.Instr.SL
-                                                                                                               Format.II64
-                                                                                                               tmp tmp
-                                                                                                               (PPC.Instr.RIImm
-                                                                                                                (PPC.Regs.ImmInt
-                                                                                                                 #32)))
-                                                                                                              (cons
-                                                                                                               (PPC.Instr.ORIS
-                                                                                                                tmp tmp
-                                                                                                                (PPC.Regs.HA
-                                                                                                                 imm))
-                                                                                                               nil)))) in
-                                                                                                         GHC.Base.return_
-                                                                                                         (MkAmode
-                                                                                                          (PPC.Regs.AddrRegImm
-                                                                                                           tmp
-                                                                                                           (PPC.Regs.LO
-                                                                                                            imm)) code))
-                                                                                                  end)
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W32) (cons x (cons y
-                                                                                             nil)) =>
-                                                                                               let cont_21__ arg_22__ :=
-                                                                                                 let 'pair regX codeX :=
-                                                                                                   arg_22__ in
-                                                                                                 let cont_23__ arg_24__ :=
-                                                                                                   let 'pair regY
-                                                                                                      codeY :=
-                                                                                                     arg_24__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegReg
-                                                                                                     regX regY)
-                                                                                                    (OrdList.appOL codeX
-                                                                                                                   codeY)) in
-                                                                                                 getSomeReg y
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_23__ in
-                                                                                               getSomeReg x GHC.Base.>>=
-                                                                                               cont_21__
-                                                                                           | _
-                                                                                           , CmmExpr.CmmMachOp
-                                                                                           (CmmMachOp.MO_Add
-                                                                                            CmmType.W64) (cons x (cons y
-                                                                                             nil)) =>
-                                                                                               let cont_26__ arg_27__ :=
-                                                                                                 let 'pair regX codeX :=
-                                                                                                   arg_27__ in
-                                                                                                 let cont_28__ arg_29__ :=
-                                                                                                   let 'pair regY
-                                                                                                      codeY :=
-                                                                                                     arg_29__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegReg
-                                                                                                     regX regY)
-                                                                                                    (OrdList.appOL codeX
-                                                                                                                   codeY)) in
-                                                                                                 getSomeReg y
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_28__ in
-                                                                                               getSomeReg x GHC.Base.>>=
-                                                                                               cont_26__
-                                                                                           | _, other =>
-                                                                                               let cont_31__ arg_32__ :=
-                                                                                                 let 'pair reg code :=
-                                                                                                   arg_32__ in
-                                                                                                 let off :=
-                                                                                                   PPC.Regs.ImmInt #0 in
-                                                                                                 GHC.Base.return_
-                                                                                                 (MkAmode
-                                                                                                  (PPC.Regs.AddrRegImm
-                                                                                                   reg off) code) in
-                                                                                               getSomeReg other
-                                                                                               GHC.Base.>>=
-                                                                                               cont_31__
-                                                                                           end in
-                                                                                         match arg_0__, arg_1__ with
-                                                                                         | inf
-                                                                                         , (CmmExpr.CmmRegOff _
-                                                                                          _ as tree) =>
-                                                                                             DynFlags.getDynFlags
-                                                                                             GHC.Base.>>=
-                                                                                             (fun dflags =>
-                                                                                                getAmode inf
-                                                                                                (mangleIndexTree dflags
-                                                                                                 tree))
-                                                                                         | _
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W32)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W32 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_37__ arg_38__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_38__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_37__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | _
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W32)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W32 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_40__ arg_41__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_41__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_40__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | D
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_43__ arg_44__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_44__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_43__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | D
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_46__ arg_47__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_47__ in
-                                                                                                   GHC.Base.return_
-                                                                                                   (MkAmode
-                                                                                                    (PPC.Regs.AddrRegImm
-                                                                                                     reg off) code) in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_46__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | DS
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Sub CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     (GHC.Num.negate
-                                                                                                      i) with
-                                                                                             | Some off =>
-                                                                                                 let cont_49__ arg_50__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_50__ in
-                                                                                                   let cont_51__ arg_52__ :=
-                                                                                                     let 'pair (pair
-                                                                                                         reg' off')
-                                                                                                        code' :=
-                                                                                                       arg_52__ in
-                                                                                                     GHC.Base.return_
-                                                                                                     (MkAmode
-                                                                                                      (PPC.Regs.AddrRegImm
-                                                                                                       reg' off')
-                                                                                                      code') in
-                                                                                                   (if GHC.Real.mod_ i
-                                                                                                                     #4
-                                                                                                       GHC.Base.==
-                                                                                                       #0 : bool
-                                                                                                    then GHC.Base.return_
-                                                                                                         (pair (pair reg
-                                                                                                                     off)
-                                                                                                               code)
-                                                                                                    else NCGMonad.getNewRegNat
-                                                                                                         Format.II64
-                                                                                                         GHC.Base.>>=
-                                                                                                         (fun tmp =>
-                                                                                                            GHC.Base.return_
-                                                                                                            (pair (pair
-                                                                                                                   tmp
-                                                                                                                   (PPC.Regs.ImmInt
-                                                                                                                    #0))
-                                                                                                                  (OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   (PPC.Instr.ADD
-                                                                                                                    tmp
-                                                                                                                    reg
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     off))))))
-                                                                                                   GHC.Base.>>=
-                                                                                                   cont_51__ in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_49__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | DS
-                                                                                         , CmmExpr.CmmMachOp
-                                                                                         (CmmMachOp.MO_Add CmmType.W64)
-                                                                                         (cons x (cons
-                                                                                           (CmmExpr.Mk_CmmLit
-                                                                                            (CmmExpr.CmmInt i _))
-                                                                                           nil)) =>
-                                                                                             match PPC.Regs.makeImmediate
-                                                                                                     CmmType.W64 true
-                                                                                                     i with
-                                                                                             | Some off =>
-                                                                                                 let cont_54__ arg_55__ :=
-                                                                                                   let 'pair reg code :=
-                                                                                                     arg_55__ in
-                                                                                                   let cont_56__ arg_57__ :=
-                                                                                                     let 'pair (pair
-                                                                                                         reg' off')
-                                                                                                        code' :=
-                                                                                                       arg_57__ in
-                                                                                                     GHC.Base.return_
-                                                                                                     (MkAmode
-                                                                                                      (PPC.Regs.AddrRegImm
-                                                                                                       reg' off')
-                                                                                                      code') in
-                                                                                                   (if GHC.Real.mod_ i
-                                                                                                                     #4
-                                                                                                       GHC.Base.==
-                                                                                                       #0 : bool
-                                                                                                    then GHC.Base.return_
-                                                                                                         (pair (pair reg
-                                                                                                                     off)
-                                                                                                               code)
-                                                                                                    else NCGMonad.getNewRegNat
-                                                                                                         Format.II64
-                                                                                                         GHC.Base.>>=
-                                                                                                         (fun tmp =>
-                                                                                                            GHC.Base.return_
-                                                                                                            (pair (pair
-                                                                                                                   tmp
-                                                                                                                   (PPC.Regs.ImmInt
-                                                                                                                    #0))
-                                                                                                                  (OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   (PPC.Instr.ADD
-                                                                                                                    tmp
-                                                                                                                    reg
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     off))))))
-                                                                                                   GHC.Base.>>=
-                                                                                                   cont_56__ in
-                                                                                                 getSomeReg x
-                                                                                                 GHC.Base.>>=
-                                                                                                 cont_54__
-                                                                                             | _ => j_35__
-                                                                                             end
-                                                                                         | _, _ => j_35__
-                                                                                         end with condFltReg (cond
-                                                                                                              
-                                                                                                              : PPC.Cond.Cond)
-                                                                                                             (x y
-                                                                                                              
-                                                                                                              : CmmExpr.CmmExpr)
-                                                                                                    : NCGMonad.NatM
-                                                                                                      Register
-                                                                                                    := condReg
-                                                                                                       (condFltCode cond
-                                                                                                        x y)
-  with condFltCode (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                    CondCode
-         := let cont_0__ arg_1__ :=
-              let 'pair src1 code1 := arg_1__ in
-              let cont_2__ arg_3__ :=
-                let 'pair src2 code2 := arg_3__ in
-                let code' :=
-                  OrdList.snocOL (OrdList.appOL code1 code2) (PPC.Instr.FCMP src1 src2) in
-                let code'' :=
-                  let gtbit := #1 in
-                  let eqbit := #2 in
-                  let ltbit := #0 in
-                  match cond with
-                  | PPC.Cond.GE => OrdList.snocOL code' (PPC.Instr.CRNOR ltbit eqbit gtbit)
-                  | PPC.Cond.LE => OrdList.snocOL code' (PPC.Instr.CRNOR gtbit eqbit ltbit)
-                  | _ => code'
-                  end in
-                GHC.Base.return_ (MkCondCode true cond code'') in
-              getSomeReg y GHC.Base.>>= cont_2__ in
-            getSomeReg x GHC.Base.>>= cont_0__ with condIntReg (cond : PPC.Cond.Cond) (x y
-                                                                 : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                                      := condReg (condIntCode cond x y) with condIntCode (arg_0__
-                                                                                                          
-                                                                                                          : PPC.Cond.Cond)
-                                                                                                         (arg_1__
-                                                                                                          arg_2__
-                                                                                                          
-                                                                                                          : CmmExpr.CmmExpr)
-                                                                                               : NCGMonad.NatM CondCode
-                                                                                               := let j_11__ :=
-                                                                                                    match arg_0__
-                                                                                                        , arg_1__
-                                                                                                        , arg_2__ with
-                                                                                                    | cond, x, y =>
-                                                                                                        let cont_4__ arg_5__ :=
-                                                                                                          let 'pair src1
-                                                                                                             code1 :=
-                                                                                                            arg_5__ in
-                                                                                                          let cont_6__ arg_7__ :=
-                                                                                                            let 'pair
-                                                                                                               src2
-                                                                                                               code2 :=
-                                                                                                              arg_7__ in
-                                                                                                            DynFlags.getDynFlags
-                                                                                                            GHC.Base.>>=
-                                                                                                            (fun dflags =>
-                                                                                                               let format :=
-                                                                                                                 PPC.Instr.archWordFormat
-                                                                                                                 (Platform.target32Bit
-                                                                                                                  (DynFlags.targetPlatform
-                                                                                                                   dflags)) in
-                                                                                                               let code' :=
-                                                                                                                 OrdList.snocOL
-                                                                                                                 (OrdList.appOL
-                                                                                                                  code1
-                                                                                                                  code2)
-                                                                                                                 ((if PPC.Cond.condUnsigned
-                                                                                                                      cond : bool
-                                                                                                                   then PPC.Instr.CMPL
-                                                                                                                   else PPC.Instr.CMP)
-                                                                                                                  format
-                                                                                                                  src1
-                                                                                                                  (PPC.Instr.RIReg
-                                                                                                                   src2)) in
-                                                                                                               GHC.Base.return_
-                                                                                                               (MkCondCode
-                                                                                                                false
-                                                                                                                cond
-                                                                                                                code')) in
-                                                                                                          getSomeReg y
-                                                                                                          GHC.Base.>>=
-                                                                                                          cont_6__ in
-                                                                                                        getSomeReg x
-                                                                                                        GHC.Base.>>=
-                                                                                                        cont_4__
-                                                                                                    end in
-                                                                                                  let j_17__ :=
-                                                                                                    match arg_0__
-                                                                                                        , arg_1__
-                                                                                                        , arg_2__ with
-                                                                                                    | cond
-                                                                                                    , x
-                                                                                                    , CmmExpr.Mk_CmmLit
-                                                                                                    (CmmExpr.CmmInt y
-                                                                                                     rep) =>
-                                                                                                        match PPC.Regs.makeImmediate
-                                                                                                                rep
-                                                                                                                (negb
-                                                                                                                 (PPC.Cond.condUnsigned
-                                                                                                                  cond))
-                                                                                                                y with
-                                                                                                        | Some src2 =>
-                                                                                                            let cont_12__ arg_13__ :=
-                                                                                                              let 'pair
-                                                                                                                 src1
-                                                                                                                 code :=
-                                                                                                                arg_13__ in
-                                                                                                              DynFlags.getDynFlags
-                                                                                                              GHC.Base.>>=
-                                                                                                              (fun dflags =>
-                                                                                                                 let format :=
-                                                                                                                   PPC.Instr.archWordFormat
-                                                                                                                   (Platform.target32Bit
-                                                                                                                    (DynFlags.targetPlatform
-                                                                                                                     dflags)) in
-                                                                                                                 let code' :=
-                                                                                                                   OrdList.snocOL
-                                                                                                                   code
-                                                                                                                   ((if PPC.Cond.condUnsigned
-                                                                                                                        cond : bool
-                                                                                                                     then PPC.Instr.CMPL
-                                                                                                                     else PPC.Instr.CMP)
-                                                                                                                    format
-                                                                                                                    src1
-                                                                                                                    (PPC.Instr.RIImm
-                                                                                                                     src2)) in
-                                                                                                                 GHC.Base.return_
-                                                                                                                 (MkCondCode
-                                                                                                                  false
-                                                                                                                  cond
-                                                                                                                  code')) in
-                                                                                                            getSomeReg x
-                                                                                                            GHC.Base.>>=
-                                                                                                            cont_12__
-                                                                                                        | _ => j_11__
-                                                                                                        end
-                                                                                                    | _, _, _ => j_11__
-                                                                                                    end in
-                                                                                                  match arg_0__
-                                                                                                      , arg_1__
-                                                                                                      , arg_2__ with
-                                                                                                  | cond
-                                                                                                  , CmmExpr.CmmMachOp
-                                                                                                  (CmmMachOp.MO_And _)
-                                                                                                  (cons x (cons
-                                                                                                    (CmmExpr.Mk_CmmLit
-                                                                                                     (CmmExpr.CmmInt imm
-                                                                                                      rep)) nil))
-                                                                                                  , CmmExpr.Mk_CmmLit
-                                                                                                  (CmmExpr.CmmInt
-                                                                                                   num_3__ _) =>
-                                                                                                      if num_3__
-                                                                                                         GHC.Base.==
-                                                                                                         #0 : bool
-                                                                                                      then if negb
-                                                                                                              (PPC.Cond.condUnsigned
-                                                                                                               cond) : bool
-                                                                                                           then match PPC.Regs.makeImmediate
-                                                                                                                        rep
-                                                                                                                        false
-                                                                                                                        imm with
-                                                                                                                | Some
-                                                                                                                src2 =>
-                                                                                                                    let cont_18__ arg_19__ :=
-                                                                                                                      let 'pair
-                                                                                                                         src1
-                                                                                                                         code :=
-                                                                                                                        arg_19__ in
-                                                                                                                      let code' :=
-                                                                                                                        OrdList.snocOL
-                                                                                                                        code
-                                                                                                                        (PPC.Instr.AND
-                                                                                                                         PPC.Regs.r0
-                                                                                                                         src1
-                                                                                                                         (PPC.Instr.RIImm
-                                                                                                                          src2)) in
-                                                                                                                      GHC.Base.return_
-                                                                                                                      (MkCondCode
-                                                                                                                       false
-                                                                                                                       cond
-                                                                                                                       code') in
-                                                                                                                    getSomeReg
-                                                                                                                    x
-                                                                                                                    GHC.Base.>>=
-                                                                                                                    cont_18__
-                                                                                                                | _ =>
-                                                                                                                    j_17__
-                                                                                                                end else
-                                                                                                           j_17__ else
-                                                                                                      j_17__
-                                                                                                  | _, _, _ => j_17__
-                                                                                                  end with remainderCode
-                                                                                                             (rep
-                                                                                                              
-                                                                                                              : CmmType.Width)
-                                                                                                             (sgn
-                                                                                                               : bool)
-                                                                                                             (x y
-                                                                                                              
-                                                                                                              : CmmExpr.CmmExpr)
-                                                                                                             : NCGMonad.NatM
-                                                                                                               Register
-                                                                                                             := let fmt :=
-                                                                                                                  Format.intFormat
-                                                                                                                  rep in
-                                                                                                                let cont_1__ arg_2__ :=
-                                                                                                                  let 'pair
-                                                                                                                     src1
-                                                                                                                     code1 :=
-                                                                                                                    arg_2__ in
-                                                                                                                  let cont_3__ arg_4__ :=
-                                                                                                                    let 'pair
-                                                                                                                       src2
-                                                                                                                       code2 :=
-                                                                                                                      arg_4__ in
-                                                                                                                    let code :=
-                                                                                                                      fun dst =>
-                                                                                                                        OrdList.appOL
-                                                                                                                        (OrdList.appOL
-                                                                                                                         code1
-                                                                                                                         code2)
-                                                                                                                        (OrdList.toOL
-                                                                                                                         (cons
-                                                                                                                          (PPC.Instr.DIV
-                                                                                                                           fmt
-                                                                                                                           sgn
-                                                                                                                           dst
-                                                                                                                           src1
-                                                                                                                           src2)
-                                                                                                                          (cons
-                                                                                                                           (PPC.Instr.MULL
-                                                                                                                            fmt
-                                                                                                                            dst
-                                                                                                                            dst
-                                                                                                                            (PPC.Instr.RIReg
-                                                                                                                             src2))
-                                                                                                                           (cons
-                                                                                                                            (PPC.Instr.SUBF
-                                                                                                                             dst
-                                                                                                                             dst
-                                                                                                                             src1)
-                                                                                                                            nil)))) in
-                                                                                                                    GHC.Base.return_
-                                                                                                                    (Any
-                                                                                                                     (Format.intFormat
-                                                                                                                      rep)
-                                                                                                                     code) in
-                                                                                                                  getSomeReg
-                                                                                                                  y
-                                                                                                                  GHC.Base.>>=
-                                                                                                                  cont_3__ in
-                                                                                                                getSomeReg
-                                                                                                                x
-                                                                                                                GHC.Base.>>=
-                                                                                                                cont_1__
-  with shiftMulCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
-                      : (Format.Format -> Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr))
-                    (arg_3__ arg_4__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-         := let j_12__ :=
-              match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-              | width, _, instr, x, y =>
-                  let cont_5__ arg_6__ :=
-                    let 'pair src1 code1 := arg_6__ in
-                    let cont_7__ arg_8__ :=
-                      let 'pair src2 code2 := arg_8__ in
-                      let format := Format.intFormat width in
-                      let code :=
-                        fun dst =>
-                          OrdList.snocOL (OrdList.appOL code1 code2) (instr format dst src1
-                                          (PPC.Instr.RIReg src2)) in
-                      GHC.Base.return_ (Any format code) in
-                    getSomeReg y GHC.Base.>>= cont_7__ in
-                  getSomeReg x GHC.Base.>>= cont_5__
-              end in
-            match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-            | width, sign, instr, x, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt y _) =>
-                match PPC.Regs.makeImmediate width sign y with
-                | Some imm =>
-                    let cont_13__ arg_14__ :=
-                      let 'pair src1 code1 := arg_14__ in
-                      let format := Format.intFormat width in
-                      let code :=
-                        fun dst => OrdList.snocOL code1 (instr format dst src1 (PPC.Instr.RIImm imm)) in
-                      GHC.Base.return_ (Any format code) in
-                    getSomeReg x GHC.Base.>>= cont_13__
-                | _ => j_12__
-                end
-            | _, _, _, _, _ => j_12__
-            end with trivialCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
-                                   : (Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr)) (arg_3__ arg_4__
-                                   : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                       := let j_11__ :=
-                            match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-                            | rep, _, instr, x, y =>
-                                let cont_5__ arg_6__ :=
-                                  let 'pair src1 code1 := arg_6__ in
-                                  let cont_7__ arg_8__ :=
-                                    let 'pair src2 code2 := arg_8__ in
-                                    let code :=
-                                      fun dst =>
-                                        OrdList.snocOL (OrdList.appOL code1 code2) (instr dst src1 (PPC.Instr.RIReg
-                                                                                                    src2)) in
-                                    GHC.Base.return_ (Any (Format.intFormat rep) code) in
-                                  getSomeReg y GHC.Base.>>= cont_7__ in
-                                getSomeReg x GHC.Base.>>= cont_5__
-                            end in
-                          match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-                          | rep, signed, instr, x, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt y _) =>
-                              match PPC.Regs.makeImmediate rep signed y with
-                              | Some imm =>
-                                  let cont_12__ arg_13__ :=
-                                    let 'pair src1 code1 := arg_13__ in
-                                    let code :=
-                                      fun dst => OrdList.snocOL code1 (instr dst src1 (PPC.Instr.RIImm imm)) in
-                                    GHC.Base.return_ (Any (Format.intFormat rep) code) in
-                                  getSomeReg x GHC.Base.>>= cont_12__
-                              | _ => j_11__
-                              end
-                          | _, _, _, _, _ => j_11__
-                          end with trivialCodeNoImm (format : Format.Format) (instr
-                                                      : (Format.Format ->
-                                                         Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr)) (x y
-                                                      : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-                                     := trivialCodeNoImm' format (instr format) x y with trivialCodeNoImm' (format
-                                                                                                            
-                                                                                                            : Format.Format)
-                                                                                                           (instr
-                                                                                                            
-                                                                                                            : (Reg.Reg ->
-                                                                                                               Reg.Reg ->
-                                                                                                               Reg.Reg ->
-                                                                                                               PPC.Instr.Instr))
-                                                                                                           (x y
-                                                                                                            
-                                                                                                            : CmmExpr.CmmExpr)
-                                                                                           : NCGMonad.NatM Register
-                                                                                           := let cont_0__ arg_1__ :=
-                                                                                                let 'pair src1 code1 :=
-                                                                                                  arg_1__ in
-                                                                                                let cont_2__ arg_3__ :=
-                                                                                                  let 'pair src2
-                                                                                                     code2 := arg_3__ in
-                                                                                                  let code :=
-                                                                                                    fun dst =>
-                                                                                                      OrdList.snocOL
-                                                                                                      (OrdList.appOL
-                                                                                                       code1 code2)
-                                                                                                      (instr dst src1
-                                                                                                       src2) in
-                                                                                                  GHC.Base.return_ (Any
-                                                                                                                    format
-                                                                                                                    code) in
-                                                                                                getSomeReg y
-                                                                                                GHC.Base.>>=
-                                                                                                cont_2__ in
-                                                                                              getSomeReg x GHC.Base.>>=
-                                                                                              cont_0__
-  with trivialCodeNoImmSign (format : Format.Format) (sgn : bool) (instr
-                              : (Format.Format -> bool -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
-                            (x y : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-         := trivialCodeNoImm' format (instr format sgn) x y with trivialUCode (rep
-                                                                                : Format.Format) (instr
-                                                                                : (Reg.Reg ->
-                                                                                   Reg.Reg -> PPC.Instr.Instr)) (x
-                                                                                : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                                                     Register
-                                                                   := let cont_0__ arg_1__ :=
-                                                                        let 'pair src code := arg_1__ in
-                                                                        let code' :=
-                                                                          fun dst =>
-                                                                            OrdList.snocOL code (instr dst src) in
-                                                                        GHC.Base.return_ (Any rep code') in
-                                                                      getSomeReg x GHC.Base.>>= cont_0__ for getSomeReg.
 
 Definition genJump'
    : CmmExpr.CmmExpr -> GenCCallPlatform -> NCGMonad.NatM InstrBlock :=
