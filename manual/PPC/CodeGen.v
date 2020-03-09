@@ -203,7 +203,7 @@ Fixpoint coerceFP2Int (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr) {str
                           (fun dflags =>
                              let arch := Platform.platformArch (DynFlags.targetPlatform dflags) in
                              coerceFP2Int' arch fromRep toRep x)
-with coerceFP2Int' (arg_0__ : Platform.Arch) (arg_1__ arg_2__ : CmmType.Width) (arg_3__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register
+with coerceFP2Int' (arg_0__ : Platform.Arch) (arg_1__ arg_2__ : CmmType.Width) (arg_3__ : CmmExpr.CmmExpr) {struct arg_3__}: NCGMonad.NatM Register
      := match arg_0__, arg_1__, arg_2__, arg_3__ with
         | Platform.ArchPPC, _, toRep, x =>
           DynFlags.getDynFlags GHC.Base.>>=
@@ -269,9 +269,8 @@ with coerceFP2Int' (arg_0__ : Platform.Arch) (arg_1__ arg_2__ : CmmType.Width) (
           Panic.panic (GHC.Base.hs_string__
                          "PPC.CodeGen.coerceFP2Int: unknown arch")
         end
-with getSomeReg (expr : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                             (Reg.Reg *
-                                              InstrBlock)%type
+with getSomeReg (expr : CmmExpr.CmmExpr) {struct expr}
+     : NCGMonad.NatM (Reg.Reg * InstrBlock)%type
      := getRegister expr GHC.Base.>>=
                     (fun r =>
                        match r with
@@ -283,13 +282,13 @@ with getSomeReg (expr : CmmExpr.CmmExpr) : NCGMonad.NatM
                        | Fixed _ reg code =>
                          GHC.Base.return_ (pair reg code)
                        end)
-with getRegister (e : CmmExpr.CmmExpr)
+with getRegister (e : CmmExpr.CmmExpr) {struct e}
      : NCGMonad.NatM Register
      := DynFlags.getDynFlags
           GHC.Base.>>=
           (fun dflags =>
              getRegister' dflags e)
-with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr)
+with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr) {struct arg_1__}
      : NCGMonad.NatM Register
      := match arg_0__, arg_1__ with
         | dflags, CmmExpr.Mk_CmmReg (CmmExpr.CmmGlobal CmmExpr.PicBaseReg) =>
@@ -758,7 +757,7 @@ with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr)
                 | _, _ => j_187__
                 end
         end
-with coerceInt2FP (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
+with coerceInt2FP (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr) {struct x}
      : NCGMonad.NatM Register
      := DynFlags.getDynFlags GHC.Base.>>=
                           (fun dflags =>
@@ -766,7 +765,7 @@ with coerceInt2FP (fromRep toRep : CmmType.Width) (x : CmmExpr.CmmExpr)
                              coerceInt2FP' arch fromRep toRep x)
 with coerceInt2FP' (arg_0__ : Platform.Arch)
                    (arg_1__ arg_2__ : CmmType.Width)
-                   (arg_3__ : CmmExpr.CmmExpr)
+                   (arg_3__ : CmmExpr.CmmExpr) {struct arg_3__}
      : NCGMonad.NatM Register
      := match arg_0__, arg_1__, arg_2__, arg_3__ with
         | Platform.ArchPPC, fromRep, toRep, x =>
@@ -974,7 +973,7 @@ with coerceInt2FP' (arg_0__ : Platform.Arch)
                                                                                             "PPC.CodeGen.coerceInt2FP: unknown arch")
         end
 with getAmode (arg_0__ : InstrForm)
-              (arg_1__ : CmmExpr.CmmExpr)
+              (arg_1__ : CmmExpr.CmmExpr) {struct arg_1__}
      : NCGMonad.NatM Amode
      := let j_35__ :=
             match arg_0__, arg_1__ with
@@ -1390,14 +1389,14 @@ with getAmode (arg_0__ : InstrForm)
         | _, _ => j_35__
         end
 with condFltReg (cond : PPC.Cond.Cond)
-                (x y : CmmExpr.CmmExpr)
+                (x y : CmmExpr.CmmExpr) {struct x}
      : NCGMonad.NatM
          Register
      := condReg
           (condFltCode cond
                        x y)
-with condFltCode (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) : NCGMonad.NatM
-                                                                    CondCode
+with condFltCode (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) {struct x}
+     : NCGMonad.NatM CondCode
      := let cont_0__ arg_1__ :=
             let 'pair src1 code1 := arg_1__ in
             let cont_2__ arg_3__ :=
@@ -1416,10 +1415,11 @@ with condFltCode (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) : NCGMonad.NatM
                 GHC.Base.return_ (MkCondCode true cond code'') in
             getSomeReg y GHC.Base.>>= cont_2__ in
         getSomeReg x GHC.Base.>>= cont_0__
-with condIntReg (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) : NCGMonad.NatM Register
+with condIntReg (cond : PPC.Cond.Cond) (x y : CmmExpr.CmmExpr) {struct x}
+     : NCGMonad.NatM Register
      := condReg (condIntCode cond x y)
 with condIntCode (arg_0__ : PPC.Cond.Cond)
-                 (arg_1__ arg_2__ : CmmExpr.CmmExpr)
+                 (arg_1__ arg_2__ : CmmExpr.CmmExpr) {struct arg_1__}
      : NCGMonad.NatM CondCode
      := let j_11__ :=
             match arg_0__
@@ -1576,7 +1576,7 @@ with condIntCode (arg_0__ : PPC.Cond.Cond)
                                                                                                   end
 with remainderCode (rep : CmmType.Width)
                    (sgn : bool)
-                   (x y : CmmExpr.CmmExpr)
+                   (x y : CmmExpr.CmmExpr) {struct x}
      : NCGMonad.NatM Register
      := let fmt :=
             Format.intFormat
@@ -1631,43 +1631,45 @@ with remainderCode (rep : CmmType.Width)
           x
           GHC.Base.>>=
           cont_1__
-with shiftMulCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
-                      : (Format.Format -> Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr))
-                    (arg_3__ arg_4__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register
-         := let j_12__ :=
-              match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-              | width, _, instr, x, y =>
-                  let cont_5__ arg_6__ :=
-                    let 'pair src1 code1 := arg_6__ in
-                    let cont_7__ arg_8__ :=
+with shiftMulCode (arg_0__ : CmmType.Width) (arg_1__ : bool)
+                  (arg_2__ : (Format.Format -> Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr))
+                  (arg_3__ arg_4__ : CmmExpr.CmmExpr) {struct arg_3__}
+     : NCGMonad.NatM Register
+     := let j_12__ :=
+            match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
+            | width, _, instr, x, y =>
+              let cont_5__ arg_6__ :=
+                  let 'pair src1 code1 := arg_6__ in
+                  let cont_7__ arg_8__ :=
                       let 'pair src2 code2 := arg_8__ in
                       let format := Format.intFormat width in
                       let code :=
-                        fun dst =>
-                          OrdList.snocOL (OrdList.appOL code1 code2) (instr format dst src1
-                                          (PPC.Instr.RIReg src2)) in
+                          fun dst =>
+                            OrdList.snocOL (OrdList.appOL code1 code2) (instr format dst src1
+                                                                              (PPC.Instr.RIReg src2)) in
                       GHC.Base.return_ (Any format code) in
-                    getSomeReg y GHC.Base.>>= cont_7__ in
-                  getSomeReg x GHC.Base.>>= cont_5__
-              end in
-            match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-            | width, sign, instr, x, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt y _) =>
-                match PPC.Regs.makeImmediate width sign y with
-                | Some imm =>
-                    let cont_13__ arg_14__ :=
-                      let 'pair src1 code1 := arg_14__ in
-                      let format := Format.intFormat width in
-                      let code :=
-                        fun dst => OrdList.snocOL code1 (instr format dst src1 (PPC.Instr.RIImm imm)) in
-                      GHC.Base.return_ (Any format code) in
-                    getSomeReg x GHC.Base.>>= cont_13__
-                | _ => j_12__
-                end
-            | _, _, _, _, _ => j_12__
-            end
-with trivialCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
-                                   : (Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr)) (arg_3__ arg_4__
-                                   : CmmExpr.CmmExpr) : NCGMonad.NatM Register
+                  getSomeReg y GHC.Base.>>= cont_7__ in
+              getSomeReg x GHC.Base.>>= cont_5__
+            end in
+        match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
+        | width, sign, instr, x, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt y _) =>
+          match PPC.Regs.makeImmediate width sign y with
+          | Some imm =>
+            let cont_13__ arg_14__ :=
+                let 'pair src1 code1 := arg_14__ in
+                let format := Format.intFormat width in
+                let code :=
+                    fun dst => OrdList.snocOL code1 (instr format dst src1 (PPC.Instr.RIImm imm)) in
+                GHC.Base.return_ (Any format code) in
+            getSomeReg x GHC.Base.>>= cont_13__
+          | _ => j_12__
+          end
+        | _, _, _, _, _ => j_12__
+        end
+with trivialCode (arg_0__ : CmmType.Width) (arg_1__ : bool)
+                 (arg_2__ : (Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr))
+                 (arg_3__ arg_4__ : CmmExpr.CmmExpr) {struct arg_3__}
+     : NCGMonad.NatM Register
                        := let j_11__ :=
                             match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
                             | rep, _, instr, x, y =>
@@ -1699,14 +1701,12 @@ with trivialCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
                           end
 with trivialCodeNoImm (format : Format.Format)
                       (instr : (Format.Format -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
-                      (x y : CmmExpr.CmmExpr) : NCGMonad.NatM Register
+                      (x y : CmmExpr.CmmExpr) {struct x}
+     : NCGMonad.NatM Register
      := trivialCodeNoImm' format (instr format) x y
 with trivialCodeNoImm' (format : Format.Format)
-                       (instr : (Reg.Reg ->
-                                                                                                               Reg.Reg ->
-                                                                                                               Reg.Reg ->
-                                                                                                               PPC.Instr.Instr))
-                       (x y : CmmExpr.CmmExpr)
+                       (instr : (Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
+                       (x y : CmmExpr.CmmExpr) {struct x}
      : NCGMonad.NatM Register
      := let cont_0__ arg_1__ :=
             let 'pair src1 code1 :=
@@ -1731,10 +1731,11 @@ with trivialCodeNoImm' (format : Format.Format)
                    cont_0__
 with trivialCodeNoImmSign (format : Format.Format) (sgn : bool)
                           (instr : (Format.Format -> bool -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
-                          (x y : CmmExpr.CmmExpr) : NCGMonad.NatM Register
+                          (x y : CmmExpr.CmmExpr) {struct x}
+     : NCGMonad.NatM Register
      := trivialCodeNoImm' format (instr format sgn) x y
 with trivialUCode (rep : Format.Format) (instr : (Reg.Reg -> Reg.Reg -> PPC.Instr.Instr))
-                  (x : CmmExpr.CmmExpr)
+                  (x : CmmExpr.CmmExpr) {struct x}
      : NCGMonad.NatM Register
      := let cont_0__ arg_1__ :=
             let 'pair src code := arg_1__ in
