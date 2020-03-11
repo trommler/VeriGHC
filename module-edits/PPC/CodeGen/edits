@@ -13,6 +13,22 @@ skip PPC.CodeGen.genCCall'
 skip PPC.CodeGen.genBranch
 skip PPC.CodeGen.genSwitch
 
+# axiomatize for Hutton's Razor
+axiomatize definition PPC.CodeGen.coerceFP2Int
+axiomatize definition PPC.CodeGen.coerceInt2FP
+axiomatize definition PPC.CodeGen.coerceInt2FP'
+axiomatize definition PPC.CodeGen.condFltReg
+axiomatize definition PPC.CodeGen.condFltCode
+axiomatize definition PPC.CodeGen.condIntReg
+axiomatize definition PPC.CodeGen.condIntCode
+axiomatize definition PPC.CodeGen.shiftMulCode
+axiomatize definition PPC.CodeGen.getAmode
+axiomatize definition PPC.CodeGen.remainderCode
+axiomatize definition PPC.CodeGen.trivialUCode
+axiomatize definition PPC.CodeGen.trivialCodeNoImm
+axiomatize definition PPC.CodeGen.trivialCodeNoImm'
+axiomatize definition PPC.CodeGen.trivialCodeNoImmSign
+
 # 64-bit operations for 32-bit platforms
 skip PPC.CodeGen.getI64Amodes
 skip PPC.CodeGen.assignMem_I64Code
