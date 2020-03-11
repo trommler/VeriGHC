@@ -10,7 +10,6 @@ HANDMOD        = \
    AxiomatizedTypes \
    IntMap \
    Hoopl/Block \
-   PPC/CodeGen \
 
 UTILS          = \
    Util \
@@ -57,6 +56,7 @@ CMM2PPC        = \
    PIC \
    PprCmmExpr \
    TargetReg \
+   PPC/CodeGen \
 
 MODULES        = \
    $(UTILS) \
@@ -65,7 +65,6 @@ MODULES        = \
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
 BROKEN_MODULES = \
-   PPC/CodeGen \
 
 VFILES_GEN     = $(addsuffix .v,$(MODULES))
 VFILES_MAN     = $(addsuffix .v,$(HANDMOD))
