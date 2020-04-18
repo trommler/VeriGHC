@@ -77,8 +77,8 @@ OUTFILES_MAN   = $(addprefix $(OUT)/,$(VFILES_MAN))
 
 OUTFILES       = $(OUTFILES_GEN) $(OUTFILES_MAN)
 
-HSFILES        = $(addsuffix .hs,$(MODULES)) 
-HSFILESPATH    = $(addprefix ghc/compiler/*/,$(HSFILES)) 
+HSFILES        = $(addsuffix .hs,$(MODULES))
+HSFILESPATH    = $(addprefix ghc/compiler/*/,$(HSFILES))
 
 EDITPATHS      = $(addprefix module-edits/,$(MODULES))
 EDITFILES      = edits $(addsuffix /edits,$(EDITPATHS)) $(addsuffix /*.v, $(EDITPATHS))
@@ -93,7 +93,9 @@ vfiles : $(OUT)/edits $(OUT)/Makefile $(OUTFILES)
 .stamp-hs-to-coq: .git/modules/ext/hs-to-coq/HEAD
 	cd $(HS_TO_COQ_DIR) && stack setup && stack build
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/base-src -f Makefile all
+	$(MAKE) -C $(HS_TO_COQ_DIR)/base-thy -f Makefile all
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers -f Makefile all
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers/theories -f Makefile all
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/transformers -f Makefile all
 	touch $@
 
@@ -173,10 +175,11 @@ CoqMakefile: Makefile _CoqProject
 clean:: CoqMakefile
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/ghc -f Makefile clean
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/base-src -f Makefile clean
+	$(MAKE) -C $(HS_TO_COQ_DIR)/base-thy -f Makefile clean
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers -f Makefile clean
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers/theories -f Makefile clean
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/transformers -f Makefile clean
 	rm -f .stamp-hs-to-coq
 	rm -rf $(OUT) deps
 	$(MAKE) -f CoqMakefile clean
 	rm -f CoqMakefile CoqMakefile.conf .coqdepend.d
-
