@@ -35,6 +35,18 @@ skip PPC.CodeGen.assignMem_I64Code
 skip PPC.CodeGen.assignReg_I64Code
 axiomatize definition PPC.CodeGen.iselExpr64
 
+# help coq with termination checking
+# hs-to-coq cannot do termination annotations for mutual fixed points
+# here is the error message:
+# non-structural mutual recursion unsupported [in definitions PPC.CodeGen.getRegister', PPC.CodeGen.getSomeReg, PPC.CodeGen.getRegister, and PPC.CodeGen.trivialCode in module PPC.CodeGen]
+# termination PPC.CodeGen.getRegister' { struct arg_1__ }
+
+
+# skip some (many) cases in getRegister'
+skip equation PPC.CodeGen.getRegister' dflags (CmmExpr.CmmLoad mem pk)
+skip equation PPC.CodeGen.getRegister' dflags (CmmExpr.CmmMachOp mop (cons x nil))
+skip equation PPC.CodeGen.getRegister' dflags (CmmExpr.Mk_CmmReg (CmmExpr.CmmGlobal CmmExpr.PicBaseReg))
+
 # Punned
 rename value PPC.CodeGen.CondCode=PPC.CodeGen.MkCondCode
 rename value PPC.CodeGen.ChildCode64=PPC.CodeGen.MkChildCode64
