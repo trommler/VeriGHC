@@ -10,6 +10,7 @@ HANDMOD        = \
    AxiomatizedTypes \
    IntMap \
    Hoopl/Block \
+   PPC/CodeGen \
 
 UTILS          = \
    Util \
@@ -56,7 +57,6 @@ CMM2PPC        = \
    PIC \
    PprCmmExpr \
    TargetReg \
-   PPC/CodeGen \
 
 MODULES        = \
    $(UTILS) \
