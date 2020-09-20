@@ -240,6 +240,17 @@ Axiom condFltReg : PPC.Cond.Cond ->
 Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e:=
   getRegister e:= DynFlags.getDynFlags GHC.Base.>>= (fun dflags => getRegister' dflags e)
 
+  with getSomeReg (expr : CmmExpr.CmmExpr) : NCGMonad.NatM (Reg.Reg *
+                                                                         InstrBlock)%type :=
+                    getSomeReg expr  := getRegister expr GHC.Base.>>=
+                         (fun r =>
+                            match r with
+                            | Any rep code =>
+                                NCGMonad.getNewRegNat rep GHC.Base.>>=
+                                (fun tmp => GHC.Base.return_ (pair tmp (code tmp)))
+                            | Fixed _ reg code => GHC.Base.return_ (pair reg code)
+                            end)
+
   with trivialCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
                      : (Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr)) (arg_3__ arg_4__
                      : CmmExpr.CmmExpr) : NCGMonad.NatM Register :=
@@ -610,16 +621,7 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                     j_133__ else
                j_133__
            | _, _ => j_133__
-           end with getSomeReg (expr : CmmExpr.CmmExpr) : NCGMonad.NatM (Reg.Reg *
-                                                                         InstrBlock)%type :=
-                    getSomeReg expr  := getRegister expr GHC.Base.>>=
-                         (fun r =>
-                            match r with
-                            | Any rep code =>
-                                NCGMonad.getNewRegNat rep GHC.Base.>>=
-                                (fun tmp => GHC.Base.return_ (pair tmp (code tmp)))
-                            | Fixed _ reg code => GHC.Base.return_ (pair reg code)
-                            end).
+           end.
 
 Definition getRegister'
    : DynFlags.DynFlags -> CmmExpr.CmmExpr -> NCGMonad.NatM Register :=
