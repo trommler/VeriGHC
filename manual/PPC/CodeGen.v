@@ -292,17 +292,16 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
 
 
   with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register :=
-        getRegister' arg_0__ arg_1__ :=
-           match arg_0__, arg_1__ with
-           | dflags, CmmExpr.Mk_CmmReg reg =>
+        getRegister' dflags (CmmExpr.Mk_CmmReg reg) :=
                GHC.Base.return_ (Fixed (Format.cmmTypeFormat (CmmExpr.cmmRegType dflags reg))
-                                 (getRegisterReg (DynFlags.targetPlatform dflags) reg) OrdList.nilOL)
-           | dflags, (CmmExpr.CmmRegOff _ _ as tree) =>
-               getRegister' dflags (mangleIndexTree dflags tree)
-           | dflags
-           , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
+                                 (getRegisterReg (DynFlags.targetPlatform dflags) reg) OrdList.nilOL);
+
+        getRegister' dflags (CmmExpr.CmmRegOff as_arg_0 as_arg_1 ) =>
+               getRegister' dflags (mangleIndexTree dflags (CmmExpr.CmmRegOff as_arg_0 as_arg_1 ));
+
+        getRegister' dflags (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
             (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
-               (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil) =>
+               (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil)) :=
                if num_2__ GHC.Base.== #32 : bool
                then if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
                     then let cont_136__ arg_137__ :=
@@ -1188,11 +1187,11 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                              Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
                                                                                        other)
 
-                end)
-           | dflags
-           , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
+                end);
+
+        getRegister' dflags (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
             (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
-               (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil) =>
+               (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil)) :=
                if num_3__ GHC.Base.== #32 : bool
                then if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
                     then let cont_139__ arg_140__ :=
@@ -2077,10 +2076,10 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                  | _, other =>
                              Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
                                                                                        other)
-                 end )
-          | dflags
-             , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons x
-              nil) =>
+                 end );
+
+        getRegister' dflags (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons x
+              nil)) :=
                  if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
                  then let cont_22__ arg_23__ :=
                         let 'MkChildCode64 code rlo := arg_23__ in
@@ -2136,10 +2135,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                   | _, other =>
                                Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
                                                                                          other)
-                   end )
-          | dflags
-             , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons x
-              nil) =>
+                   end );
+        getRegister' dflags (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons x
+              nil)) :=
                  if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
                  then let cont_25__ arg_26__ :=
                         let 'MkChildCode64 code rlo := arg_26__ in
@@ -2195,78 +2193,79 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                   | _, other =>
                                Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
                                                                                          other)
-                   end)
-          | _
-             , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W32) (cons
-              (CmmExpr.CmmLoad mem _) nil) =>
+                   end);
+
+        getRegister' _ (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W32) (cons
+              (CmmExpr.CmmLoad mem _) nil)) :=
                  let cont_28__ arg_29__ :=
                    let 'MkAmode addr addr_code := arg_29__ in
                    GHC.Base.return_ (Any Format.II32 (fun dst =>
                                                         OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst addr))) in
-                 getAmode D mem GHC.Base.>>= cont_28__
-          | _
-             , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W64) (cons
-              (CmmExpr.CmmLoad mem _) nil) =>
+                 getAmode D mem GHC.Base.>>= cont_28__;
+
+        getRegister' _ (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W64) (cons
+              (CmmExpr.CmmLoad mem _) nil)) :=
                  let cont_32__ arg_33__ :=
                    let 'MkAmode addr addr_code := arg_33__ in
                    GHC.Base.return_ (Any Format.II64 (fun dst =>
                                                         OrdList.snocOL addr_code (PPC.Instr.LD Format.II8 dst addr))) in
-                 getAmode D mem GHC.Base.>>= cont_32__
-          | _
-             , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W32) (cons
-              (CmmExpr.CmmLoad mem _) nil) =>
+                 getAmode D mem GHC.Base.>>= cont_32__;
+
+        getRegister' _ (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W32) (cons
+              (CmmExpr.CmmLoad mem _) nil)) :=
                  let cont_36__ arg_37__ :=
                    let 'MkAmode addr addr_code := arg_37__ in
                    GHC.Base.return_ (Any Format.II32 (fun dst =>
                                                         OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
                                                                         addr))) in
-                 getAmode D mem GHC.Base.>>= cont_36__
-          | _
-             , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W32) (cons
-              (CmmExpr.CmmLoad mem _) nil) =>
+                 getAmode D mem GHC.Base.>>= cont_36__;
+
+        getRegister' _ (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W32) (cons
+              (CmmExpr.CmmLoad mem _) nil)) :=
                  let cont_40__ arg_41__ :=
                    let 'MkAmode addr addr_code := arg_41__ in
                    GHC.Base.return_ (Any Format.II32 (fun dst =>
                                                         OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
                                                                         addr))) in
-                 getAmode D mem GHC.Base.>>= cont_40__
-          | _
-             , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W64) (cons
-              (CmmExpr.CmmLoad mem _) nil) =>
+                 getAmode D mem GHC.Base.>>= cont_40__;
+
+        getRegister' _ (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W16 CmmType.W64) (cons
+              (CmmExpr.CmmLoad mem _) nil)) :=
                  let cont_44__ arg_45__ :=
                    let 'MkAmode addr addr_code := arg_45__ in
                    GHC.Base.return_ (Any Format.II64 (fun dst =>
                                                         OrdList.snocOL addr_code (PPC.Instr.LD Format.II16 dst
                                                                         addr))) in
-                 getAmode D mem GHC.Base.>>= cont_44__
-          | _
-             , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W64) (cons
-              (CmmExpr.CmmLoad mem _) nil) =>
+                 getAmode D mem GHC.Base.>>= cont_44__;
+
+        getRegister' _ (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W16 CmmType.W64) (cons
+              (CmmExpr.CmmLoad mem _) nil)) =>
                  let cont_48__ arg_49__ :=
                    let 'MkAmode addr addr_code := arg_49__ in
                    GHC.Base.return_ (Any Format.II64 (fun dst =>
                                                         OrdList.snocOL addr_code (PPC.Instr.LA Format.II16 dst
                                                                         addr))) in
-                 getAmode D mem GHC.Base.>>= cont_48__
-          | _
-             , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W32 CmmType.W64) (cons
-              (CmmExpr.CmmLoad mem _) nil) =>
+                 getAmode D mem GHC.Base.>>= cont_48__;
+
+        getRegister' _ (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W32 CmmType.W64) (cons
+              (CmmExpr.CmmLoad mem _) nil)) :=
                  let cont_52__ arg_53__ :=
                    let 'MkAmode addr addr_code := arg_53__ in
                    GHC.Base.return_ (Any Format.II64 (fun dst =>
                                                         OrdList.snocOL addr_code (PPC.Instr.LD Format.II32 dst
                                                                         addr))) in
-                 getAmode D mem GHC.Base.>>= cont_52__
-          | _
-             , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W32 CmmType.W64) (cons
-              (CmmExpr.CmmLoad mem _) nil) =>
+                 getAmode D mem GHC.Base.>>= cont_52__;
+
+        getRegister' _ (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W32 CmmType.W64) (cons
+              (CmmExpr.CmmLoad mem _) nil)) :=
                  let cont_56__ arg_57__ :=
                    let 'MkAmode addr addr_code := arg_57__ in
                    GHC.Base.return_ (Any Format.II64 (fun dst =>
                                                         OrdList.snocOL addr_code (PPC.Instr.LA Format.II32 dst
                                                                         addr))) in
-                 getAmode DS mem GHC.Base.>>= cont_56__
-          | dflags, CmmExpr.CmmMachOp mop (cons x (cons y nil)) =>
+                 getAmode DS mem GHC.Base.>>= cont_56__;
+
+        getRegister' dflags (CmmExpr.CmmMachOp mop (cons x (cons y nil))) :=
                  let triv_float
                   : CmmType.Width ->
                     (Format.Format -> Reg.Reg -> Reg.Reg -> Reg.Reg -> PPC.Instr.Instr) ->
@@ -2408,8 +2407,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                  | CmmMachOp.MO_U_Shr rep =>
                      shiftMulCode rep false PPC.Instr.SR (extendUExpr dflags rep x) y
                  | _ => Panic.panic (GHC.Base.hs_string__ "PPC.CodeGen.getRegister: no match")
-                 end
-          | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt i rep) =>
+                 end;
+
+        getRegister' _ (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt i rep)) :=
                  match PPC.Regs.makeImmediate rep true i with
                  | Some imm =>
                      let code := fun dst => OrdList.unitOL (PPC.Instr.LI dst imm) in
@@ -2465,8 +2465,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                                      Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
                                                                                                other)
                          end)
-                 end
-          | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
+                 end;
+
+        getRegister' _ (CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep)) :=
                  NCGMonad.getNewLabelNat GHC.Base.>>=
                  (fun lbl =>
                     DynFlags.getDynFlags GHC.Base.>>=
@@ -2483,8 +2484,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                                                                        nil))) (OrdList.snocOL addr_code (PPC.Instr.LD
                                                                                                format dst addr)) in
                             GHC.Base.return_ (Any format code) in
-                          getAmode D dynRef GHC.Base.>>= cont_6__)))
-          | dflags, CmmExpr.Mk_CmmLit lit =>
+                          getAmode D dynRef GHC.Base.>>= cont_6__)));
+
+        getRegister' dflags (CmmExpr.Mk_CmmLit lit) :=
                  if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
                  then let imm := PPC.Regs.litToImm lit in
                       let code :=
@@ -2511,11 +2513,11 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                                                 (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil))) (OrdList.snocOL
                                                 addr_code (PPC.Instr.LD format dst addr)) in
                             GHC.Base.return_ (Any format code) in
-                          getAmode D dynRef GHC.Base.>>= cont_14__)))
-          | _, other =>
+                          getAmode D dynRef GHC.Base.>>= cont_14__)));
+
+        getRegister' _ other :=
                          Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
-                                                                                  other)
-          end.
+                                                                                  other).
 
 Definition genJump'
    : CmmExpr.CmmExpr -> GenCCallPlatform -> NCGMonad.NatM InstrBlock :=
