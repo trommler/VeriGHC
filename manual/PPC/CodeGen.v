@@ -295,7 +295,6 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
         getRegister' dflags (CmmExpr.Mk_CmmReg reg) :=
                GHC.Base.return_ (Fixed (Format.cmmTypeFormat (CmmExpr.cmmRegType dflags reg))
                                  (getRegisterReg (DynFlags.targetPlatform dflags) reg) OrdList.nilOL);
-
         getRegister' dflags (CmmExpr.CmmRegOff as_arg_0 as_arg_1 ) =>
                getRegister' dflags (mangleIndexTree dflags (CmmExpr.CmmRegOff as_arg_0 as_arg_1 ));
 
@@ -308,7 +307,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                            let 'MkChildCode64 code rlo := arg_137__ in
                            GHC.Base.return_ (Fixed Format.II32 (Reg.getHiVRegFromLo rlo) code) in
                          iselExpr64 x GHC.Base.>>= cont_136__ else
-                    (match arg_0__, arg_1__ with
+                    (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
+                                   (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                   (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil)) with
                      | dflags
                      , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons x
                       nil) =>
@@ -317,7 +318,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                                 let 'MkChildCode64 code rlo := arg_23__ in
                                 GHC.Base.return_ (Fixed Format.II32 rlo code) in
                               iselExpr64 x GHC.Base.>>= cont_22__ else
-                         (match arg_0__, arg_1__ with
+                         (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
+                                        (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                        (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil)) with
                           | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                                NCGMonad.getNewLabelNat GHC.Base.>>=
                                (fun lbl =>
@@ -376,7 +379,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                                 let 'MkChildCode64 code rlo := arg_26__ in
                                 GHC.Base.return_ (Fixed Format.II32 rlo code) in
                               iselExpr64 x GHC.Base.>>= cont_25__ else
-                         (match arg_0__, arg_1__ with
+                         (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
+                                        (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                        (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil)) with
                           | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                                NCGMonad.getNewLabelNat GHC.Base.>>=
                                (fun lbl =>
@@ -645,7 +650,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                          | Some imm =>
                              let code := fun dst => OrdList.unitOL (PPC.Instr.LI dst imm) in
                              GHC.Base.return_ (Any (Format.intFormat rep) code)
-                         | _ => (match arg_0__, arg_1__ with
+                         | _ => (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
+                                               (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                               (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil)) with
                                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                                      NCGMonad.getNewLabelNat GHC.Base.>>=
                                      (fun lbl =>
@@ -748,7 +755,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                                                                                            other)
 
                      end) else
-               (match arg_0__, arg_1__ with
+               (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
+                              (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                              (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil)) with
                 | dflags
                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons x
                   nil) =>
@@ -757,7 +766,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                             let 'MkChildCode64 code rlo := arg_23__ in
                             GHC.Base.return_ (Fixed Format.II32 rlo code) in
                           iselExpr64 x GHC.Base.>>= cont_22__ else
-                     (match arg_0__, arg_1__ with
+                     (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
+                                    (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                    (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil)) with
                       | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                            NCGMonad.getNewLabelNat GHC.Base.>>=
                            (fun lbl =>
@@ -816,7 +827,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                             let 'MkChildCode64 code rlo := arg_26__ in
                             GHC.Base.return_ (Fixed Format.II32 rlo code) in
                           iselExpr64 x GHC.Base.>>= cont_25__ else
-                     (match arg_0__, arg_1__ with
+                     (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
+                                    (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                    (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil)) with
                       | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                            NCGMonad.getNewLabelNat GHC.Base.>>=
                            (fun lbl =>
@@ -1085,7 +1098,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                      | Some imm =>
                          let code := fun dst => OrdList.unitOL (PPC.Instr.LI dst imm) in
                          GHC.Base.return_ (Any (Format.intFormat rep) code)
-                     | _ => (match arg_0__, arg_1__ with
+                     | _ => (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons
+                                           (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                           (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_2__ _)) nil))) nil)) with
                              | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                                  NCGMonad.getNewLabelNat GHC.Base.>>=
                                  (fun lbl =>
@@ -1198,7 +1213,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                            let 'MkChildCode64 code rlo := arg_140__ in
                            GHC.Base.return_ (Fixed Format.II32 (Reg.getHiVRegFromLo rlo) code) in
                          iselExpr64 x GHC.Base.>>= cont_139__ else
-                    (match arg_0__, arg_1__ with
+                    (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
+                                   (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                   (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil)) with
                      | dflags
                      , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons x
                       nil) =>
@@ -1207,7 +1224,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                                 let 'MkChildCode64 code rlo := arg_23__ in
                                 GHC.Base.return_ (Fixed Format.II32 rlo code) in
                               iselExpr64 x GHC.Base.>>= cont_22__ else
-                         (match arg_0__, arg_1__ with
+                         (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
+                                        (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                        (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil)) with
                           | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                                NCGMonad.getNewLabelNat GHC.Base.>>=
                                (fun lbl =>
@@ -1266,7 +1285,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                                 let 'MkChildCode64 code rlo := arg_26__ in
                                 GHC.Base.return_ (Fixed Format.II32 rlo code) in
                               iselExpr64 x GHC.Base.>>= cont_25__ else
-                         (match arg_0__, arg_1__ with
+                         (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
+                                        (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                        (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil)) with
                           | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                                NCGMonad.getNewLabelNat GHC.Base.>>=
                                (fun lbl =>
@@ -1535,7 +1556,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                          | Some imm =>
                              let code := fun dst => OrdList.unitOL (PPC.Instr.LI dst imm) in
                              GHC.Base.return_ (Any (Format.intFormat rep) code)
-                         | _ => (match arg_0__, arg_1__ with
+                         | _ => (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
+                                               (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                               (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil)) with
                                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                                      NCGMonad.getNewLabelNat GHC.Base.>>=
                                      (fun lbl =>
@@ -1638,7 +1661,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                                                                                            other)
 
                      end ) else
-               (match arg_0__, arg_1__ with
+               (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
+                              (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                              (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil)) with
                  | dflags
                  , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons x
                   nil) =>
@@ -1647,7 +1672,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                             let 'MkChildCode64 code rlo := arg_23__ in
                             GHC.Base.return_ (Fixed Format.II32 rlo code) in
                           iselExpr64 x GHC.Base.>>= cont_22__ else
-                     (match arg_0__, arg_1__ with
+                     (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
+                                    (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                    (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil)) with
                       | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                            NCGMonad.getNewLabelNat GHC.Base.>>=
                            (fun lbl =>
@@ -1706,7 +1733,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                             let 'MkChildCode64 code rlo := arg_26__ in
                             GHC.Base.return_ (Fixed Format.II32 rlo code) in
                           iselExpr64 x GHC.Base.>>= cont_25__ else
-                     (match arg_0__, arg_1__ with
+                     (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
+                                    (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                     (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil)) with
                       | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                            NCGMonad.getNewLabelNat GHC.Base.>>=
                            (fun lbl =>
@@ -1975,7 +2004,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                      | Some imm =>
                          let code := fun dst => OrdList.unitOL (PPC.Instr.LI dst imm) in
                          GHC.Base.return_ (Any (Format.intFormat rep) code)
-                     | _ => (match arg_0__, arg_1__ with
+                     | _ => (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons
+                                           (CmmExpr.CmmMachOp (CmmMachOp.MO_U_Shr CmmType.W64) (cons x (cons
+                                           (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt num_3__ _)) nil))) nil)) with
                              | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                                  NCGMonad.getNewLabelNat GHC.Base.>>=
                                  (fun lbl =>
@@ -2085,7 +2116,7 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                         let 'MkChildCode64 code rlo := arg_23__ in
                         GHC.Base.return_ (Fixed Format.II32 rlo code) in
                       iselExpr64 x GHC.Base.>>= cont_22__ else
-                 (match arg_0__, arg_1__ with
+                 (match dflags, (CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W64 CmmType.W32) (cons xnil)) with
                   | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                        NCGMonad.getNewLabelNat GHC.Base.>>=
                        (fun lbl =>
@@ -2143,7 +2174,7 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                         let 'MkChildCode64 code rlo := arg_26__ in
                         GHC.Base.return_ (Fixed Format.II32 rlo code) in
                       iselExpr64 x GHC.Base.>>= cont_25__ else
-                 (match arg_0__, arg_1__ with
+                 (match dflags (CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons x nil)) with
                   | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                        NCGMonad.getNewLabelNat GHC.Base.>>=
                        (fun lbl =>
@@ -2414,7 +2445,7 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                  | Some imm =>
                      let code := fun dst => OrdList.unitOL (PPC.Instr.LI dst imm) in
                      GHC.Base.return_ (Any (Format.intFormat rep) code)
-                 | _ => (match arg_0__, arg_1__ with
+                 | _ => (match arg_0__, (CmmExpr.Mk_CmmLit (CmmExpr.CmmInt i rep)) with
                          | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
                              NCGMonad.getNewLabelNat GHC.Base.>>=
                              (fun lbl =>
