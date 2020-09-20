@@ -243,21 +243,7 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
   with trivialCode (arg_0__ : CmmType.Width) (arg_1__ : bool) (arg_2__
                      : (Reg.Reg -> Reg.Reg -> PPC.Instr.RI -> PPC.Instr.Instr)) (arg_3__ arg_4__
                      : CmmExpr.CmmExpr) : NCGMonad.NatM Register :=
-         trivialCode arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ := let j_11__ :=
-              match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-              | rep, _, instr, x, y =>
-                  let cont_5__ arg_6__ :=
-                    let 'pair src1 code1 := arg_6__ in
-                    let cont_7__ arg_8__ :=
-                      let 'pair src2 code2 := arg_8__ in
-                      let code :=
-                        fun dst =>
-                          OrdList.snocOL (OrdList.appOL code1 code2) (instr dst src1 (PPC.Instr.RIReg
-                                                                                      src2)) in
-                      GHC.Base.return_ (Any (Format.intFormat rep) code) in
-                    getSomeReg y GHC.Base.>>= cont_7__ in
-                  getSomeReg x GHC.Base.>>= cont_5__
-              end in
+         trivialCode arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ :=
             match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
             | rep, signed, instr, x, CmmExpr.Mk_CmmLit (CmmExpr.CmmInt y _) =>
                 match PPC.Regs.makeImmediate rep signed y with
@@ -268,9 +254,33 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                         fun dst => OrdList.snocOL code1 (instr dst src1 (PPC.Instr.RIImm imm)) in
                       GHC.Base.return_ (Any (Format.intFormat rep) code) in
                     getSomeReg x GHC.Base.>>= cont_12__
-                | _ => j_11__
+                | _ => match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
+                       | rep, _, instr, x, y =>
+                            let cont_5__ arg_6__ :=
+                              let 'pair src1 code1 := arg_6__ in
+                              let cont_7__ arg_8__ :=
+                                let 'pair src2 code2 := arg_8__ in
+                                let code :=
+                                  fun dst =>
+                                    OrdList.snocOL (OrdList.appOL code1 code2) (instr dst src1 (PPC.Instr.RIReg
+                                                                                                src2)) in
+                                GHC.Base.return_ (Any (Format.intFormat rep) code) in
+                              getSomeReg y GHC.Base.>>= cont_7__ in
+                            getSomeReg x GHC.Base.>>= cont_5__
+                        end
                 end
-            | _, _, _, _, _ => j_11__
+            | rep, _, instr, x, y =>
+                let cont_5__ arg_6__ :=
+                  let 'pair src1 code1 := arg_6__ in
+                  let cont_7__ arg_8__ :=
+                    let 'pair src2 code2 := arg_8__ in
+                    let code :=
+                      fun dst =>
+                        OrdList.snocOL (OrdList.appOL code1 code2) (instr dst src1 (PPC.Instr.RIReg
+                                                                                    src2)) in
+                    GHC.Base.return_ (Any (Format.intFormat rep) code) in
+                  getSomeReg y GHC.Base.>>= cont_7__ in
+                getSomeReg x GHC.Base.>>= cont_5__
             end
 
   with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register :=
