@@ -292,12 +292,7 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
 
 
   with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register :=
-        getRegister' arg_0__ arg_1__ := let j_5__ :=
-             match arg_0__, arg_1__ with
-             | _, other =>
-                 Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
-                                                                           other)
-             end in
+        getRegister' arg_0__ arg_1__ :=
            let j_21__ :=
              match arg_0__, arg_1__ with
              | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
@@ -346,7 +341,9 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                                                 addr_code (PPC.Instr.LD format dst addr)) in
                             GHC.Base.return_ (Any format code) in
                           getAmode D dynRef GHC.Base.>>= cont_14__)))
-             | _, _ => j_5__
+             | _, other =>
+                         Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
+                                                                                   other)
              end in
            let j_133__ :=
              match arg_0__, arg_1__ with
