@@ -293,58 +293,6 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
 
   with getRegister' (arg_0__ : DynFlags.DynFlags) (arg_1__ : CmmExpr.CmmExpr) : NCGMonad.NatM Register :=
         getRegister' arg_0__ arg_1__ :=
-           let j_21__ :=
-             match arg_0__, arg_1__ with
-             | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
-                 NCGMonad.getNewLabelNat GHC.Base.>>=
-                 (fun lbl =>
-                    DynFlags.getDynFlags GHC.Base.>>=
-                    (fun dflags =>
-                       PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
-                       (fun dynRef =>
-                          let cont_6__ arg_7__ :=
-                            let 'MkAmode addr addr_code := arg_7__ in
-                            let format := Format.floatFormat frep in
-                            let code :=
-                              fun dst =>
-                                OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
-                                                (Cmm.Statics lbl (cons (Cmm.CmmStaticLit (CmmExpr.CmmFloat f frep))
-                                                                       nil))) (OrdList.snocOL addr_code (PPC.Instr.LD
-                                                                                               format dst addr)) in
-                            GHC.Base.return_ (Any format code) in
-                          getAmode D dynRef GHC.Base.>>= cont_6__)))
-             | dflags, CmmExpr.Mk_CmmLit lit =>
-                 if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
-                 then let imm := PPC.Regs.litToImm lit in
-                      let code :=
-                        fun dst =>
-                          OrdList.toOL (cons (PPC.Instr.LIS dst (PPC.Regs.HA imm)) (cons (PPC.Instr.ADD
-                                                                                          dst dst (PPC.Instr.RIImm
-                                                                                                   (PPC.Regs.LO imm)))
-                                                                                         nil)) in
-                      let rep := CmmExpr.cmmLitType dflags lit in
-                      GHC.Base.return_ (Any (Format.cmmTypeFormat rep) code) else
-                 NCGMonad.getNewLabelNat GHC.Base.>>=
-                 (fun lbl =>
-                    DynFlags.getDynFlags GHC.Base.>>=
-                    (fun dflags =>
-                       PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
-                       (fun dynRef =>
-                          let cont_14__ arg_15__ :=
-                            let 'MkAmode addr addr_code := arg_15__ in
-                            let rep := CmmExpr.cmmLitType dflags lit in
-                            let format := Format.cmmTypeFormat rep in
-                            let code :=
-                              fun dst =>
-                                OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
-                                                (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil))) (OrdList.snocOL
-                                                addr_code (PPC.Instr.LD format dst addr)) in
-                            GHC.Base.return_ (Any format code) in
-                          getAmode D dynRef GHC.Base.>>= cont_14__)))
-             | _, other =>
-                         Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
-                                                                                   other)
-             end in
            let j_133__ :=
              match arg_0__, arg_1__ with
              | dflags
@@ -355,7 +303,57 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                         let 'MkChildCode64 code rlo := arg_23__ in
                         GHC.Base.return_ (Fixed Format.II32 rlo code) in
                       iselExpr64 x GHC.Base.>>= cont_22__ else
-                 j_21__
+                 (match arg_0__, arg_1__ with
+                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
+                       NCGMonad.getNewLabelNat GHC.Base.>>=
+                       (fun lbl =>
+                          DynFlags.getDynFlags GHC.Base.>>=
+                          (fun dflags =>
+                             PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
+                             (fun dynRef =>
+                                let cont_6__ arg_7__ :=
+                                  let 'MkAmode addr addr_code := arg_7__ in
+                                  let format := Format.floatFormat frep in
+                                  let code :=
+                                    fun dst =>
+                                      OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
+                                                      (Cmm.Statics lbl (cons (Cmm.CmmStaticLit (CmmExpr.CmmFloat f frep))
+                                                                             nil))) (OrdList.snocOL addr_code (PPC.Instr.LD
+                                                                                                     format dst addr)) in
+                                  GHC.Base.return_ (Any format code) in
+                                getAmode D dynRef GHC.Base.>>= cont_6__)))
+                  | dflags, CmmExpr.Mk_CmmLit lit =>
+                       if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
+                       then let imm := PPC.Regs.litToImm lit in
+                            let code :=
+                              fun dst =>
+                                OrdList.toOL (cons (PPC.Instr.LIS dst (PPC.Regs.HA imm)) (cons (PPC.Instr.ADD
+                                                                                                dst dst (PPC.Instr.RIImm
+                                                                                                         (PPC.Regs.LO imm)))
+                                                                                               nil)) in
+                            let rep := CmmExpr.cmmLitType dflags lit in
+                            GHC.Base.return_ (Any (Format.cmmTypeFormat rep) code) else
+                       NCGMonad.getNewLabelNat GHC.Base.>>=
+                       (fun lbl =>
+                          DynFlags.getDynFlags GHC.Base.>>=
+                          (fun dflags =>
+                             PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
+                             (fun dynRef =>
+                                let cont_14__ arg_15__ :=
+                                  let 'MkAmode addr addr_code := arg_15__ in
+                                  let rep := CmmExpr.cmmLitType dflags lit in
+                                  let format := Format.cmmTypeFormat rep in
+                                  let code :=
+                                    fun dst =>
+                                      OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
+                                                      (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil))) (OrdList.snocOL
+                                                      addr_code (PPC.Instr.LD format dst addr)) in
+                                  GHC.Base.return_ (Any format code) in
+                                getAmode D dynRef GHC.Base.>>= cont_14__)))
+                  | _, other =>
+                               Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
+                                                                                         other)
+                   end )
              | dflags
              , CmmExpr.CmmMachOp (CmmMachOp.MO_SS_Conv CmmType.W64 CmmType.W32) (cons x
               nil) =>
@@ -364,7 +362,57 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                         let 'MkChildCode64 code rlo := arg_26__ in
                         GHC.Base.return_ (Fixed Format.II32 rlo code) in
                       iselExpr64 x GHC.Base.>>= cont_25__ else
-                 j_21__
+                 (match arg_0__, arg_1__ with
+                  | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
+                       NCGMonad.getNewLabelNat GHC.Base.>>=
+                       (fun lbl =>
+                          DynFlags.getDynFlags GHC.Base.>>=
+                          (fun dflags =>
+                             PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
+                             (fun dynRef =>
+                                let cont_6__ arg_7__ :=
+                                  let 'MkAmode addr addr_code := arg_7__ in
+                                  let format := Format.floatFormat frep in
+                                  let code :=
+                                    fun dst =>
+                                      OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
+                                                      (Cmm.Statics lbl (cons (Cmm.CmmStaticLit (CmmExpr.CmmFloat f frep))
+                                                                             nil))) (OrdList.snocOL addr_code (PPC.Instr.LD
+                                                                                                     format dst addr)) in
+                                  GHC.Base.return_ (Any format code) in
+                                getAmode D dynRef GHC.Base.>>= cont_6__)))
+                  | dflags, CmmExpr.Mk_CmmLit lit =>
+                       if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
+                       then let imm := PPC.Regs.litToImm lit in
+                            let code :=
+                              fun dst =>
+                                OrdList.toOL (cons (PPC.Instr.LIS dst (PPC.Regs.HA imm)) (cons (PPC.Instr.ADD
+                                                                                                dst dst (PPC.Instr.RIImm
+                                                                                                         (PPC.Regs.LO imm)))
+                                                                                               nil)) in
+                            let rep := CmmExpr.cmmLitType dflags lit in
+                            GHC.Base.return_ (Any (Format.cmmTypeFormat rep) code) else
+                       NCGMonad.getNewLabelNat GHC.Base.>>=
+                       (fun lbl =>
+                          DynFlags.getDynFlags GHC.Base.>>=
+                          (fun dflags =>
+                             PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
+                             (fun dynRef =>
+                                let cont_14__ arg_15__ :=
+                                  let 'MkAmode addr addr_code := arg_15__ in
+                                  let rep := CmmExpr.cmmLitType dflags lit in
+                                  let format := Format.cmmTypeFormat rep in
+                                  let code :=
+                                    fun dst =>
+                                      OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
+                                                      (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil))) (OrdList.snocOL
+                                                      addr_code (PPC.Instr.LD format dst addr)) in
+                                  GHC.Base.return_ (Any format code) in
+                                getAmode D dynRef GHC.Base.>>= cont_14__)))
+                  | _, other =>
+                               Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
+                                                                                         other)
+                   end)
              | _
              , CmmExpr.CmmMachOp (CmmMachOp.MO_UU_Conv CmmType.W8 CmmType.W32) (cons
               (CmmExpr.CmmLoad mem _) nil) =>
@@ -583,9 +631,108 @@ Equations getRegister (e : CmmExpr.CmmExpr) : NCGMonad.NatM Register by struct e
                  | Some imm =>
                      let code := fun dst => OrdList.unitOL (PPC.Instr.LI dst imm) in
                      GHC.Base.return_ (Any (Format.intFormat rep) code)
-                 | _ => j_21__
+                 | _ => (match arg_0__, arg_1__ with
+                         | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
+                             NCGMonad.getNewLabelNat GHC.Base.>>=
+                             (fun lbl =>
+                                DynFlags.getDynFlags GHC.Base.>>=
+                                (fun dflags =>
+                                   PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
+                                   (fun dynRef =>
+                                      let cont_6__ arg_7__ :=
+                                        let 'MkAmode addr addr_code := arg_7__ in
+                                        let format := Format.floatFormat frep in
+                                        let code :=
+                                          fun dst =>
+                                            OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
+                                                            (Cmm.Statics lbl (cons (Cmm.CmmStaticLit (CmmExpr.CmmFloat f frep))
+                                                                                   nil))) (OrdList.snocOL addr_code (PPC.Instr.LD
+                                                                                                           format dst addr)) in
+                                        GHC.Base.return_ (Any format code) in
+                                      getAmode D dynRef GHC.Base.>>= cont_6__)))
+                         | dflags, CmmExpr.Mk_CmmLit lit =>
+                             if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
+                             then let imm := PPC.Regs.litToImm lit in
+                                  let code :=
+                                    fun dst =>
+                                      OrdList.toOL (cons (PPC.Instr.LIS dst (PPC.Regs.HA imm)) (cons (PPC.Instr.ADD
+                                                                                                      dst dst (PPC.Instr.RIImm
+                                                                                                               (PPC.Regs.LO imm)))
+                                                                                                     nil)) in
+                                  let rep := CmmExpr.cmmLitType dflags lit in
+                                  GHC.Base.return_ (Any (Format.cmmTypeFormat rep) code) else
+                             NCGMonad.getNewLabelNat GHC.Base.>>=
+                             (fun lbl =>
+                                DynFlags.getDynFlags GHC.Base.>>=
+                                (fun dflags =>
+                                   PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
+                                   (fun dynRef =>
+                                      let cont_14__ arg_15__ :=
+                                        let 'MkAmode addr addr_code := arg_15__ in
+                                        let rep := CmmExpr.cmmLitType dflags lit in
+                                        let format := Format.cmmTypeFormat rep in
+                                        let code :=
+                                          fun dst =>
+                                            OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
+                                                            (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil))) (OrdList.snocOL
+                                                            addr_code (PPC.Instr.LD format dst addr)) in
+                                        GHC.Base.return_ (Any format code) in
+                                      getAmode D dynRef GHC.Base.>>= cont_14__)))
+                         | _, other =>
+                                     Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
+                                                                                               other)
+                         end)
                  end
-             | _, _ => j_21__
+             | _, CmmExpr.Mk_CmmLit (CmmExpr.CmmFloat f frep) =>
+                 NCGMonad.getNewLabelNat GHC.Base.>>=
+                 (fun lbl =>
+                    DynFlags.getDynFlags GHC.Base.>>=
+                    (fun dflags =>
+                       PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
+                       (fun dynRef =>
+                          let cont_6__ arg_7__ :=
+                            let 'MkAmode addr addr_code := arg_7__ in
+                            let format := Format.floatFormat frep in
+                            let code :=
+                              fun dst =>
+                                OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
+                                                (Cmm.Statics lbl (cons (Cmm.CmmStaticLit (CmmExpr.CmmFloat f frep))
+                                                                       nil))) (OrdList.snocOL addr_code (PPC.Instr.LD
+                                                                                               format dst addr)) in
+                            GHC.Base.return_ (Any format code) in
+                          getAmode D dynRef GHC.Base.>>= cont_6__)))
+             | dflags, CmmExpr.Mk_CmmLit lit =>
+                 if Platform.target32Bit (DynFlags.targetPlatform dflags) : bool
+                 then let imm := PPC.Regs.litToImm lit in
+                      let code :=
+                        fun dst =>
+                          OrdList.toOL (cons (PPC.Instr.LIS dst (PPC.Regs.HA imm)) (cons (PPC.Instr.ADD
+                                                                                          dst dst (PPC.Instr.RIImm
+                                                                                                   (PPC.Regs.LO imm)))
+                                                                                         nil)) in
+                      let rep := CmmExpr.cmmLitType dflags lit in
+                      GHC.Base.return_ (Any (Format.cmmTypeFormat rep) code) else
+                 NCGMonad.getNewLabelNat GHC.Base.>>=
+                 (fun lbl =>
+                    DynFlags.getDynFlags GHC.Base.>>=
+                    (fun dflags =>
+                       PIC.cmmMakeDynamicReference dflags PIC.DataReference lbl GHC.Base.>>=
+                       (fun dynRef =>
+                          let cont_14__ arg_15__ :=
+                            let 'MkAmode addr addr_code := arg_15__ in
+                            let rep := CmmExpr.cmmLitType dflags lit in
+                            let format := Format.cmmTypeFormat rep in
+                            let code :=
+                              fun dst =>
+                                OrdList.consOL (PPC.Instr.LDATA (Cmm.Mk_Section Cmm.ReadOnlyData lbl)
+                                                (Cmm.Statics lbl (cons (Cmm.CmmStaticLit lit) nil))) (OrdList.snocOL
+                                                addr_code (PPC.Instr.LD format dst addr)) in
+                            GHC.Base.return_ (Any format code) in
+                          getAmode D dynRef GHC.Base.>>= cont_14__)))
+             | _, other =>
+                         Panic.panicStr (GHC.Base.hs_string__ "getRegister(ppc)") (PprCmmExpr.pprExpr
+                                                                                   other)
+
              end in
            match arg_0__, arg_1__ with
            | dflags, CmmExpr.Mk_CmmReg reg =>
