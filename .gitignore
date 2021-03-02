@@ -49,3 +49,5 @@ deps/
 lib/
 # stamp files for submodules
 .stamp-hs-to-coq
+# OPAM build dependencies
+builddep/

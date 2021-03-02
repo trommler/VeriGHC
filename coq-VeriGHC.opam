@@ -1,0 +1,16 @@
+opam-version: "2.0"
+maintainer: "Peter Trommler <ptrommler@acm.org>"
+authors: "Peter Trommler"
+license: "BSD"
+homepage: "https://github.com/trommler/VeriGHC"
+bug-reports: "https://github.com/trommler/VeriGHC/issues"
+dev-repo: "git+https://github.com/trommler/VeriGHC.git"
+
+synopsis: "Semantics for concurrent Haskell/concurrent Cmm"
+
+depends: [
+  "coq-gpfsl"  { (= "dev.2021-02-16.0.c0f38bcc") | (= "dev") }
+]
+
+build: [make "-j%{jobs}%"]
+install: [make "install"]
