@@ -7,6 +7,3 @@
 [submodule "ext/ghc"]
 	path = ext/ghc
 	url = https://gitlab.haskell.org/ghc/ghc.git
-[submodule "ext/refinedc"]
-	path = ext/refinedc
-	url = https://gitlab.mpi-sws.org/iris/refinedc.git
