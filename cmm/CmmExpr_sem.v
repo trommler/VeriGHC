@@ -13,11 +13,16 @@ Require Import CmmExpr.
 Require Import CmmType.
 Require Import CmmMachOp.
 Require Import Unique.
+Require Import CLabel.
 
 Require Import CmmType_sem.
 Require Import Identifiers.
 
 (* FIXME: Implement all literals *)
+
+Axiom label_to_block : CLabel -> block.
+Axiom int_to_long : Num.Int -> long.
+
 Definition cmmLitDenote (l : CmmLit) : option val :=
   match l with
   | CmmInt n w => match w with
@@ -32,8 +37,9 @@ Definition cmmLitDenote (l : CmmLit) : option val :=
                       | W64 => None
                       | _ => None
                       end
-  | CmmLabel lab => None (*Some (Vptr lab (Ptrofs.of_int64 Int64.zero)) *)
-  | CmmLabelOff lab off => None (* Some (Vptr lab (Ptrofs.of_int64 off)) *)
+  | CmmLabel lab => Some (Vptr (label_to_block lab) (Ptrofs.of_int64 Int64.zero))
+  | CmmLabelOff lab off => Some (Vptr (label_to_block lab)
+                                      (Ptrofs.of_int64 (int_to_long off)))
   | CmmLabelDiffOff _ _ _ => None (* FIXME: See issue #6 *)
   | CmmBlock blk => None (* Some (Vptr blk (Ptrofs.of_int64 Int64.zero)) *)
   | CmmHighStackMark => None

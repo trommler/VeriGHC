@@ -1,5 +1,7 @@
 axiomatize module CLabel
 
+rename value CLabel.CmmLabel = CLabel.CLabelCmmLabel
+
 skip CLabel.pprDebugCLabel
 skip CLabel.mkPrimCallLabel
 skip CLabel.mkCCLabel
@@ -32,4 +34,3 @@ skip constructor CLabel.RtsLabel
 skip constructor CLabel.CC_Label
 skip constructor CLabel.CCS_Label
 skip constructor CLabel.RtsPrimOp
-
