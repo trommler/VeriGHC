@@ -1,6 +1,6 @@
 Require Import Coq.Lists.List.
 Import ListNotations.
-Require Import BinPosDef.
+Require Import ZArith.
 
 Require Import compcert.common.Memory.
 Require Import compcert.common.AST.
@@ -25,7 +25,7 @@ Definition cmmLitDenote (l : CmmLit) : option val :=
                   | W16 => Some (Vint (Int.repr n))
                   | W32 => Some (Vint (Int.repr n))
                   | W64 => Some (Vlong (Int64.repr n))
-                  | _   => None 
+                  | _   => None
                   end
   | CmmFloat rat w => match w with
                       | W32 => None
