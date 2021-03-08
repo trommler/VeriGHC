@@ -22,6 +22,7 @@ Require Import Identifiers.
 
 Axiom label_to_block : CLabel -> block.
 Axiom int_to_long : Num.Int -> long.
+Axiom blockId_to_block : BlockId.BlockId -> block.
 
 Definition cmmLitDenote (l : CmmLit) : option val :=
   match l with
@@ -41,7 +42,7 @@ Definition cmmLitDenote (l : CmmLit) : option val :=
   | CmmLabelOff lab off => Some (Vptr (label_to_block lab)
                                       (Ptrofs.of_int64 (int_to_long off)))
   | CmmLabelDiffOff _ _ _ => None (* FIXME: See issue #6 *)
-  | CmmBlock blk => None (* Some (Vptr blk (Ptrofs.of_int64 Int64.zero)) *)
+  | CmmBlock blk => Some (Vptr (blockId_to_block blk) (Ptrofs.of_int64 Int64.zero))
   | CmmHighStackMark => None
   | _ => None (* CmmVec *)
   end.
@@ -163,37 +164,39 @@ Definition globalRegToPtr (g:GlobalReg) : option val :=
 
 
 Definition env := PTree.t val.
-(* FIXME: Implement all expressions *) (*
+Axiom unique_to_positive : Unique -> positive.
+
+(* FIXME: Implement all expressions *)
 Fixpoint cmmExprDenote (m:mem) (en:env) (sp:val) (e:CmmExpr) : option val :=
   match e with
-  | CE_CmmLit l => cmmLitDenote l
-  | CE_CmmLoad e' t => match (cmmExprDenote m en sp e') with
-                       | None => None
-                       | Some v => Mem.loadv (cmmTypeToChunk t) m v
-                       end
-  | CE_CmmReg r => match r with
-                   | CmmLocal (LR_LocalReg u t) => PTree.get u en
+  | Mk_CmmLit l => cmmLitDenote l
+  | CmmLoad e' t => match (cmmExprDenote m en sp e') with
+                    | None => None
+                    | Some v => Mem.loadv (cmmTypeToChunk t) m v
+                    end
+  | Mk_CmmReg r => match r with
+                   | CmmLocal (MkLocalReg u t) => PTree.get (unique_to_positive u) en
                    | CmmGlobal g => match globalRegToPtr g with
                                     | None   => None
                                     | Some p => Mem.loadv (globalRegToChunk g) m p
                                     end
                    end
-  | CE_CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote m en sp) ps)
-  | CE_CmmStackSlot a off => Some (Val.offset_ptr sp (Ptrofs.of_int64 off)) (* TODO parameter a: What is the semantics of an Area? *)
-  | CE_CmmRegOff r off => match r with
-                          | CmmLocal (LR_LocalReg u t) => match PTree.get u en with
-                                                          | Some v => Some(Val.offset_ptr sp (Ptrofs.of_int64 off))
-                                                          | None => None
-                                                          end
-                          | CmmGlobal g =>
-                            match globalRegToPtr g with
-                            | None   => None
-                            | Some p => match Mem.loadv (globalRegToChunk g) m p with
-                                        | Some v => Some(Val.offset_ptr sp (Ptrofs.of_int64 off))
-                                        | None => None
-                                        end
-                            end
-                          end
+  | CmmMachOp mo ps => moDenote mo (List.map (cmmExprDenote m en sp) ps)
+  | CmmStackSlot a off => Some (Val.offset_ptr sp (Ptrofs.of_int64 (int_to_long off))) (* TODO parameter a: What is the semantics of an Area? *)
+  | CmmRegOff r off => match r with
+                       | CmmLocal (MkLocalReg u t) => match PTree.get (unique_to_positive u) en with
+                                                      | Some v => Some(Val.offset_ptr sp (Ptrofs.of_int64 (int_to_long off)))
+                                                      | None => None
+                                                      end
+                       | CmmGlobal g =>
+                         match globalRegToPtr g with
+                         | None   => None
+                         | Some p => match Mem.loadv (globalRegToChunk g) m p with
+                                     | Some v => Some(Val.offset_ptr sp (Ptrofs.of_int64 (int_to_long off)))
+                                     | None => None
+                                     end
+                         end
+                       end
   end.
 
 
@@ -209,4 +212,3 @@ Fixpoint cmmExprListDenote (m:mem) (en:env) (sp:val) (es:list CmmExpr) : option 
                           end
               end
   end.
-*)
