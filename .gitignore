@@ -23,6 +23,8 @@
 *.v.d
 *.vio
 *.vo
+*.vok
+*.vos
 .coq-native/
 .csdp.cache
 .lia.cache
@@ -38,6 +40,7 @@ nra.cache
 CoqMakefile
 CoqMakefile.conf
 .coqdeps.d
+.CoqMakefile.d
 # files created by file browsers
 .directory
 
@@ -51,3 +54,6 @@ lib/
 .stamp-hs-to-coq
 # OPAM build dependencies
 builddep/
+# vi[m] temporary files
+*.swp
+
