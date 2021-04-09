@@ -1,6 +1,3 @@
-[submodule "ext/VST"]
-	path = ext/VST
-	url = https://github.com/trommler/VST.git
 [submodule "ext/hs-to-coq"]
 	path = ext/hs-to-coq
 	url = https://github.com/trommler/hs-to-coq.git
