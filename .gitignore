@@ -57,3 +57,5 @@ builddep/
 # vi[m] temporary files
 *.swp
 
+# opam switch directory
+.verighc/
