@@ -196,12 +196,20 @@ builddep/%-builddep.opam: %.opam Makefile
 builddep-opamfiles: $(BUILDDEPFILES)
 .PHONY: builddep-opamfiles
 
-builddep: builddep-opamfiles
+OPAMSWITCH=$(shell pwd)/.verighc
+OPAM=OPAMSWITCH=$(OPAMSWITCH) opam
+
+builddep: builddep-opamfiles .verighc
 	@# We want opam to not just install the build-deps now, but to also keep satisfying these
 	@# constraints.  Otherwise, `opam upgrade` may well update some packages to versions
 	@# that are incompatible with our build requirements.
 	@# To achieve this, we create a fake opam package that has our build-dependencies as
 	@# dependencies, but does not actually install anything itself.
 	@echo "# Installing builddep packages."
-	@opam install $(OPAMFLAGS) $(BUILDDEPFILES)
+	@$(OPAM) install $(OPAMFLAGS) $(BUILDDEPFILES)
 .PHONY: builddep
+
+.verighc:
+	opam switch create $@
+	$(OPAM) repo add coq-released "https://coq.inria.fr/opam/released"
+	$(OPAM) repo add iris-dev "https://gitlab.mpi-sws.org/iris/opam.git"
