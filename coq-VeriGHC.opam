@@ -11,6 +11,7 @@ synopsis: "Semantics for concurrent Haskell/concurrent Cmm"
 depends: [
   "coq-gpfsl"  { (= "dev.2021-02-16.0.c0f38bcc") | (= "dev") }
   "coq-compcert" { = "3.7~coq-platform~open-source" }
+  "coq-mathcomp-ssreflect"
 ]
 
 build: [make "-j%{jobs}%"]

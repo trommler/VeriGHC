@@ -1,3 +1,5 @@
+export V=1
+
 OUT=lib
 
 FOREIGN_HS_TO_COQ = 1
@@ -56,7 +58,6 @@ CMM2PPC        = \
    PIC \
    PprCmmExpr \
    TargetReg \
-   PPC/CodeGen \
 
 MODULES        = \
    $(UTILS) \
@@ -65,7 +66,6 @@ MODULES        = \
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
 BROKEN_MODULES = \
-   PPC/CodeGen \
 
 VFILES_GEN     = $(addsuffix .v,$(MODULES))
 VFILES_MAN     = $(addsuffix .v,$(HANDMOD))
@@ -92,11 +92,7 @@ vfiles : $(OUT)/edits $(OUT)/Makefile $(OUTFILES)
 
 .stamp-hs-to-coq: .git/modules/ext/hs-to-coq/HEAD
 	cd $(HS_TO_COQ_DIR) && stack setup && stack build
-	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/base-src -f Makefile all
-	$(MAKE) -C $(HS_TO_COQ_DIR)/base-thy -f Makefile all
-	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers -f Makefile all
-	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers/theories -f Makefile all
-	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/transformers -f Makefile all
+	$(MAKE) -f HsToCoqMakefile all
 	touch $@
 
 $(OUT)/README.md:
@@ -121,8 +117,10 @@ $(OUT)/_CoqProject: $(OUT)/README.md Makefile .stamp-hs-to-coq
 	echo $(filter-out $(addsuffix .v,$(BROKEN_MODULES)), $(VFILES)) >> $@
 
 $(OUT)/Makefile: $(OUT)/README.md $(OUT)/_CoqProject $(OUTFILES) Makefile
-	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
+	cd $(OUT); $(COQMAKEFILE) -f _CoqProject -o Makefile
 
+$(OUT)/CoqMakefile.local: $(OUT)/README.md CoqMakefile.local
+	cp CoqMakefile.local $@
 
 HS_TO_COQ_GHC_OPTS=\
      --ghc-tree ext/hs-to-coq/examples/ghc/ghc \
@@ -170,17 +168,12 @@ coq: CoqMakefile $(OUT)/Makefile $(OUTFILES)
 	$(MAKE) -f CoqMakefile
 
 CoqMakefile: Makefile _CoqProject
-	coq_makefile -f _CoqProject -o CoqMakefile
+	$(COQMAKEFILE) -f _CoqProject -o $@
 
 clean:: CoqMakefile
-	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/ghc -f Makefile clean
-	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/base-src -f Makefile clean
-	$(MAKE) -C $(HS_TO_COQ_DIR)/base-thy -f Makefile clean
-	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers -f Makefile clean
-	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers/theories -f Makefile clean
-	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/transformers -f Makefile clean
 	rm -f .stamp-hs-to-coq
 	rm -rf $(OUT) deps
+	$(MAKE) -f HsToCoqMakefile clean
 	$(MAKE) -f CoqMakefile clean
 	rm -f CoqMakefile CoqMakefile.conf .coqdepend.d
 
@@ -197,7 +190,8 @@ builddep-opamfiles: $(BUILDDEPFILES)
 .PHONY: builddep-opamfiles
 
 OPAMSWITCH=$(shell pwd)/.verighc
-OPAM=OPAMSWITCH=$(OPAMSWITCH) opam
+OPAMFLAGS+=--switch $(OPAMSWITCH)
+COQMAKEFILE=opam exec $(OPAMFLAGS) coq_makefile --
 
 builddep: builddep-opamfiles .verighc
 	@# We want opam to not just install the build-deps now, but to also keep satisfying these
@@ -206,10 +200,10 @@ builddep: builddep-opamfiles .verighc
 	@# To achieve this, we create a fake opam package that has our build-dependencies as
 	@# dependencies, but does not actually install anything itself.
 	@echo "# Installing builddep packages."
-	@$(OPAM) install $(OPAMFLAGS) $(BUILDDEPFILES)
+	@opam install --yes $(OPAMFLAGS) $(BUILDDEPFILES)
 .PHONY: builddep
 
 .verighc:
 	opam switch create $@
-	$(OPAM) repo add coq-released "https://coq.inria.fr/opam/released"
-	$(OPAM) repo add iris-dev "https://gitlab.mpi-sws.org/iris/opam.git"
+	opam repo add $(OPAMFLAGS) coq-released "https://coq.inria.fr/opam/released"
+	opam repo add $(OPAMFLAGS) iris-dev "https://gitlab.mpi-sws.org/iris/opam.git"

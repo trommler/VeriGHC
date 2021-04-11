@@ -1,0 +1,7 @@
+export COQC=opam exec $(OPAMFLAGS) coqc --
+export COQTOP=opam exec $(OPAMFLAGS) coqtop --
+export COQCHK=opam exec $(OPAMFLAGS) coqchk --
+export COQDEP=opam exec $(OPAMFLAGS) coqdep --
+export COQDOC=opam exec $(OPAMFLAGS) coqdoc --
+export COQPP =opam exec $(OPAMFLAGS) coqpp --
+export COQMKFILE=opam exec $(OPAMFLAGS) coq_makefile --
