@@ -52,6 +52,8 @@ deps/
 lib/
 # stamp files for submodules
 .stamp-hs-to-coq
+stamp-hs-to-coq-libs
+
 # OPAM build dependencies
 builddep/
 # vi[m] temporary files

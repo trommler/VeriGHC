@@ -1,0 +1,22 @@
+include CoqMakefile.local
+
+HS_TO_COQ_DIR = ext/hs-to-coq
+
+all: stamp-hs-to-coq_libs
+
+stamp-hs-to-coq-libs:
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/base-src -f Makefile all
+	$(MAKE) -C $(HS_TO_COQ_DIR)/base-thy -f Makefile all
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers -f Makefile all
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers/theories -f Makefile all
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/transformers -f Makefile all
+	touch $@
+
+clean:
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/ghc -f Makefile clean
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/base-src -f Makefile clean
+	$(MAKE) -C $(HS_TO_COQ_DIR)/base-thy -f Makefile clean
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers -f Makefile clean
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/containers/theories -f Makefile clean
+	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/transformers -f Makefile clean
+	rm -f stamp-hs-to-coq-libs
