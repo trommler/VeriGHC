@@ -22,20 +22,22 @@ Notation long := Int64.int.
 
 Definition cmmTypeDenote (t:CmmType) :=
   match t with
-  | Mk_CmmType BitsCat w => match w with
-                            | W8 => byte
-                            | W16 => short
-                            | W32 => int
-                            | W64 => long
-                            | _ => unit
-                            end
-  | Mk_CmmType FloatCat w => match w with
-                             | W32 => float32
-                             | W64 => float
-                             | _ => unit
-                             end
-  | Mk_CmmType GcPtrCat _ => long
-  | Mk_CmmType (VecCat _ _) _ => unit
+  | Mk_CmmType BitsCat w      =>
+      match w with
+      | W8  => byte
+      | W16 => short
+      | W32 => int
+      | W64 => long
+      | _   => Empty_set
+      end
+  | Mk_CmmType FloatCat w     =>
+      match w with
+      | W32 => float32
+      | W64 => float
+      | _   => Empty_set
+      end
+  | Mk_CmmType GcPtrCat _     => long
+  | Mk_CmmType (VecCat _ _) _ => Empty_set
   end.
 
 Definition widthToChunk (w:Width) : memory_chunk :=
