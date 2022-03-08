@@ -13,8 +13,10 @@ Require Import CmmExpr.
 Require Import Unique.
 Require Import CmmMachOp.
 
+
 Axiom unique_to_string : Unique -> string.
 Axiom label_to_loc : CLabel.CLabel -> loc.
+Axiom rational_to_float : GHC.Real.Rational -> float.
 
 Inductive value := VInt8 (b : byte)
                  | VInt16 (h : Int16.int)
@@ -23,14 +25,64 @@ Inductive value := VInt8 (b : byte)
                  | VFloat (f : float32)
                  | VDouble (d : float).
 
+(* Literals *)
+Inductive lit := LitPoison
+            | LitLoc (l : loc)
+            | LitInt (n : Z)
+            | LitFloat (f : float).
+
+Instance lit_inhabited : Inhabited lit := populate LitPoison.
+
 Definition cmmlit_to_lit (cl : CmmLit) : lit :=
   match cl with
-  | CmmInt i _ => LitInt i
-  | CmmLabel l => LitLoc (label_to_loc l)
-  | _          => LitPoison
+  | CmmInt i _   => LitInt i
+  | CmmLabel l   => LitLoc (label_to_loc l)
+  | CmmFloat f _ => LitFloat (rational_to_float f)
+  | _            => LitPoison
   end.
+(** Expressions and values. *)
 
-Definition machop_arity (mo : MachOp) : Z :=
+Inductive un_op := | NegOp | MinusUnOp.
+
+Inductive bin_op := | PlusOp | MinusOp | ModOp | LeOp | LtOp | EqOp | OffsetOp.
+
+Notation "[ ]" := (@nil binder) : binder_scope.
+Notation "a :: b" := (@cons binder a%binder b%binder)
+  (at level 60, right associativity) : binder_scope.
+Notation "[ x1 ; x2 ; .. ; xn ]" :=
+  (@cons binder x1%binder (@cons binder x2%binder
+        (..(@cons binder xn%binder (@nil binder))..))) : binder_scope.
+Notation "[ x ]" := (@cons binder x%binder (@nil binder)) : binder_scope.
+
+Module base.
+  (** Base expression language without views *)
+  Inductive expr :=
+  (* Basic operations *)
+  | Lit (l : lit)
+  | Var (x : string)
+  | UnOp (op : un_op) (e: expr)
+  | BinOp (op : bin_op) (e1 e2 : expr)
+  | Case (e : expr) (el : list expr)
+  (* Memory *)
+  | Read (o : memOrder) (e : expr)
+  | Write (o : memOrder) (e1 e2: expr)
+  | CAS (e0 e1 e2 : expr) (orf or ow: memOrder)
+  | FenceAcq
+  | FenceRel
+  | FenceSC
+  | StuckE.
+
+  Bind Scope expr_scope with expr.
+  Delimit Scope expr_scope with E.
+
+  Arguments UnOp _ _%E.
+  Arguments BinOp _ _%E _%E.
+  Arguments Case _%E _%E.
+  Arguments Read _ _%E.
+  Arguments Write _ _%E _%E.
+  Arguments CAS _%E _%E _%E _ _.
+
+Definition machop_arity (mo : MachOp) : nat :=
   match mo with
   | MO_Add _
   | MO_Sub _
@@ -68,7 +120,7 @@ Definition machop_arity (mo : MachOp) : Z :=
   | MO_Shl _
   | MO_U_Shr _
   | MO_S_Shr _
-    => 2
+    => 2%nat
   | MO_S_Neg _
   | MO_F_Neg _
   | MO_SF_Conv _ _
@@ -76,8 +128,9 @@ Definition machop_arity (mo : MachOp) : Z :=
   | MO_SS_Conv _ _
   | MO_UU_Conv _ _
   | MO_FF_Conv _ _
-    => 1
-  | _          => 0
+    => 1%nat
+  | _
+    => 0%nat
   end.
 
 Definition machop_to_unop (mo : MachOp) : un_op :=
@@ -89,7 +142,7 @@ Definition machop_to_unop (mo : MachOp) : un_op :=
 Definition cmm_unop_to_expr (mo : MachOp) (exprs : list expr) :=
   match exprs with
   | [x] => UnOp (machop_to_unop mo) x
-  | _    => Var "fail"
+  | _   => StuckE
   end.
 
 Definition machop_to_binop (mo : MachOp) : bin_op :=
@@ -101,14 +154,14 @@ Definition machop_to_binop (mo : MachOp) : bin_op :=
 Definition cmm_binop_to_expr (mo : MachOp) (exprs : list expr) :=
   match exprs with
   | [x1;x2] => BinOp (machop_to_binop mo) x1 x2
-  | _       => Var "fail"
+  | _       => StuckE
   end.
 
 Definition cmm_machop_to_expr (op : MachOp) (exprs : list expr) : expr :=
   match machop_arity op with
-  | 1 => cmm_unop_to_expr op exprs
-  | 2 => cmm_binop_to_expr op exprs
-  | _ => Var "fail"
+  | 1%nat => cmm_unop_to_expr op exprs
+  | 2%nat => cmm_binop_to_expr op exprs
+  | _     => StuckE
   end.
 
 Fixpoint cmmexpr_to_expr (ce : CmmExpr) : expr :=
@@ -118,8 +171,23 @@ Fixpoint cmmexpr_to_expr (ce : CmmExpr) : expr :=
       | ce :: ces' => cmmexpr_to_expr ce :: cmmexprs_to_exprs ces'
       end
   in match ce with
-     | Mk_CmmLit cl       => Lit (cmmlit_to_lit cl)
-     | CmmLoad ce' _      => Read NonAtomic (cmmexpr_to_expr ce')
-     | CmmMachOp op exprs => cmm_machop_to_expr op (cmmexprs_to_exprs exprs)
-     | _                  => Var "fail"
+     | Mk_CmmLit cl          => Lit (cmmlit_to_lit cl)
+     | CmmLoad ce' _         => Read NonAtomic (cmmexpr_to_expr ce')
+     | Mk_CmmReg reg         => StuckE (* TODO *)
+     | CmmMachOp op exprs    => cmm_machop_to_expr op (cmmexprs_to_exprs exprs)
+     | CmmStackSlot area num => StuckE (* TODO *)
+     | CmmRegOff reg off     => StuckE (* TODO *)
      end.
+
+Inductive stmt := Goto (b : loc)
+             | Return (e : expr)
+             | IfS (e : expr) (s1 s2 : stmt)
+             (* m: map from values of e to indices into bs, def: default *)
+             | Switch (e : expr) (m : gmap Z nat) (bs : list stmt) (def : stmt)
+             | Assign (e1 e2 : expr) (s : stmt)
+             | SkipS (s : stmt)
+             | StuckS (* stuck statement *)
+             | ExprS (e : expr) (s : stmt)
+.
+
+Arguments Switch _%E _%E _%E.
