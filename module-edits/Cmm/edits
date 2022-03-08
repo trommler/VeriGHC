@@ -10,8 +10,6 @@ skip Cmm.CmmTopInfo
 skip Cmm.pprBBlock
 
 # requires Hoopl.Graph
-skip Cmm.CmmGraph
-skip Cmm.GenCmmGraph
 skip Cmm.CmmDecl
 skip Cmm.RawCmmDecl
 skip Cmm.topInfoTable
@@ -24,7 +22,14 @@ skip Cmm.CmmBlock
 
 # requires Word8
 skip constructor Cmm.CmmString
+skip constructor Cmm.ProfilingInfo
+
+# requires SMRep.StgHalfWord
+skip constructor Cmm.C_SRT
 
 # Punned
 rename value Cmm.ListGraph=Cmm.MkListGraph
 rename value Cmm.CmmInfoTable= Cmm.MkCmmInfoTable
+rename value Cmm.CmmGraph=Cmm.MkCmmGraph
+# rename value Cmm.C_SRT=Cmm.MkC_SRT
+# rename value Cmm.ProfilingInfo=Cmm.MkProfilingInfo

@@ -12,6 +12,7 @@ HANDMOD        = \
    AxiomatizedTypes \
    IntMap \
    Hoopl/Block \
+   Hoopl/Graph \
 
 UTILS          = \
    Util \
