@@ -12,10 +12,13 @@ Require Import CmmType_sem. (* for Int16; TODO: Move to separate module *)
 Require Import CmmExpr.
 Require Import Unique.
 Require Import CmmMachOp.
-
+Require Import CmmNode.
+Require Import Hoopl.Block.
+Require Import Cmm.
 
 Axiom unique_to_string : Unique -> string.
 Axiom label_to_loc : CLabel.CLabel -> loc.
+Axiom hoopl_label_to_loc : Hoopl.Label.Label -> loc.
 Axiom rational_to_float : GHC.Real.Rational -> float.
 
 Inductive value := VInt8 (b : byte)
@@ -54,33 +57,31 @@ Notation "[ x1 ; x2 ; .. ; xn ]" :=
         (..(@cons binder xn%binder (@nil binder))..))) : binder_scope.
 Notation "[ x ]" := (@cons binder x%binder (@nil binder)) : binder_scope.
 
-Module base.
-  (** Base expression language without views *)
-  Inductive expr :=
-  (* Basic operations *)
-  | Lit (l : lit)
-  | Var (x : string)
-  | UnOp (op : un_op) (e: expr)
-  | BinOp (op : bin_op) (e1 e2 : expr)
-  | Case (e : expr) (el : list expr)
-  (* Memory *)
-  | Read (o : memOrder) (e : expr)
-  | Write (o : memOrder) (e1 e2: expr)
-  | CAS (e0 e1 e2 : expr) (orf or ow: memOrder)
-  | FenceAcq
-  | FenceRel
-  | FenceSC
-  | StuckE.
+(** Base expression language without views *)
+Inductive expr :=
+(* Basic operations *)
+| Lit (l : lit)
+| Var (x : string)
+| UnOp (op : un_op) (e: expr)
+| BinOp (op : bin_op) (e1 e2 : expr)
+| Case (e : expr) (el : list expr)
+(* Memory *)
+| Read (o : memOrder) (e : expr)
+| CAS (e0 e1 e2 : expr) (orf or ow: memOrder)
+| FenceAcq
+| FenceRel
+| FenceSC
+| StuckE.
 
-  Bind Scope expr_scope with expr.
-  Delimit Scope expr_scope with E.
+Bind Scope expr_scope with expr.
+Delimit Scope expr_scope with E.
 
-  Arguments UnOp _ _%E.
-  Arguments BinOp _ _%E _%E.
-  Arguments Case _%E _%E.
-  Arguments Read _ _%E.
-  Arguments Write _ _%E _%E.
-  Arguments CAS _%E _%E _%E _ _.
+Arguments UnOp _ _%E.
+Arguments BinOp _ _%E _%E.
+Arguments Case _%E _%E.
+Arguments Read _ _%E.
+Arguments Write _ _%E _%E.
+Arguments CAS _%E _%E _%E _ _.
 
 Definition machop_arity (mo : MachOp) : nat :=
   match mo with
@@ -185,9 +186,42 @@ Inductive stmt := Goto (b : loc)
              (* m: map from values of e to indices into bs, def: default *)
              | Switch (e : expr) (m : gmap Z nat) (bs : list stmt) (def : stmt)
              | Assign (e1 e2 : expr) (s : stmt)
+             | Write (o : memOrder) (e1 e2: expr) (s : stmt)
              | SkipS (s : stmt)
              | StuckS (* stuck statement *)
              | ExprS (e : expr) (s : stmt)
 .
 
 Arguments Switch _%E _%E _%E.
+
+Fixpoint cmmblock_to_stmt (nodes : list (CmmNode O O)) (f : CmmNode O C): stmt :=
+  match nodes with
+  | nil =>
+      match f in CmmNode e x return (match e, x with
+                                     | O, C => stmt
+                                     | _, _ => unit
+                                     end) with
+      | CmmBranch l           => Goto (hoopl_label_to_loc l)
+      | CmmCondBranch e t f _ => IfS (cmmexpr_to_expr e) (Goto (hoopl_label_to_loc t)) (Goto (hoopl_label_to_loc f))
+      | CmmSwitch e ts        => StuckS (* TODO *)
+      | _ => tt (* impossible case *)
+      end
+  | n :: ns =>
+      let r := cmmblock_to_stmt ns f
+      in match n in CmmNode e x return (match e, x with
+                                        | O, O => stmt
+                                        | _, _ => unit
+                                        end) with
+         | CmmComment _    => SkipS r
+         | CmmAssign reg e => Assign (cmmexpr_to_expr (Mk_CmmReg reg)) (cmmexpr_to_expr e) r
+         | CmmStore e1 e2  => Write NonAtomic (cmmexpr_to_expr e1) (cmmexpr_to_expr e2) r
+         | CmmUnsafeForeignCall _ _ _ => StuckS (* TODO *)
+           (* CmmCall TODO *)
+         | _ => tt (* impossible case *)
+         end
+  end.
+
+Definition block_to_stmt (b : CmmBlock) : stmt :=
+  match blockSplit b with
+  | (_, m, f) => cmmblock_to_stmt (blockToList m) f
+  end.
