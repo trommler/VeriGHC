@@ -11,7 +11,6 @@ skip Cmm.pprBBlock
 
 # requires Hoopl.Graph
 skip Cmm.CmmDecl
-skip Cmm.RawCmmDecl
 skip Cmm.topInfoTable
 skip Cmm.RawCmmGroup
 skip Cmm.CmmGroup
