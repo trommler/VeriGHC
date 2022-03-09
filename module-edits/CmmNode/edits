@@ -8,7 +8,7 @@ axiomatize module CmmNode
 # [...]
 skip CmmNode.CmmNode
 
-add CmmNode Inductive CmmNode.CmmNode : Type -> (Type -> Type)
+add CmmNode Inductive CmmNode.CmmNode : Hoopl.Block.oc -> (Hoopl.Block.oc -> Type)
   := | CmmEntry
    : Hoopl.Label.Label -> (CmmTickScope -> CmmNode Hoopl.Block.C Hoopl.Block.O)
   |  CmmComment : FastString.FastString -> CmmNode Hoopl.Block.O Hoopl.Block.O
