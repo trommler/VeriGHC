@@ -12,8 +12,6 @@ Inductive MaybeO : oc -> Type -> Type :=
 | NothingO :      MaybeO C t.
 End Maybes.
 
-Print MaybeO.
-
 Inductive Block (n: oc -> oc -> Type) : oc -> oc -> Type :=
   BlockCO : n C O -> Block n O O          -> Block n C O
 | BlockCC : n C O -> Block n O O -> n O C -> Block n C C
@@ -47,3 +45,6 @@ Fixpoint go {n : oc -> oc -> Type} (blk : Block n O O) (acc : list (n O O))
   | BCons _ n b1 => n :: go b1 acc
   | _            => tt
   end.
+
+Definition blockToList {n : oc -> oc -> Type} (blk: Block n O O) : list (n O O) :=
+  go blk nil.
