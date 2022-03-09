@@ -16,9 +16,6 @@ skip Cmm.RawCmmGroup
 skip Cmm.CmmGroup
 skip Cmm.CmmProgram
 
-# requires Hoopl.Block
-skip Cmm.CmmBlock
-
 # requires Word8
 skip constructor Cmm.CmmString
 skip constructor Cmm.ProfilingInfo
