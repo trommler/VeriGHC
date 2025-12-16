@@ -2,7 +2,7 @@ include CoqMakefile.local
 
 HS_TO_COQ_DIR = ext/hs-to-coq
 
-all: stamp-hs-to-coq_libs
+all: stamp-hs-to-coq-libs
 
 stamp-hs-to-coq-libs:
 	$(MAKE) -C $(HS_TO_COQ_DIR)/examples/base-src -f Makefile all
