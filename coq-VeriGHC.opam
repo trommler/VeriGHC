@@ -1,7 +1,7 @@
 opam-version: "2.0"
 maintainer: "Peter Trommler <ptrommler@acm.org>"
 authors: "Peter Trommler"
-license: "BSD"
+license: "MIT"
 homepage: "https://github.com/trommler/VeriGHC"
 bug-reports: "https://github.com/trommler/VeriGHC/issues"
 dev-repo: "git+https://github.com/trommler/VeriGHC.git"
